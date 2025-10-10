@@ -23,7 +23,8 @@ import {
   Trophy,
   ArrowLeft,
   Timer,
-  Wallet
+  Wallet,
+  Check
 } from 'lucide-react'
 
 interface PotData {
@@ -386,6 +387,7 @@ export default function ViewPots() {
 
 function PotCard({ pot, onReclaim }: { pot: PotData, onReclaim: (potId: string) => void }) {
   const [showDetails, setShowDetails] = useState(false)
+  const [copied, setCopied] = useState(false)
   
   const statusConfig = {
     active: {
@@ -581,11 +583,28 @@ function PotCard({ pot, onReclaim }: { pot: PotData, onReclaim: (potId: string) 
                     </p>
                   </div>
                   <button
-                    onClick={() => navigator.clipboard.writeText(`${window.location.origin}/claim/${pot.id}`)}
-                    className="w-full bg-gray-800 hover:bg-gray-900 text-white text-sm font-medium py-2 px-3 rounded-md transition-all duration-200 flex items-center justify-center space-x-2"
+                    onClick={() => {
+                      navigator.clipboard.writeText(`${window.location.origin}/claim/${pot.id}`)
+                      setCopied(true)
+                      setTimeout(() => setCopied(false), 2000)
+                    }}
+                    className={`w-full text-sm font-medium py-2 px-3 rounded-md transition-all duration-300 flex items-center justify-center space-x-2 ${
+                      copied
+                        ? 'bg-green-600 hover:bg-green-700 text-white'
+                        : 'bg-gray-800 hover:bg-gray-900 text-white'
+                    }`}
                   >
-                    <Copy className="w-4 h-4" />
-                    <span>Copy Share Link</span>
+                    {copied ? (
+                      <>
+                        <Check className="w-4 h-4 animate-in zoom-in duration-200" />
+                        <span>Copied!</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-4 h-4" />
+                        <span>Copy Share Link</span>
+                      </>
+                    )}
                   </button>
                 </div>
               </div>

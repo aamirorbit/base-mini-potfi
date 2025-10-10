@@ -22,6 +22,7 @@ export default function Create() {
   const [farcasterApproving, setFarcasterApproving] = useState(false)
   const [farcasterCreating, setFarcasterCreating] = useState(false)
   const [isPotIdPending, setIsPotIdPending] = useState(false)
+  const [copied, setCopied] = useState(false)
   const usdcAmt = BigInt(Math.round(amount * 1_000_000)) // 6dp
 
   // Wagmi hooks for fallback
@@ -411,12 +412,29 @@ export default function Create() {
           </a>
           
           <button
-            onClick={() => navigator.clipboard.writeText(frameUrl)}
-            className="w-full bg-gray-800/90 backdrop-blur-sm hover:bg-gray-900 text-white font-medium py-3 px-6 rounded-md text-base transition-all duration-200 shadow-xl transform active:scale-95"
+            onClick={() => {
+              navigator.clipboard.writeText(frameUrl)
+              setCopied(true)
+              setTimeout(() => setCopied(false), 2000)
+            }}
+            className={`w-full font-medium py-3 px-6 rounded-md text-base transition-all duration-300 shadow-xl transform active:scale-95 ${
+              copied 
+                ? 'bg-green-600 hover:bg-green-700' 
+                : 'bg-gray-800/90 backdrop-blur-sm hover:bg-gray-900'
+            } text-white`}
           >
             <div className="flex items-center justify-center space-x-2">
-              <Copy className="w-4 h-4" />
-              <span>Copy Direct Link</span>
+              {copied ? (
+                <>
+                  <CheckCircle className="w-4 h-4 animate-in zoom-in duration-200" />
+                  <span>Copied!</span>
+                </>
+              ) : (
+                <>
+                  <Copy className="w-4 h-4" />
+                  <span>Copy Direct Link</span>
+                </>
+              )}
             </div>
           </button>
         </div>

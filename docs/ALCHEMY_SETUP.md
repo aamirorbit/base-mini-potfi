@@ -1,107 +1,214 @@
-# Alchemy Enhanced APIs for PotFi
+# Alchemy Setup for PotFi
 
-## Why Alchemy?
+## ✅ Required for Production
 
-Alchemy provides enhanced APIs that are faster and more reliable than raw RPC calls, plus they have indexed data APIs.
+PotFi uses **Alchemy Growth Plan** to scan blockchain events efficiently.
 
-## Setup
+---
 
-### 1. Get API Key
-1. Sign up at https://www.alchemy.com/
-2. Create a Base Mainnet app
-3. Copy your API key
+## 🚀 Quick Setup
 
-### 2. Update Environment
-```env
-# .env.local
-NEXT_PUBLIC_BASE_RPC_URL=https://base-mainnet.g.alchemy.com/v2/YOUR_API_KEY
-ALCHEMY_API_KEY=YOUR_API_KEY
-```
+### 1. Create Alchemy Account
 
-### 3. Use Alchemy SDK (Better than raw RPC)
+1. Go to: **https://alchemy.com**
+2. Sign up (free)
+3. Verify your email
 
-Install:
+### 2. Create Base Mainnet App
+
+1. Click **"+ Create New App"**
+2. Fill in:
+   - **Chain**: Base
+   - **Network**: Mainnet
+   - **Name**: PotFi (or any name)
+3. Click **"Create App"**
+
+### 3. Upgrade to Growth Plan
+
+**⚠️ Important:** Free tier only allows scanning 10 blocks at a time!
+
+1. Go to **Settings** → **Plan & Billing**
+2. Click **"Upgrade"**
+3. Select **"Growth Plan"** ($49/month)
+4. This unlocks:
+   - ✅ Large block range scanning (1M+ blocks)
+   - ✅ Higher rate limits
+   - ✅ Better reliability
+
+### 4. Get API Key
+
+1. Go to your app dashboard
+2. Click **"API Keys"** tab
+3. Click **"View Key"**
+4. Copy the API Key
+
+### 5. Add to Environment
+
+Add to `.env.local`:
+
 ```bash
-npm install alchemy-sdk
+ALCHEMY_API_KEY=your_alchemy_api_key_here
 ```
 
-Update `/app/api/pots/route.ts`:
+### 6. Restart Server
 
-```typescript
-import { Alchemy, Network } from 'alchemy-sdk'
-
-const alchemy = new Alchemy({
-  apiKey: process.env.ALCHEMY_API_KEY,
-  network: Network.BASE_MAINNET,
-})
-
-export async function GET(request: NextRequest) {
-  try {
-    const { searchParams } = new URL(request.url)
-    const creatorAddress = searchParams.get('creator')
-    
-    // Get logs using Alchemy (much faster than public RPC)
-    const logs = await alchemy.core.getLogs({
-      address: jackpotAddress,
-      topics: [
-        // PotCreated event signature
-        '0x...' // Your event signature
-      ],
-      fromBlock: 'earliest', // Alchemy handles this efficiently
-      toBlock: 'latest',
-    })
-    
-    // Rest of your logic...
-    
-  } catch (error) {
-    console.error('Alchemy fetch error:', error)
-    return NextResponse.json({ error: 'Failed to fetch pots' }, { status: 500 })
-  }
-}
+```bash
+yarn dev
 ```
 
-## Benefits
+---
 
-✅ **Much faster** than public RPC
-✅ **Higher rate limits** (300 compute units/sec on free tier)
-✅ **99.9% uptime** SLA
-✅ **Archive node access** (full history)
-✅ **Enhanced APIs** (transfers, NFTs, etc.)
-✅ **Free tier**: 300M compute units/month
+## 📊 What It Does
 
-## Cost
-- **Free tier**: Sufficient for most apps
-- **Growth tier**: $49/month for 400M compute units
-- **Scale tier**: Custom pricing
+### Scans Blockchain Events
 
-## Alternative: Use Alchemy Notify (Webhooks)
+The app uses Alchemy to:
+- Scan last **1,000,000 blocks** (~23 days on Base)
+- Find all `PotCreated` events
+- Get pot details
+- Track claims and jackpots
 
-Even better - get notified when events happen!
+### Performance
 
-```typescript
-// Setup webhook in Alchemy dashboard
-// Alchemy will POST to your endpoint when PotCreated event fires
+| Metric | Value |
+|--------|-------|
+| **Speed** | ~400ms |
+| **Blocks Scanned** | 1,000,000 |
+| **History** | ~23 days |
+| **Rate Limit** | 660 CU/s |
 
-// /app/api/alchemy-webhook/route.ts
-export async function POST(request: NextRequest) {
-  const body = await request.json()
-  
-  // Alchemy sends you the decoded event
-  const { event, log } = body
-  
-  if (event.name === 'PotCreated') {
-    // Store in your database
-    await storePotInDB({
-      id: event.args.id,
-      creator: event.args.creator,
-      amount: event.args.amount,
-      // ...
-    })
-  }
-  
-  return NextResponse.json({ received: true })
-}
+---
+
+## 💰 Pricing
+
+### Growth Plan ($49/month)
+
+- **Included**: 400M compute units/month
+- **Extra**: $12 per 100M CUs
+- **Base Mainnet**: 0.1 CU per call
+
+### Estimated Usage (1,000 users/day)
+
+```
+View Pots: 1,000 requests/day × 30 days = 30,000 requests
+Claim Page: 100 requests/day × 30 days = 3,000 requests
+Total: ~33,000 requests/month
+
+Compute Units: 33,000 × 10 = 330,000 CU
+Cost: $49/month (within included 400M CUs)
 ```
 
-This way you have instant updates without polling!
+✅ **Easily within free included quota!**
 
+---
+
+## 🧪 Test Your Setup
+
+Run the test script:
+
+```bash
+node test-blockchain-scan.js
+```
+
+**Expected output:**
+
+```
+✅ Latest block: 36654394
+✅ Query completed in: 388 ms
+📦 Found events: 2
+🎉 SUCCESS! Found 2 pot(s)
+```
+
+If you see errors:
+- ❌ "10 block range" → Upgrade not applied yet (wait 5-10 min)
+- ❌ "503 error" → Public RPC (check API key)
+- ❌ "401 error" → Invalid API key
+
+---
+
+## 📋 Checklist
+
+- [ ] Create Alchemy account
+- [ ] Create Base Mainnet app
+- [ ] Upgrade to Growth Plan
+- [ ] Copy API key
+- [ ] Add `ALCHEMY_API_KEY` to `.env.local`
+- [ ] Restart dev server
+- [ ] Test with `node test-blockchain-scan.js`
+- [ ] Verify "View Pots" page works
+
+---
+
+## 🔍 Troubleshooting
+
+### "Under the Free tier plan, you can make eth_getLogs requests with up to a 10 block range"
+
+**Solution:** Upgrade hasn't taken effect yet.
+- Wait 5-10 minutes
+- Generate a new API key
+- Check plan in dashboard
+
+### "HTTP request failed. Status: 503"
+
+**Solution:** No Alchemy key or wrong key.
+- Check `.env.local` has `ALCHEMY_API_KEY`
+- Verify key is correct
+- Restart server
+
+### "View Pots" page shows no data
+
+**Solutions:**
+1. Check console for errors
+2. Verify contract address is correct
+3. Make sure you've created at least one pot
+4. Check if pots are older than 23 days (out of scan range)
+
+---
+
+## 💡 Why Alchemy?
+
+### Alternatives Considered
+
+| Method | Speed | Cost | Reliability | Status |
+|--------|-------|------|-------------|--------|
+| **BaseScan API** | N/A | FREE | N/A | ❌ Deprecated |
+| **Public RPC** | 5-10s | FREE | ❌ Poor | ⚠️ Unreliable |
+| **Alchemy Free** | N/A | FREE | N/A | ❌ 10 block limit |
+| **Alchemy Growth** | 0.4s | $49/mo | ✅ Excellent | ✅ **Chosen** |
+| **The Graph** | 0.5s | FREE | ✅ Good | 🔄 Complex setup |
+
+**Alchemy Growth is the best balance of:**
+- ✅ Speed
+- ✅ Reliability  
+- ✅ Simple setup
+- ✅ Reasonable cost
+
+---
+
+## 📱 Production Deployment
+
+When deploying to production (Vercel):
+
+1. Add to **Vercel Environment Variables**:
+   ```
+   ALCHEMY_API_KEY=your_key_here
+   ```
+
+2. Redeploy:
+   ```bash
+   git push
+   ```
+
+3. Verify in Vercel logs:
+   ```
+   🔗 Using RPC: Alchemy (Growth Plan)
+   ✅ Found X PotCreated events in Yms
+   ```
+
+---
+
+## ✅ You're Done!
+
+Your app now uses Alchemy for fast, reliable blockchain scanning! 🎉
+
+**Next:** Create some pots and test the "View Pots" page!
