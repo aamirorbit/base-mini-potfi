@@ -47,6 +47,7 @@ export default function ViewPots() {
   const [mounted, setMounted] = useState(false)
   const [pots, setPots] = useState<PotData[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
   const [filter, setFilter] = useState<'all' | 'active' | 'completed' | 'expired'>('all')
   const [isFarcaster, setIsFarcaster] = useState(false)
 
@@ -74,6 +75,7 @@ export default function ViewPots() {
   async function loadUserPots() {
     try {
       setLoading(true)
+      setError('')
       
       // Get pots directly from blockchain
       const response = await fetch(`/api/pots?creator=${userAddress}`)
@@ -83,10 +85,15 @@ export default function ViewPots() {
         setPots(data.pots || [])
       } else {
         console.error('Failed to load pots:', data.error)
+        const errorMsg = data.suggestion 
+          ? `${data.error}\n\n${data.suggestion}`
+          : data.error || 'Failed to load pots'
+        setError(errorMsg)
         setPots([])
       }
     } catch (error) {
       console.error('Error loading pots:', error)
+      setError('Network error. Please check your connection and try again.')
       setPots([])
     } finally {
       setLoading(false)
@@ -204,7 +211,24 @@ export default function ViewPots() {
         </div>
       </div>
 
-      {loading ? (
+      {error && !loading ? (
+        <div className="bg-yellow-500/10 backdrop-blur-xl border border-yellow-200/50 text-yellow-700 px-6 py-4 rounded-md shadow-2xl mb-6">
+          <div className="flex items-start space-x-3">
+            <AlertTriangle className="w-5 h-5 mt-0.5 flex-shrink-0" />
+            <div className="flex-1">
+              <p className="font-medium mb-2">Unable to Load Pots</p>
+              <p className="text-sm whitespace-pre-line">{error}</p>
+              <button
+                onClick={loadUserPots}
+                className="mt-4 bg-yellow-600 hover:bg-yellow-700 text-white font-medium py-2 px-4 rounded-md text-sm transition-all duration-200 shadow-lg flex items-center space-x-2"
+              >
+                <RefreshCw className="w-4 h-4" />
+                <span>Retry</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : loading ? (
         <div className="text-center py-8">
           <div className="animate-spin w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full mx-auto mb-4"></div>
           <p className="text-gray-600">Loading your pots...</p>

@@ -21,6 +21,7 @@ export default function Create() {
   const [farcasterApproved, setFarcasterApproved] = useState(false)
   const [farcasterApproving, setFarcasterApproving] = useState(false)
   const [farcasterCreating, setFarcasterCreating] = useState(false)
+  const [isPotIdPending, setIsPotIdPending] = useState(false)
   const usdcAmt = BigInt(Math.round(amount * 1_000_000)) // 6dp
 
   // Wagmi hooks for fallback
@@ -237,10 +238,68 @@ export default function Create() {
 
         console.log('✅ CreatePot transaction sent:', txHash)
         
-        // Show success - pot will appear in "View Pots" once mined
-        setPotId(txHash) // Use transaction hash as identifier
+        // Show initial success with txHash
+        setPotId(txHash)
         setShowSuccess(true)
-        setFarcasterCreating(false)
+        setIsPotIdPending(true)
+        
+        // Poll for transaction receipt to get real potId
+        console.log('⏳ Waiting for transaction to be mined...')
+        let attempts = 0
+        const maxAttempts = 20 // 20 seconds max
+        const pollInterval = setInterval(async () => {
+          attempts++
+          try {
+            const receipt = await provider.request({
+              method: 'eth_getTransactionReceipt',
+              params: [txHash]
+            })
+            
+            if (receipt && receipt.status === '0x1') {
+              // Transaction successful, extract potId
+              clearInterval(pollInterval)
+              console.log('✅ Transaction mined:', receipt)
+              
+              if (receipt.logs && receipt.logs.length > 0) {
+                // Find the PotCreated event (first indexed topic after event signature)
+                const potCreatedLog = receipt.logs.find((log: any) => 
+                  log.address.toLowerCase() === jackpotAddress.toLowerCase() &&
+                  log.topics.length >= 2
+                )
+                
+                if (potCreatedLog && potCreatedLog.topics[1]) {
+                  const realPotId = potCreatedLog.topics[1]
+                  console.log('🎯 Real pot ID extracted:', realPotId)
+                  setPotId(realPotId)
+                  setIsPotIdPending(false)
+                  
+                  // Initialize pot state
+                  initializePotState(realPotId, amount)
+                }
+              }
+              setFarcasterCreating(false)
+            } else if (receipt && receipt.status === '0x0') {
+              // Transaction failed
+              clearInterval(pollInterval)
+              console.error('❌ Transaction failed')
+              setErrorMessage('Transaction failed. Please try again.')
+              setShowSuccess(false)
+              setFarcasterCreating(false)
+            } else if (attempts >= maxAttempts) {
+              // Timeout - transaction still pending
+              clearInterval(pollInterval)
+              console.warn('⏱️ Transaction still pending after 20 seconds')
+              setIsPotIdPending(false)
+              setFarcasterCreating(false)
+            }
+          } catch (error) {
+            console.error('Error polling receipt:', error)
+            if (attempts >= maxAttempts) {
+              clearInterval(pollInterval)
+              setFarcasterCreating(false)
+            }
+          }
+        }, 1000) // Poll every second
         
       } catch (error: any) {
         console.error('CreatePot error:', error)
@@ -385,19 +444,37 @@ export default function Create() {
           </div>
           
           <div className="mt-4 pt-3 border-t border-gray-200">
-            <p className="text-xs text-gray-500 mb-2">
-              <span className="font-medium">Transaction Hash:</span>
-            </p>
-            <a 
-              href={`https://basescan.org/tx/${potId}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-xs text-blue-600 hover:text-blue-800 break-all underline"
-            >
-              {potId}
-            </a>
+            {isPotIdPending ? (
+              <>
+                <div className="flex items-center space-x-2 mb-3">
+                  <RefreshCw className="w-4 h-4 text-blue-600 animate-spin" />
+                  <p className="text-xs text-gray-600 font-medium">
+                    Waiting for confirmation...
+                  </p>
+                </div>
+                <p className="text-xs text-gray-500">
+                  Transaction is being mined. Your shareable link will be ready in a few seconds.
+                </p>
+              </>
+            ) : (
+              <>
+                <p className="text-xs text-gray-500 mb-2">
+                  <span className="font-medium">Pot ID:</span>
+                </p>
+                <p className="text-xs text-gray-700 break-all font-mono bg-gray-50 p-2 rounded">
+                  {potId}
+                </p>
+              </>
+            )}
             <p className="text-xs text-gray-500 mt-3">
-              Your pot will appear in "View Pots" once the transaction is confirmed (usually within seconds).
+              <a 
+                href={`https://basescan.org/tx/${potId.startsWith('0x') && potId.length === 66 ? potId : ''}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:text-blue-800 underline"
+              >
+                View on BaseScan →
+              </a>
             </p>
           </div>
         </div>

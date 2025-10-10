@@ -1,12 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { Alchemy, Network } from 'alchemy-sdk'
 import { createPublicClient, http, parseAbi, getAddress } from 'viem'
 import { base } from 'viem/chains'
 import { jackpotAddress } from '@/lib/contracts'
 
-// Create a public client for reading from the blockchain
+// Initialize Alchemy
+const alchemy = new Alchemy({
+  apiKey: process.env.ALCHEMY_API_KEY || process.env.NEXT_PUBLIC_ALCHEMY_API_KEY,
+  network: Network.BASE_MAINNET,
+})
+
+// Fallback public client (for read operations not in Alchemy SDK)
 const publicClient = createPublicClient({
   chain: base,
-  transport: http()
+  transport: http(`https://base-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY || process.env.NEXT_PUBLIC_ALCHEMY_API_KEY}`, {
+    retryCount: 3,
+    retryDelay: 1000,
+    timeout: 30000,
+  })
 })
 
 // Simplified ABI for the functions we need
@@ -44,23 +55,47 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const creatorAddress = searchParams.get('creator')
     
-    // Get all PotCreated events
-    const potCreatedLogs = await publicClient.getLogs({
+    // Get current block number using Alchemy
+    const latestBlock = await alchemy.core.getBlockNumber()
+    
+    // Only scan last 1 million blocks (roughly 3-4 weeks on Base)
+    // Base has ~2 second block time, so 1M blocks ≈ 23 days
+    const fromBlock = latestBlock > 1_000_000 ? latestBlock - 1_000_000 : 0
+    
+    console.log(`[Alchemy] Fetching PotCreated events from block ${fromBlock} to ${latestBlock}`)
+    
+    // PotCreated event signature: keccak256("PotCreated(bytes32,address,address,uint256,uint128)")
+    const potCreatedTopic = '0xedbc7e1f4902e524d9cab0ffcc13f86772988eae02f52b3a34acaa7681b58fc4'
+    
+    // Get all PotCreated events using Alchemy (much faster and more reliable)
+    const logsResponse = await alchemy.core.getLogs({
       address: jackpotAddress,
-      event: {
-        type: 'event',
-        name: 'PotCreated',
-        inputs: [
-          { name: 'id', type: 'bytes32', indexed: true },
-          { name: 'creator', type: 'address', indexed: true },
-          { name: 'token', type: 'address' },
-          { name: 'amount', type: 'uint256' },
-          { name: 'winners', type: 'uint32' }
-        ]
-      },
-      fromBlock: 'earliest',
+      topics: [potCreatedTopic],
+      fromBlock: `0x${fromBlock.toString(16)}`,
       toBlock: 'latest'
     })
+    
+    console.log(`[Alchemy] Found ${logsResponse.length} PotCreated events`)
+    
+    // Decode logs using viem
+    const potCreatedLogs = logsResponse.map(log => {
+      try {
+        return {
+          args: {
+            id: log.topics[1] as `0x${string}`,
+            creator: `0x${log.topics[2]?.slice(26)}` as `0x${string}`, // Remove padding
+            token: log.data ? `0x${log.data.slice(26, 66)}` as `0x${string}` : undefined,
+            amount: log.data ? BigInt(`0x${log.data.slice(66, 130)}`) : BigInt(0),
+            standardClaim: log.data ? BigInt(`0x${log.data.slice(130, 162)}`) : BigInt(0)
+          },
+          blockNumber: BigInt(log.blockNumber || 0),
+          transactionHash: log.transactionHash
+        }
+      } catch (error) {
+        console.error('Error decoding log:', error)
+        return null
+      }
+    }).filter(log => log !== null)
 
     // Filter by creator if specified
     const filteredLogs = creatorAddress 
@@ -214,12 +249,32 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     console.error('Blockchain data fetch error:', error)
+    
+    // Check if it's an RPC error
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    const isRpcError = errorMessage.includes('503') || 
+                       errorMessage.includes('backend') || 
+                       errorMessage.includes('HTTP request failed')
+    
     return NextResponse.json(
       { 
-        error: 'Failed to fetch pot data from blockchain',
-        details: error instanceof Error ? error.message : 'Unknown error'
+        error: isRpcError 
+          ? 'Base RPC is temporarily unavailable. Please try again in a moment.' 
+          : 'Failed to fetch pot data from blockchain',
+        details: errorMessage,
+        suggestion: isRpcError 
+          ? 'The Base network RPC is experiencing high traffic. Try refreshing in 10-30 seconds.' 
+          : undefined,
+        pots: [], // Return empty array so UI doesn't break
+        stats: {
+          totalPots: 0,
+          activePots: 0,
+          totalVolume: 0,
+          totalClaims: 0
+        },
+        success: false
       },
-      { status: 500 }
+      { status: isRpcError ? 503 : 500 }
     )
   }
 }
