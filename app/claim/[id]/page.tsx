@@ -7,7 +7,9 @@ import { injected } from 'wagmi/connectors'
 import { jackpotAbi, jackpotAddress } from '@/lib/contracts'
 import { useMiniKitWallet } from '@/hooks/useMiniKitWallet'
 import { sdk } from '@farcaster/miniapp-sdk'
-import { pad } from 'viem'
+import { pad, createWalletClient, custom, PublicClient, createPublicClient, http } from 'viem'
+import { base } from 'viem/chains'
+import { miniKitWallet } from '@/lib/minikit-wallet'
 import { Coins, Target, AlertTriangle, CheckCircle, Wifi, X, XCircle } from 'lucide-react'
 import Link from 'next/link'
 
@@ -125,9 +127,20 @@ export default function Claim() {
   const { writeContract, data: txHash, error: writeError } = useWriteContract()
   const { isLoading: isClaiming, isSuccess: txSuccess, error: txError } = useWaitForTransactionReceipt({ hash: txHash })
   
+  // For MiniKit transactions
+  const [miniKitTxHash, setMiniKitTxHash] = useState<`0x${string}` | null>(null)
+  const { isLoading: isMiniKitTxPending, isSuccess: miniKitTxSuccess, error: miniKitTxError } = useWaitForTransactionReceipt({ 
+    hash: miniKitTxHash || undefined 
+  })
+  
+  // Unified transaction status
+  const isTransactionPending = isFarcaster ? isMiniKitTxPending : isClaiming
+  const transactionSuccess = isFarcaster ? miniKitTxSuccess : txSuccess
+  const transactionError = isFarcaster ? miniKitTxError : txError
+  
   // Handle transaction completion
   useEffect(() => {
-    if (txSuccess) {
+    if (transactionSuccess) {
       setErrorMessage('')
       setBusy(false)
       
@@ -136,15 +149,15 @@ export default function Claim() {
         setShowJackpotModal(true)
       }
       
-      console.log('Transaction successful!', txHash)
+      console.log('Transaction successful!', isFarcaster ? miniKitTxHash : txHash)
       console.log('Jackpot info:', jackpotInfo)
     }
-    if (txError || writeError) {
-      setErrorMessage(txError?.message || writeError?.message || 'Transaction failed')
+    if (transactionError || writeError) {
+      setErrorMessage(transactionError?.message || writeError?.message || 'Transaction failed')
       setBusy(false)
-      console.error('Transaction error:', txError || writeError)
+      console.error('Transaction error:', transactionError || writeError)
     }
-  }, [txSuccess, txError, writeError, txHash, jackpotInfo])
+  }, [transactionSuccess, transactionError, writeError, txHash, miniKitTxHash, jackpotInfo, isFarcaster])
 
   async function claim() {
     setBusy(true)
@@ -193,14 +206,45 @@ export default function Claim() {
         jackpotAddress
       })
       
-      // writeContract is async but doesn't return a promise
-      // The transaction state is handled by wagmi hooks
-      writeContract({
-        abi: jackpotAbi, 
-        address: jackpotAddress, 
-        functionName: 'claim',
-        args: [potIdBytes32, BigInt(deadline), castIdBytes32, signature as `0x${string}`]
-      })
+      if (isFarcaster) {
+        // Use MiniKit provider directly for Farcaster transactions
+        try {
+          const provider = miniKitWallet.getProvider()
+          if (!provider) {
+            throw new Error('MiniKit provider not available')
+          }
+          
+          // Create wallet client with MiniKit provider
+          const walletClient = createWalletClient({
+            account: address as `0x${string}`,
+            chain: base,
+            transport: custom(provider)
+          })
+          
+          // Send transaction using viem
+          const hash = await walletClient.writeContract({
+            abi: jackpotAbi,
+            address: jackpotAddress,
+            functionName: 'claim',
+            args: [potIdBytes32, BigInt(deadline), castIdBytes32, signature as `0x${string}`]
+          })
+          
+          console.log('MiniKit transaction submitted:', hash)
+          setMiniKitTxHash(hash)
+        } catch (error: any) {
+          console.error('MiniKit transaction error:', error)
+          setErrorMessage(error.message || 'Transaction failed')
+          setBusy(false)
+        }
+      } else {
+        // Use wagmi for non-Farcaster transactions
+        writeContract({
+          abi: jackpotAbi, 
+          address: jackpotAddress, 
+          functionName: 'claim',
+          args: [potIdBytes32, BigInt(deadline), castIdBytes32, signature as `0x${string}`]
+        })
+      }
       
       // Don't set busy to false immediately - let the transaction complete
       // The busy state will be managed by the transaction status
@@ -426,11 +470,11 @@ export default function Claim() {
 
               <div>
                 <button
-                  disabled={busy || isClaiming || !address || !castId}
+                  disabled={busy || isTransactionPending || !address || !castId}
                   onClick={claim}
                   className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 disabled:from-gray-300 disabled:to-gray-400 text-white font-bold py-4 px-6 rounded-md text-base transition-all duration-200 shadow-xl transform active:scale-95"
                 >
-                  {isClaiming ? 'Transaction Pending...' : 
+                  {isTransactionPending ? 'Transaction Pending...' : 
                    busy ? 'Getting Permit...' : 
                    !castId ? 'Detecting Cast...' : 
                    'Claim PotFi'}
@@ -482,7 +526,7 @@ export default function Claim() {
       )}
 
       {/* Standard Success Info */}
-      {txSuccess && !jackpotInfo?.isJackpot && jackpotInfo && (
+      {transactionSuccess && !jackpotInfo?.isJackpot && jackpotInfo && (
         <div className="fixed bottom-4 right-4 bg-white/90 backdrop-blur-xl rounded-md p-4 shadow-2xl border border-white/20 max-w-sm">
           <div className="flex items-center space-x-3">
             <CheckCircle className="w-6 h-6 text-blue-600" />
