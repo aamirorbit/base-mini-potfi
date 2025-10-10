@@ -8,7 +8,8 @@ import { jackpotAbi, jackpotAddress } from '@/lib/contracts'
 import { useMiniKitWallet } from '@/hooks/useMiniKitWallet'
 import { sdk } from '@farcaster/miniapp-sdk'
 import { pad } from 'viem'
-import { Coins, Target, AlertTriangle, CheckCircle, Wifi, X } from 'lucide-react'
+import { Coins, Target, AlertTriangle, CheckCircle, Wifi, X, XCircle } from 'lucide-react'
+import Link from 'next/link'
 
 export default function Claim() {
   const { id } = useParams() as { id: `0x${string}` }
@@ -20,6 +21,8 @@ export default function Claim() {
   const [errorMessage, setErrorMessage] = useState<string>('')
   const [jackpotInfo, setJackpotInfo] = useState<any>(null)
   const [showJackpotModal, setShowJackpotModal] = useState(false)
+  const [potDetails, setPotDetails] = useState<any>(null)
+  const [loadingPot, setLoadingPot] = useState(true)
   
   // Wagmi hooks for fallback
   const { address: wagmiAddress, isConnected: wagmiConnected } = useAccount()
@@ -82,7 +85,35 @@ export default function Claim() {
       }
       getCastContext()
     }
-  }, [])
+
+    // Fetch pot details to check if it's active
+    const fetchPotDetails = async () => {
+      try {
+        setLoadingPot(true)
+        const response = await fetch('/api/pots', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ potId: id })
+        })
+        
+        const data = await response.json()
+        
+        if (response.ok && data.success) {
+          setPotDetails(data)
+          console.log('Pot details:', data)
+        } else {
+          setErrorMessage('Failed to load pot details')
+        }
+      } catch (error) {
+        console.error('Error fetching pot details:', error)
+        setErrorMessage('Failed to load pot details')
+      } finally {
+        setLoadingPot(false)
+      }
+    }
+    
+    fetchPotDetails()
+  }, [id])
 
   // Use MiniKit in Farcaster, fallback to wagmi elsewhere
   const address = isFarcaster ? miniKitAddress : wagmiAddress
@@ -238,7 +269,45 @@ export default function Claim() {
             </div>
           )}
 
-          {!isConnected ? (
+          {loadingPot ? (
+            <div className="bg-white/70 backdrop-blur-xl rounded-md p-8 shadow-2xl border border-white/20">
+              <p className="text-gray-700 text-center">Loading pot details...</p>
+            </div>
+          ) : potDetails && !potDetails.active ? (
+            <div className="bg-yellow-500/10 backdrop-blur-xl border border-yellow-200/50 rounded-md p-8 shadow-2xl">
+              <div className="text-center">
+                <XCircle className="w-16 h-16 text-yellow-700 mx-auto mb-4" />
+                <h2 className="text-2xl font-bold text-yellow-700 mb-2">Pot is Inactive</h2>
+                <p className="text-yellow-600 mb-4">
+                  {potDetails.remainingAmount === 0 
+                    ? 'This pot has been fully claimed!' 
+                    : 'This pot has been closed by the creator.'}
+                </p>
+                <div className="bg-white/50 backdrop-blur-xl rounded-md p-4 mb-6">
+                  <div className="space-y-2 text-sm text-gray-700">
+                    <div className="flex justify-between">
+                      <span className="font-medium">Total Pot:</span>
+                      <span className="font-mono">{potDetails.amount} USDC</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="font-medium">Claimed:</span>
+                      <span className="font-mono">{potDetails.claimedAmount} USDC</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="font-medium">Claims Made:</span>
+                      <span className="font-mono">{potDetails.claimed}</span>
+                    </div>
+                  </div>
+                </div>
+                <Link 
+                  href="/"
+                  className="inline-block w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold py-4 px-6 rounded-md text-base transition-all duration-200 shadow-xl transform active:scale-95"
+                >
+                  Return Home
+                </Link>
+              </div>
+            </div>
+          ) : !isConnected ? (
             <div className="bg-white/70 backdrop-blur-xl rounded-md p-8 shadow-2xl border border-white/20">
               <p className="text-gray-700 mb-4 text-center">
                 Connect your wallet to claim your share of this PotFi!
@@ -274,6 +343,24 @@ export default function Claim() {
               </div>
 
               <div className="bg-white/70 backdrop-blur-xl rounded-md p-8 shadow-2xl border border-white/20 mb-8">
+                {potDetails && (
+                  <div className="bg-blue-500/10 backdrop-blur-xl border border-blue-200/50 rounded-md p-4 mb-6">
+                    <div className="space-y-2 text-sm text-blue-700">
+                      <div className="flex justify-between">
+                        <span className="font-medium">Standard Claim:</span>
+                        <span className="font-mono font-bold">{potDetails.standardClaim} USDC</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="font-medium">Remaining:</span>
+                        <span className="font-mono">{potDetails.remainingAmount} USDC</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="font-medium">Jackpot Chance:</span>
+                        <span className="font-mono">{potDetails.jackpotProbability}%</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
                 <p className="text-gray-700 mb-4 text-center">
                   Complete the required actions to claim your share of this PotFi!
                 </p>

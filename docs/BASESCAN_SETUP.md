@@ -1,5 +1,18 @@
 # BaseScan API Setup for PotFi
 
+## ⚠️ IMPORTANT: Etherscan API for Base
+
+**Good news!** Etherscan API v2 works across **all chains** including Base!
+
+The same Etherscan API key works for:
+- ✅ Ethereum mainnet (`api.etherscan.io`)
+- ✅ Base network (`api.basescan.org`)
+- ✅ Optimism, Arbitrum, Polygon, etc.
+
+**You can use either:**
+- Your existing Etherscan API key, OR
+- Create a new one specifically for Base
+
 ## Why BaseScan API is Better
 
 Instead of scanning blockchain logs directly (slow, expensive), we use BaseScan's pre-indexed data:
@@ -21,9 +34,14 @@ Instead of scanning blockchain logs directly (slow, expensive), we use BaseScan'
 
 ## Setup Steps
 
-### 1. Get BaseScan API Key (FREE)
+### 1. Get Etherscan API Key (FREE)
 
-1. Go to https://basescan.org/myapikey
+**Option A: Use existing Etherscan key**
+- If you already have an Etherscan API key, use it!
+- Works on Base via `api.basescan.org`
+
+**Option B: Create new key**
+1. Go to https://etherscan.io/myapikey (or https://basescan.org/myapikey)
 2. Sign up (free account)
 3. Create a new API key
 4. Copy your API key
@@ -35,10 +53,16 @@ Instead of scanning blockchain logs directly (slow, expensive), we use BaseScan'
 
 ### 2. Add to Environment
 
-Add to your `.env.local`:
+Add to your `.env.local` (use either variable name):
 
 ```bash
-BASESCAN_API_KEY=your_basescan_api_key_here
+# Option 1: Use ETHERSCAN_API_KEY (if you have one)
+ETHERSCAN_API_KEY=your_etherscan_api_key_here
+
+# Option 2: Use BASESCAN_API_KEY (Base-specific)
+BASESCAN_API_KEY=your_api_key_here
+
+# The app will use whichever is available
 ```
 
 ### 3. Restart Server

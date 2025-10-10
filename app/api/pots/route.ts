@@ -3,8 +3,11 @@ import { createPublicClient, http, parseAbi, getAddress, decodeEventLog } from '
 import { base } from 'viem/chains'
 import { jackpotAddress } from '@/lib/contracts'
 
-// BaseScan API key (free tier: 5 calls/second, 100k calls/day)
-const basescanApiKey = process.env.BASESCAN_API_KEY || process.env.NEXT_PUBLIC_BASESCAN_API_KEY
+// Etherscan API key (works for all chains including Base via BaseScan)
+const basescanApiKey = process.env.BASESCAN_API_KEY || 
+                       process.env.ETHERSCAN_API_KEY || 
+                       process.env.NEXT_PUBLIC_BASESCAN_API_KEY ||
+                       process.env.NEXT_PUBLIC_ETHERSCAN_API_KEY
 
 // Get Alchemy API key for contract reads (not for logs)
 const alchemyApiKey = process.env.ALCHEMY_API_KEY || process.env.NEXT_PUBLIC_ALCHEMY_API_KEY
@@ -23,7 +26,7 @@ const publicClient = createPublicClient({
   })
 })
 
-console.log(`📊 Using BaseScan API: ${basescanApiKey ? '✅ Configured' : '⚠️  Not configured (limited to 1 call/5s)'}`)
+console.log(`📊 Using BaseScan API: ${basescanApiKey ? '✅ Configured (Etherscan API v2)' : '⚠️  Not configured (will use blockchain fallback)'}`)
 console.log(`🔗 Using RPC for reads: ${alchemyApiKey ? 'Alchemy' : 'Public Base RPC'}`)
 
 // Simplified ABI for the functions we need
@@ -88,29 +91,7 @@ export async function GET(request: NextRequest) {
       basescanUrl.searchParams.set('apikey', basescanApiKey)
     }
     
-    console.log('🔍 Fetching from BaseScan API...')
-    const response = await fetch(basescanUrl.toString())
-    const data = await response.json()
-    
-    if (data.status !== '1') {
-      // BaseScan error or no results
-      if (data.message === 'No records found') {
-        console.log('ℹ️  No pots found')
-        return NextResponse.json({
-          pots: [],
-          stats: {
-            totalPots: 0,
-            activePots: 0,
-            totalVolume: 0,
-            totalClaims: 0
-          },
-          success: true
-        })
-      }
-      throw new Error(data.message || 'BaseScan API error')
-    }
-    
-    // Parse logs from BaseScan response
+    // Define log type
     type ParsedLog = {
       args: {
         id: `0x${string}`
@@ -123,26 +104,93 @@ export async function GET(request: NextRequest) {
       transactionHash: string
     }
     
-    const potCreatedLogs = (data.result || []).map((log: any) => {
-      try {
-        return {
-          args: {
-            id: log.topics[1] as `0x${string}`,
-            creator: `0x${log.topics[2]?.slice(26)}` as `0x${string}`,
-            token: log.data ? `0x${log.data.slice(26, 66)}` as `0x${string}` : undefined,
-            amount: log.data ? BigInt(`0x${log.data.slice(2, 66)}`) : BigInt(0),
-            standardClaim: log.data ? BigInt(`0x${log.data.slice(66, 98)}`) : BigInt(0)
-          },
-          blockNumber: BigInt(parseInt(log.blockNumber, 16)),
-          transactionHash: log.transactionHash
-        }
-      } catch (error) {
-        console.error('Error parsing log:', error)
-        return null
-      }
-    }).filter((log: ParsedLog | null): log is ParsedLog => log !== null)
+    // Try BaseScan API first
+    let potCreatedLogs: ParsedLog[] = []
+    let useBaseScan = true
     
-    console.log(`✅ Found ${potCreatedLogs.length} PotCreated events from BaseScan`)
+    try {
+      console.log('🔍 Fetching from BaseScan API...')
+      const response = await fetch(basescanUrl.toString())
+      const data = await response.json()
+      
+      console.log('BaseScan API response:', {
+        status: data.status,
+        message: data.message,
+        result: data.result ? `${data.result.length} results` : 'no result'
+      })
+      
+      if (data.status === '1' && data.result) {
+        // Parse logs from BaseScan response
+        
+        potCreatedLogs = (data.result || []).map((log: any) => {
+          try {
+            return {
+              args: {
+                id: log.topics[1] as `0x${string}`,
+                creator: `0x${log.topics[2]?.slice(26)}` as `0x${string}`,
+                token: log.data ? `0x${log.data.slice(26, 66)}` as `0x${string}` : undefined,
+                amount: log.data ? BigInt(`0x${log.data.slice(2, 66)}`) : BigInt(0),
+                standardClaim: log.data ? BigInt(`0x${log.data.slice(66, 98)}`) : BigInt(0)
+              },
+              blockNumber: BigInt(parseInt(log.blockNumber, 16)),
+              transactionHash: log.transactionHash
+            }
+          } catch (error) {
+            console.error('Error parsing log:', error)
+            return null
+          }
+        }).filter((log: any): log is any => log !== null)
+        
+        console.log(`✅ Found ${potCreatedLogs.length} PotCreated events from BaseScan`)
+      } else if (data.message === 'No records found') {
+        console.log('ℹ️  No pots found via BaseScan')
+        return NextResponse.json({
+          pots: [],
+          stats: {
+            totalPots: 0,
+            activePots: 0,
+            totalVolume: 0,
+            totalClaims: 0
+          },
+          success: true
+        })
+      } else {
+        // BaseScan API error - fallback to direct blockchain scan
+        console.warn('⚠️  BaseScan API error, falling back to direct blockchain scan:', data.message)
+        useBaseScan = false
+      }
+    } catch (error) {
+      console.error('❌ BaseScan API request failed, falling back to direct blockchain scan:', error)
+      useBaseScan = false
+    }
+    
+    // Fallback: Direct blockchain scanning with limited range
+    if (!useBaseScan) {
+      console.log('🔗 Using direct blockchain scan (last 500k blocks)...')
+      const latestBlock = await publicClient.getBlockNumber()
+      const fromBlock = latestBlock > BigInt(500_000) ? latestBlock - BigInt(500_000) : BigInt(0)
+      
+      const rawLogs = await publicClient.getLogs({
+        address: jackpotAddress,
+        event: {
+          type: 'event',
+          name: 'PotCreated',
+          inputs: [
+            { name: 'id', type: 'bytes32', indexed: true },
+            { name: 'creator', type: 'address', indexed: true },
+            { name: 'token', type: 'address' },
+            { name: 'amount', type: 'uint256' },
+            { name: 'standardClaim', type: 'uint128' }
+          ]
+        },
+        args: creatorAddress ? { creator: creatorAddress as `0x${string}` } : undefined,
+        fromBlock,
+        toBlock: 'latest'
+      })
+      
+      potCreatedLogs = rawLogs as any[]
+      console.log(`✅ Found ${potCreatedLogs.length} PotCreated events from blockchain (last ${Number(latestBlock - fromBlock)} blocks)`)
+    }
 
     // Filter by creator if specified
     const filteredLogs = creatorAddress 
