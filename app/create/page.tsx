@@ -2,10 +2,11 @@
 
 import { useState, useEffect } from 'react'
 import { useWriteContract, useWaitForTransactionReceipt, useAccount } from 'wagmi'
-import { erc20Abi, keccak256, encodePacked, decodeEventLog } from 'viem'
+import { erc20Abi, keccak256, encodePacked, decodeEventLog, encodeFunctionData } from 'viem'
 import { jackpotAbi, jackpotAddress, USDC, ONE_USDC } from '@/lib/contracts'
 import { getAppDomain } from '@/lib/utils'
 import { useMiniKitWallet } from '@/hooks/useMiniKitWallet'
+import { miniKitWallet } from '@/lib/minikit-wallet'
 import { Coins, AlertTriangle, CheckCircle, Copy, Share2, ArrowLeft, RefreshCw } from 'lucide-react'
 
 export default function Create() {
@@ -17,6 +18,9 @@ export default function Create() {
   const [errorMessage, setErrorMessage] = useState<string>('')
   const [isFarcaster, setIsFarcaster] = useState(false)
   const [mounted, setMounted] = useState(false)
+  const [farcasterApproved, setFarcasterApproved] = useState(false)
+  const [farcasterApproving, setFarcasterApproving] = useState(false)
+  const [farcasterCreating, setFarcasterCreating] = useState(false)
   const usdcAmt = BigInt(Math.round(amount * 1_000_000)) // 6dp
 
   // Wagmi hooks for fallback
@@ -139,23 +143,119 @@ export default function Create() {
 
   async function approve() {
     clearError()
-    approveUSDC({ 
-      abi: erc20Abi, 
-      address: USDC, 
-      functionName: 'approve', 
-      args: [jackpotAddress, usdcAmt] 
-    })
+    
+    console.log('Approve called - isFarcaster:', isFarcaster, 'mounted:', mounted, 'address:', address)
+    
+    // Use MiniKit provider in Farcaster, wagmi elsewhere
+    if (isFarcaster && mounted) {
+      setFarcasterApproving(true)
+      try {
+        const provider = miniKitWallet.getProvider()
+        console.log('MiniKit provider:', provider ? 'exists' : 'null')
+        
+        if (!provider) {
+          setErrorMessage('Wallet not connected properly')
+          setFarcasterApproving(false)
+          return
+        }
+
+        // Encode the approve function call
+        const data = encodeFunctionData({
+          abi: erc20Abi,
+          functionName: 'approve',
+          args: [jackpotAddress, usdcAmt]
+        })
+
+        console.log('Sending approve transaction via MiniKit...')
+        console.log('Transaction params:', {
+          from: address,
+          to: USDC,
+          data: data.substring(0, 20) + '...'
+        })
+        
+        const txHash = await provider.request({
+          method: 'eth_sendTransaction',
+          params: [{
+            from: address,
+            to: USDC,
+            data: data,
+          }]
+        })
+
+        console.log('✅ Approve transaction sent:', txHash)
+        // Mark as approved after transaction is sent
+        setFarcasterApproved(true)
+        setFarcasterApproving(false)
+        
+      } catch (error: any) {
+        console.error('❌ Approve error:', error)
+        setErrorMessage(error.message || 'Failed to approve USDC')
+        setFarcasterApproving(false)
+      }
+    } else {
+      console.log('Using wagmi for approve')
+      // Use wagmi for non-Farcaster environments
+      approveUSDC({ 
+        abi: erc20Abi, 
+        address: USDC, 
+        functionName: 'approve', 
+        args: [jackpotAddress, usdcAmt] 
+      })
+    }
   }
   
   async function create() {
     clearError()
-    // createPot(address token, uint128 amount, uint128 standardClaim, uint32 timeoutSecs)
-    createPotContract({
-      abi: jackpotAbi, 
-      address: jackpotAddress, 
-      functionName: 'createPot',
-      args: [USDC, usdcAmt, ONE_USDC, timeout]
-    })
+    
+    // Use MiniKit provider in Farcaster, wagmi elsewhere
+    if (isFarcaster && mounted) {
+      setFarcasterCreating(true)
+      try {
+        const provider = miniKitWallet.getProvider()
+        if (!provider) {
+          setErrorMessage('Wallet not connected properly')
+          setFarcasterCreating(false)
+          return
+        }
+
+        // Encode the createPot function call
+        const data = encodeFunctionData({
+          abi: jackpotAbi,
+          functionName: 'createPot',
+          args: [USDC, usdcAmt, ONE_USDC, timeout]
+        })
+
+        console.log('Sending createPot transaction via MiniKit...')
+        const txHash = await provider.request({
+          method: 'eth_sendTransaction',
+          params: [{
+            from: address,
+            to: jackpotAddress,
+            data: data,
+          }]
+        })
+
+        console.log('CreatePot transaction sent:', txHash)
+        // Calculate potId and show success
+        const calculatedPotId = keccak256(encodePacked(['address', 'bytes32', 'uint256'], [address as `0x${string}`, postId as `0x${string}`, BigInt(Date.now())]))
+        setPotId(calculatedPotId)
+        setShowSuccess(true)
+        setFarcasterCreating(false)
+        
+      } catch (error: any) {
+        console.error('CreatePot error:', error)
+        setErrorMessage(error.message || 'Failed to create pot')
+        setFarcasterCreating(false)
+      }
+    } else {
+      // Use wagmi for non-Farcaster environments
+      createPotContract({
+        abi: jackpotAbi, 
+        address: jackpotAddress, 
+        functionName: 'createPot',
+        args: [USDC, usdcAmt, ONE_USDC, timeout]
+      })
+    }
   }
 
   // Retry function for failed pot creation
@@ -451,23 +551,34 @@ export default function Create() {
           <div className="space-y-3">
             <button
               onClick={approve}
-              disabled={isApproving || amount < 1 || !postId || (isFarcaster && !isOnBase)}
+              disabled={
+                (isFarcaster ? farcasterApproving : isApproving) || 
+                amount < 1 || 
+                !postId || 
+                (isFarcaster && !isOnBase)
+              }
               className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 disabled:from-gray-300 disabled:to-gray-400 disabled:text-gray-500 text-white font-semibold py-4 px-6 rounded-md text-base transition-all duration-200 shadow-lg transform active:scale-95"
             >
-              {isApproving ? 'Approving...' : 'Approve USDC'}
+              {(isFarcaster ? farcasterApproving : isApproving) ? 'Approving...' : 'Approve USDC'}
             </button>
             
             <button
               onClick={create}
-              disabled={isCreating || !approveSuccess || amount < 1 || !postId || (isFarcaster && !isOnBase)}
+              disabled={
+                (isFarcaster ? farcasterCreating : isCreating) || 
+                (isFarcaster ? !farcasterApproved : !approveSuccess) || 
+                amount < 1 || 
+                !postId || 
+                (isFarcaster && !isOnBase)
+              }
               className="w-full bg-yellow-600 backdrop-blur-sm hover:bg-yellow-700 disabled:bg-gray-300 disabled:text-gray-500 text-white font-semibold py-4 px-6 rounded-md text-base transition-all duration-200 shadow-lg transform active:scale-95"
             >
-              {isCreating ? 'Creating...' : 'Create Pot'}
+              {(isFarcaster ? farcasterCreating : isCreating) ? 'Creating...' : 'Create Pot'}
             </button>
           </div>
 
           {/* Success Message */}
-          {approveSuccess && (
+          {((isFarcaster && farcasterApproved) || approveSuccess) && (
             <div className="mt-6 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-md text-center">
               <div className="flex items-center justify-center">
                 <span className="mr-2">✅</span>
