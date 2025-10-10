@@ -11,46 +11,34 @@ const inter = Inter({ subsets: ['latin'] })
 const appDomain = getAppDomain()
 
 export const metadata: Metadata = {
-  title: 'JackPot - Decentralized Lottery',
-  description: 'A decentralized lottery system built on Base',
+  title: 'PotFi - Decentralized Prize Pots',
+  description: 'Create and claim prize pots on Base. Instant claims with jackpot chances!',
   icons: {
     icon: '/icon.png',
   },
   openGraph: {
-    title: 'JackPot - Decentralized Lottery',
-    description: 'A decentralized lottery system built on Base',
+    title: 'PotFi - Decentralized Prize Pots',
+    description: 'Create and claim prize pots on Base. Instant claims with jackpot chances!',
     images: ['/og.png'],
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'PotFi - Decentralized Prize Pots',
+    description: 'Create and claim prize pots on Base',
+    images: [`${appDomain}/og.png`],
   },
   other: {
-    'fc:miniapp': JSON.stringify({
-      version: "1",
-      imageUrl: `${appDomain}/og.png`,
-      button: {
-        title: "🎰 Play JackPot",
-        action: {
-          type: "launch_miniapp",
-          name: "JackPot",
-          url: appDomain,
-          splashImageUrl: `${appDomain}/icon.png`,
-          splashBackgroundColor: "#667eea"
-        }
-      }
-    }),
-    // Backward compatibility
-    'fc:frame': JSON.stringify({
-      version: "1",
-      imageUrl: `${appDomain}/og.png`,
-      button: {
-        title: "🎰 Play JackPot",
-        action: {
-          type: "launch_frame",
-          name: "JackPot",
-          url: appDomain,
-          splashImageUrl: `${appDomain}/icon.png`,
-          splashBackgroundColor: "#667eea"
-        }
-      }
-    })
+    // Farcaster Frame v2 tags (proper format, not JSON)
+    'fc:frame': 'vNext',
+    'fc:frame:image': `${appDomain}/og.png`,
+    'fc:frame:image:aspect_ratio': '1.91:1',
+    'fc:frame:button:1': '✨ Create Pot',
+    'fc:frame:button:1:action': 'link',
+    'fc:frame:button:1:target': `${appDomain}/create`,
+    'fc:frame:button:2': '👀 View Pots',
+    'fc:frame:button:2:action': 'link',
+    'fc:frame:button:2:target': `${appDomain}/view`,
   }
 }
 
