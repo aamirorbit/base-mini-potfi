@@ -239,40 +239,42 @@ export async function POST(request: NextRequest) {
     // Get detailed pot information
     const potData = await publicClient.readContract({
       address: jackpotAddress,
-      abi: jackpotAbi,
+      abi: potfiAbi,
       functionName: 'pots',
       args: [potId as `0x${string}`]
-    }) as [string, string, bigint, bigint, number, number, number, string, boolean]
+    }) as [string, string, bigint, bigint, bigint, number, number, bigint, boolean]
 
-    const [creator, token, amount, createdAt, winners, claimed, timeoutSecs, seed, active] = potData
+    const [creator, token, amount, claimedAmount, createdAt, claimed, timeoutSecs, standardClaim, active] = potData
 
-    // Get all allocations for this pot
-    const allocations: number[] = []
-    for (let i = 0; i < winners; i++) {
-      try {
-        const allocation = await publicClient.readContract({
-          address: jackpotAddress,
-          abi: jackpotAbi,
-          functionName: 'getAllocation',
-          args: [potId as `0x${string}`, i]
-        }) as bigint
-        allocations.push(Number(allocation) / 1e6)
-      } catch {
-        allocations.push(0)
-      }
-    }
+    // Get remaining funds
+    const remainingFunds = await publicClient.readContract({
+      address: jackpotAddress,
+      abi: potfiAbi,
+      functionName: 'getRemainingFunds',
+      args: [potId as `0x${string}`]
+    }) as bigint
+
+    // Get jackpot probability
+    const jackpotProbability = await publicClient.readContract({
+      address: jackpotAddress,
+      abi: potfiAbi,
+      functionName: 'getJackpotProbability',
+      args: [potId as `0x${string}`]
+    }) as bigint
 
     return NextResponse.json({
       potId,
       creator,
       token,
       amount: Number(amount) / 1e6,
+      claimedAmount: Number(claimedAmount) / 1e6,
+      remainingAmount: Number(remainingFunds) / 1e6,
+      standardClaim: Number(standardClaim) / 1e6,
       createdAt: Number(createdAt) * 1000,
-      winners,
       claimed,
       timeoutSecs,
       active,
-      allocations,
+      jackpotProbability: Number(jackpotProbability) / 100, // Convert from basis points to percentage
       success: true
     })
 
