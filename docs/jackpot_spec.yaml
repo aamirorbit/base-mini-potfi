@@ -1,0 +1,500 @@
+version: "1.0.0"
+project:
+  name: "JackPot"
+  tagline: "Social tips with a jackpot twist."
+  deployment_target: "Base mainnet"
+  app_domain: "<SET_BEFORE_DEPLOY>"   # e.g., https://jackpot.yourdomain.com
+  fee_treasury: "0x77757E4Bc90b20AD1751fEd298159dC01d78Fda3"
+  architecture: "Pure Farcaster Frame Implementation"
+  defaults:
+    pot_timeout_secs: 43200           # 12h
+    cooldown_secs: 30                 # anti-bot global cooldown
+    token_default: "USDC on Base"
+    usdc_address_base: "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913"
+    min_per_winner_usdc_6dp: 1000000  # 1 USDC in 6 decimals
+
+glossary:
+  pot: "A funded jackpot instance with N randomized allocations."
+  winner: "A successful claimer address for a specific pot."
+  allocation: "The per-winner randomized share (sum across N equals total pot)."
+  gate: "Engagement requirement: Like + Comment + Recast on the originating cast."
+  permit: "Backend-signed message authorizing a given claimer for a given pot."
+  frame: "Farcaster frame interface for native JackPot interaction."
+  strap_on: "Ability to add JackPot capability to any Farcaster post via frames."
+
+product_specs:
+  goals:
+    - "Allow a creator to deposit USDC and set up to N winners with random splits."
+    - "Enable first-come-first-serve claims, each address exactly once per pot."
+    - "Enforce engagement gating (Like + Comment + Recast) before claim."
+    - "Take a 2.5% fee from each claimer's allocation (creator pays zero spread)."
+    - "Return all unclaimed funds to creator after 12 hours."
+    - "Provide native Farcaster frame interface for 'strap on' functionality."
+    - "Enable creators to add JackPot capability to any Farcaster post."
+    - "Keep users within Farcaster ecosystem for all interactions."
+  non_goals:
+    - "Provable VRF randomness (planned v1)."
+    - "Group-thread embedding (v0 focuses on public feed URL)."
+    - "Multi-token UI (contract is parametric; UI defaults to USDC)."
+    - "Separate mini-app interface (frames provide native experience)."
+
+limits_and_policies:
+  amounts:
+    min_pot_usdc: 1
+    max_pot_usdc: 100000
+    max_winners: 200
+    min_winners: 1
+    per_winner_min_usdc: 1
+  fees:
+    fee_model: "2.5% fee per claim, charged to claimant."
+    fee_bps: 250
+    fee_recipient: "${project.fee_treasury}"
+  claiming:
+    allow_multiple_claims_same_address_same_pot: false
+    global_cooldown_secs: ${project.defaults.cooldown_secs}
+    gating_required: ["like", "comment", "recast"]
+  timeout_policy:
+    sweep_after_secs: ${project.defaults.pot_timeout_secs}
+    sweep_destination: "creator"
+
+architecture:
+  overview:
+    - "Pure Farcaster frame implementation - no mini-app needed."
+    - "Frames provide native Farcaster experience for all interactions."
+    - "Wagmi handles approve() and contract writes within frames."
+    - "Solidity escrow contract holds ERC-20 and manages claims."
+    - "Backend routes verify engagement via Farcaster/Neynar and issue signed permits."
+    - "Frame manifest enables discovery and native Farcaster integration."
+    - "Creators can 'strap on' JackPot capability to any Farcaster post."
+  directories_expected:
+    - path: "contracts/JackPot.sol"
+    - path: "scripts/deploy.ts"
+    - path: "abis/JackPot.json"
+    - path: "app/layout.tsx"
+    - path: "app/providers.tsx"
+    - path: "app/page.tsx"
+    - path: "app/create/page.tsx"
+    - path: "app/p/[id]/page.tsx"
+    - path: "app/frame/route.ts"
+    - path: "app/api/frame/create/route.ts"
+    - path: "app/api/frame/claim/route.ts"
+    - path: "app/api/frame/image/route.ts"
+    - path: "app/api/gate/route.ts"
+    - path: "app/api/gate/permit/route.ts"
+    - path: "lib/contracts.ts"
+    - path: "lib/onchain.ts"
+    - path: "lib/neynar.ts"
+    - path: "public/.well-known/farcaster.json"
+    - path: ".env.local"
+  environment_vars_required:
+    - "NEXT_PUBLIC_JACKPOT_ADDRESS"
+    - "NEXT_PUBLIC_USDC_ADDRESS"
+    - "NEXT_PUBLIC_BASE_RPC"
+    - "NEXT_PUBLIC_APP_DOMAIN"
+    - "NEYNAR_API_KEY"
+    - "GATE_SIGNER_PK"   # backend-only; never exposed client-side
+
+smart_contract:
+  name: "JackPot"
+  network: "Base mainnet"
+  storage_must_include:
+    - "mapping(bytes32 => Pot) pots"
+    - "mapping(bytes32 => mapping(uint32 => uint128)) _alloc"
+    - "mapping(bytes32 => mapping(address => bool)) hasClaimed"
+    - "mapping(bytes32 => mapping(uint32 => bool)) slotTaken"
+    - "mapping(address => uint64) lastClaimAt"
+    - "address feeTreasury"
+    - "uint32 cooldownSecs"
+    - "address gateSigner"
+  struct_Pot_fields:
+    - { name: "creator", type: "address" }
+    - { name: "token", type: "address" }
+    - { name: "amount", type: "uint128" }
+    - { name: "createdAt", type: "uint64" }
+    - { name: "winners", type: "uint32" }
+    - { name: "claimed", type: "uint32" }
+    - { name: "timeoutSecs", type: "uint32" }
+    - { name: "seed", type: "bytes32" }
+    - { name: "active", type: "bool" }
+  events_must_exist:
+    - "event PotCreated(bytes32 indexed id, address indexed creator, address token, uint256 amount, uint32 winners)"
+    - "event Claimed(bytes32 indexed id, uint32 slot, address indexed to, uint256 net, uint256 fee)"
+    - "event Swept(bytes32 indexed id, address indexed to, uint256 amount)"
+  external_functions_must_exist:
+    - signature: "createPot(address token, uint128 amount, uint32 winners, uint32 timeoutSecs, uint128 minPerWinner) returns (bytes32 id)"
+      must_require:
+        - "winners >= 1 && winners <= 200"
+        - "amount >= minPerWinner * winners"
+        - "if token == USDC then 1 USDC <= amount <= 100000 USDC"
+      effects:
+        - "transferFrom(token) from msg.sender to contract for 'amount'"
+        - "p.seed = keccak256(prevrandao, msg.sender, amount, winners, id)"
+        - "_distributeRandom -> sum(alloc[i]) == amount"
+        - "emit PotCreated"
+    - signature: "claim(bytes32 id, uint256 deadline, bytes32 castId, bytes signature)"
+      must_require:
+        - "block.timestamp <= deadline"
+        - "permit not replayed"
+        - "pots[id].active == true"
+        - "!hasClaimed[id][msg.sender]"
+        - "pots[id].claimed < pots[id].winners"
+        - "cooldown respected for msg.sender"
+        - "ECDSA.recover(digest) == gateSigner"
+      effects:
+        - "assign next sequential slot index"
+        - "fee = alloc * 2.5%"
+        - "transfer (alloc - fee) to msg.sender"
+        - "transfer fee to feeTreasury"
+        - "mark hasClaimed, slotTaken"
+        - "deactivate pot when claimed == winners"
+        - "mark permit used"
+        - "emit Claimed"
+    - signature: "sweep(bytes32 id)"
+      must_require:
+        - "msg.sender == creator"
+        - "block.timestamp >= createdAt + timeoutSecs"
+        - "pots[id].active == true"
+      effects:
+        - "sum unclaimed allocations, zero them out"
+        - "transfer sum to creator"
+        - "deactivate pot"
+        - "emit Swept"
+    - signature: "setCooldown(uint32 secs) external onlyOwner"
+    - signature: "setGateSigner(address s) external onlyOwner"
+  invariants:
+    - "∀ pot: sum(_alloc[pot][0..winners-1]) == pot.amount"
+    - "Each address can claim at most once per pot"
+    - "Claim order is FCFS via sequential slot assignment"
+    - "Fee per claim = 2.5% == 250bps of allocation"
+    - "When winners reached, pot.active == false"
+    - "After sweep, all remaining allocations are zeroed and pot.active == false"
+  randomness_v0:
+    source: "prevrandao-seeded keccak; not VRF"
+    upgrade_path_note: "In v1, replace with Chainlink VRF; allocations become verifiable."
+  security_musts:
+    - "Use ReentrancyGuard on claim/sweep"
+    - "Use SafeERC20 for transfers"
+    - "Prevent permit replay"
+    - "Check underflow/overflow on math"
+    - "No external calls before state updates where possible"
+
+backend_gating:
+  route: "POST /api/gate/permit"
+  input:
+    - "potId (bytes32)"
+    - "claimer_address (0x..)"
+    - "castId (bytes32 or hash)"
+  process:
+    - "Resolve Farcaster fid/wallet (MiniKit context or signer address)."
+    - "Verify Like + Comment + Recast on castId for this fid via Neynar/Farcaster APIs."
+    - "If pass: sign permit digest hash(claimer, potId, deadline, castId) with GATE_SIGNER_PK."
+  output:
+    - "JSON: { deadline: number, castId: 0x..., signature: 0x... }"
+  constraints:
+    - "Never expose GATE_SIGNER_PK to client."
+    - "Server clocks must be NTP-synced; allow small skew in deadline."
+
+frontend_flows:
+  frame_architecture:
+    overview: "Pure Farcaster frame implementation with native Farcaster experience"
+    frame_endpoints:
+      - "GET /api/frame - Main frame entry point"
+      - "GET /api/frame/create - Create JackPot flow"
+      - "GET /api/frame/claim - Claim JackPot flow"
+      - "GET /api/frame/image - Dynamic frame images"
+    frame_metadata:
+      - "fc:frame content for Farcaster integration"
+      - "Dynamic images based on frame state"
+      - "Button interactions for user flows"
+      - "Input fields for pot configuration"
+  create_pot_frame:
+    steps:
+      - "Creator posts normally on Farcaster"
+      - "Creator adds JackPot frame to their post"
+      - "Frame shows input field for 'amount, winners'"
+      - "Creator enters values (e.g., '50, 15')"
+      - "Creator clicks 'Create JackPot' button"
+      - "Frame processes creation via smart contract"
+      - "Frame shows success with pot ID"
+    validations:
+      - "Prevent winners > 200"
+      - "Prevent amount < winners * minPerWinner"
+      - "Default minPerWinner = 1 USDC"
+      - "Parse input format 'amount, winners'"
+  claim_pot_frame:
+    steps:
+      - "User sees post with JackPot frame"
+      - "User engages: Like + Comment + Recast"
+      - "User clicks 'Claim JackPot' button"
+      - "Frame verifies engagement requirements"
+      - "If valid: process claim via smart contract"
+      - "If invalid: show requirements frame"
+      - "Frame shows success with amount received"
+    restrictions:
+      - "Disable Claim button if gate checks fail"
+      - "One claim per address; throttle by cooldown"
+      - "Must complete all engagement requirements"
+  legacy_flows:
+    create_pot_web:
+      steps:
+        - "Connect wallet (Base)"
+        - "Approve USDC -> Create Pot (two tx flow)"
+        - "On success: read PotCreated event to obtain potId"
+        - "Show shareable URL /p/[id] and CTA to cast"
+    claim_pot_web:
+      steps:
+        - "Load pot status; show remaining slots and fee note (2.5% from allocation)"
+        - "Call /api/gate/permit to obtain signature after Like+Comment+Recast checks"
+        - "Call claim(id, deadline, castId, signature)"
+        - "Display success, amount received, and slots remaining"
+
+manifest_and_discovery:
+  file: "public/.well-known/farcaster.json"
+  required_fields:
+    - "name: JackPot"
+    - "description: 'Social tips with a jackpot twist. Deposit USDC, first N claim randomized splits on Base.'"
+    - "url: ${project.app_domain}"
+    - "icon: ${project.app_domain}/icon.png"
+    - "ogImage: ${project.app_domain}/og.png"
+    - "primaryCategory: Games"
+    - "tags: [USDC, tips, random, giveaway, onchain]"
+  frame_support:
+    frame_metadata:
+      - "fc:frame content for native Farcaster integration"
+      - "Dynamic frame images based on state"
+      - "Button interactions for create/claim flows"
+      - "Input fields for pot configuration"
+    frame_endpoints:
+      - "Main frame: /api/frame"
+      - "Create frame: /api/frame/create"
+      - "Claim frame: /api/frame/claim"
+      - "Image generator: /api/frame/image"
+  discovery_steps:
+    - "Deploy app, host manifest with frame support."
+    - "Test frames on Base App for compatibility."
+    - "Cast a post with JackPot frame."
+    - "Verify frame interactions work correctly."
+    - "If not visible in search/preview, run discovery/debug checklist."
+
+acceptance_tests:
+  # Frame Implementation Tests
+  - id: "FT-001"
+    name: "Frame create pot success"
+    preconditions:
+      - "Connected wallet with >= 20 USDC"
+      - "Access to Farcaster frame interface"
+    steps:
+      - "Navigate to create frame"
+      - "Enter input: '10, 5' (amount, winners)"
+      - "Click 'Create JackPot' button"
+      - "Frame processes creation via smart contract"
+    expected:
+      - "PotCreated event emitted with winners=5"
+      - "allocations sum exactly to 10 USDC"
+      - "pot.active == true"
+      - "Frame shows success with pot ID"
+
+  - id: "FT-002"
+    name: "Frame claim pot with engagement"
+    preconditions:
+      - "Pot exists with winners=5"
+      - "User has liked, commented, and recast target cast"
+      - "Access to Farcaster frame interface"
+    steps:
+      - "Navigate to claim frame"
+      - "Click 'Claim JackPot' button"
+      - "Frame verifies engagement requirements"
+      - "Frame processes claim via smart contract"
+    expected:
+      - "Claimed event with fee = alloc*0.025"
+      - "User balance increases by alloc*(1-0.025)"
+      - "Frame shows success with amount received"
+      - "hasClaimed[id][user] == true"
+
+  - id: "FT-003"
+    name: "Frame engagement verification failure"
+    preconditions:
+      - "Pot exists with winners=5"
+      - "User has NOT completed all engagement requirements"
+    steps:
+      - "Navigate to claim frame"
+      - "Click 'Claim JackPot' button"
+      - "Frame verifies engagement requirements"
+    expected:
+      - "Frame shows requirements frame"
+      - "User prompted to complete Like + Comment + Recast"
+      - "Claim button disabled until requirements met"
+
+  - id: "FT-004"
+    name: "Frame input validation"
+    preconditions:
+      - "Access to create frame"
+    steps:
+      - "Enter invalid input: 'invalid, format'"
+      - "Enter out of bounds: '1, 201' (winners > 200)"
+      - "Enter insufficient amount: '1, 5' (amount < winners * minPer)"
+    expected:
+      - "Frame shows validation errors"
+      - "Create button disabled for invalid inputs"
+      - "Clear error messages displayed"
+
+  # Legacy Web Interface Tests
+  - id: "CT-001"
+    name: "Create pot success (web)"
+    preconditions:
+      - "Connected wallet with >= 20 USDC"
+    steps:
+      - "Approve 10 USDC"
+      - "Create pot: amount=10, winners=5, timeout=12h, minPer=1 USDC"
+    expected:
+      - "PotCreated event emitted with winners=5"
+      - "allocations sum exactly to 10 USDC"
+      - "pot.active == true"
+
+  - id: "CT-002"
+    name: "Claim flow with gating"
+    preconditions:
+      - "Pot exists with winners=5"
+      - "User has liked, commented, and recast target cast"
+    steps:
+      - "POST /api/gate/permit (potId, claimer, castId)"
+      - "Receive signature, deadline"
+      - "Call claim(id, deadline, castId, signature)"
+    expected:
+      - "Claimed event with fee = alloc*0.025"
+      - "User balance increases by alloc*(1-0.025)"
+      - "hasClaimed[id][user] == true"
+      - "slotTaken for claimed index == true"
+      - "pots[id].claimed increments by 1"
+
+  - id: "CT-003"
+    name: "Single-claim enforcement"
+    steps:
+      - "Attempt second claim with same address and new valid permit"
+    expected:
+      - "Transaction reverts with one-claim constraint"
+
+  - id: "CT-004"
+    name: "Global cooldown"
+    steps:
+      - "Claim pot A, then immediately claim pot B within cooldown window"
+    expected:
+      - "Second claim reverts with cooldown error"
+      - "Claim after ${project.defaults.cooldown_secs} succeeds"
+
+  - id: "CT-005"
+    name: "All claimed auto-deactivate"
+    steps:
+      - "Claim until winners reached"
+    expected:
+      - "pots[id].active == false"
+      - "Further claim attempts revert with 'done/inactive'"
+
+  - id: "CT-006"
+    name: "Sweep after timeout"
+    preconditions:
+      - "Pot has at least one unclaimed allocation"
+    steps:
+      - "Wait >= 12h"
+      - "Creator calls sweep(id)"
+    expected:
+      - "Swept event with remaining > 0"
+      - "pot.active == false"
+      - "All remaining allocations zeroed"
+
+  - id: "CT-007"
+    name: "Bounds checks"
+    steps:
+      - "Try create winners=201 (should revert)"
+      - "Try create amount < winners * 1 USDC (should revert)"
+      - "Try create amount > 100000 USDC (USDC) (should revert)"
+    expected:
+      - "All revert with clear messages"
+
+  - id: "CT-008"
+    name: "Fee routing"
+    steps:
+      - "Observe Claimed event"
+    expected:
+      - "fee equals allocation * 2.5%"
+      - "feeTreasury receives fee"
+      - "creator not charged any fee beyond pot funding"
+
+code_quality_rules:
+  solidity:
+    - "Use OpenZeppelin SafeERC20, ReentrancyGuard, ECDSA, Ownable."
+    - "Functions claim/sweep protected by nonReentrant."
+    - "Events emitted for state transitions."
+    - "No floating point; handle USDC 6dp integers."
+  frontend:
+    - "Use Wagmi for approve & write calls within frames."
+    - "Show fee note '-2.5% from your claim' in frame UI."
+    - "Disable Claim until gate passes."
+    - "Implement proper frame metadata for Farcaster integration."
+    - "Handle frame input validation and error states."
+    - "Generate dynamic frame images based on state."
+  backend:
+    - "Do not leak GATE_SIGNER_PK to client."
+    - "Implement replay protection (track used permits)."
+    - "Return coherent 4xx on gating failure."
+    - "Frame endpoints must handle form data properly."
+    - "Frame image generation must be performant."
+    - "Frame interactions must be secure and validated."
+  frames:
+    - "Implement proper fc:frame metadata for Farcaster."
+    - "Handle frame button interactions correctly."
+    - "Validate frame input data thoroughly."
+    - "Generate appropriate frame images for each state."
+    - "Ensure frame compatibility with Base App."
+    - "Implement proper frame error handling."
+
+review_checklist:
+  smart_contract:
+    - "Does JackPot.sol implement all MUST functions and events?"
+    - "Are bounds and invariants enforced exactly as specified?"
+    - "Is fee 250 bps hard-coded and routed to feeTreasury?"
+    - "Is per-address single-claim per pot enforced?"
+    - "Is global cooldown enforced?"
+    - "Are USDC addresses and decimals correct for Base mainnet?"
+  backend:
+    - "Does /api/gate/permit verify Like+Comment+Recast and sign permits?"
+    - "Does the Claim UI obtain a permit before calling claim()?"
+    - "Are frame endpoints properly handling form data?"
+    - "Is frame image generation performant and secure?"
+  frames:
+    - "Are frame metadata properly implemented for Farcaster?"
+    - "Do frame button interactions work correctly?"
+    - "Is frame input validation thorough and secure?"
+    - "Are frame images generated appropriately for each state?"
+    - "Is frame compatibility with Base App verified?"
+    - "Is frame error handling comprehensive?"
+  manifest:
+    - "Is the manifest present and valid under /.well-known/farcaster.json?"
+    - "Does the manifest include frame support metadata?"
+    - "Are frame endpoints properly configured?"
+
+notes:
+  rng:
+    v0: "prevrandao keccak; attacker profit bounded by FCFS and single-claim"
+    v1: "replace with Chainlink VRF; store proof for allocations"
+  bots:
+    v0: "global cooldown + single-claim + gating"
+    v1: "per-FID cooldown, attestation-based gates, allowlists for large pots"
+  frame_implementation:
+    benefits:
+      - "Native Farcaster experience - users never leave Farcaster"
+      - "True 'strap on' functionality - add to any post"
+      - "Simplified architecture - no mini app complexity"
+      - "Better UX - everything happens in frames"
+      - "Viral mechanism - posts get engagement boost"
+    logic_verification:
+      - "Frame flows maintain same smart contract logic"
+      - "Engagement verification unchanged"
+      - "Fee structure preserved"
+      - "Security measures intact"
+      - "All invariants maintained"
+    compatibility:
+      - "Frames work on Base App"
+      - "Legacy web interface still supported"
+      - "Same smart contract for both interfaces"
+      - "Frame manifest enables discovery"

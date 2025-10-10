@@ -1,0 +1,23 @@
+{
+  "name": "hardhat-jackpot",
+  "version": "1.0.0",
+  "description": "Hardhat deployment setup for JackPot contract",
+  "type": "module",
+  "scripts": {
+    "compile": "hardhat compile",
+    "deploy": "hardhat run scripts/deploy.js --network base",
+    "deploy-testnet": "hardhat run scripts/deploy.js --network base-sepolia",
+    "verify": "hardhat verify",
+    "test": "hardhat test"
+  },
+  "devDependencies": {
+    "hardhat": "^2.26.0",
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "@nomicfoundation/hardhat-verify": "^2.0.0",
+    "@openzeppelin/contracts": "^5.0.0",
+    "dotenv": "^16.0.0"
+  },
+  "keywords": ["hardhat", "ethereum", "base", "jackpot"],
+  "author": "",
+  "license": "MIT"
+}

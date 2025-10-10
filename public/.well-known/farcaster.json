@@ -1,0 +1,30 @@
+{
+  "accountAssociation": {
+    "header": "eyJmaWQiOjYyOTMyNSwidHlwZSI6ImF1dGgiLCJrZXkiOiIweDE3YmM4QjRjYmY1YWFlMTUxOTNGYzc0ODdBNmE5M0ZCMUEwRmZFNzcifQ",
+    "payload": "eyJkb21haW4iOiJiYXNlLW1pbmktYXBwLWphY2twb3QudmVyY2VsLmFwcCJ9",
+    "signature": "G24ULr44JF+cCxor6Fs8lukSSAfvUOOy6qplgHloE/1kQDLtFnrA0z4S2941o1aZ6P1Z22q7FRuEl9CZyqtItBw="
+  },
+  "miniapp": {
+    "version": "1",
+    "name": "JackPot",
+    "iconUrl": "https://base-mini-app-jackpot.vercel.app/icon.png",
+    "homeUrl": "https://base-mini-app-jackpot.vercel.app",
+    "imageUrl": "https://base-mini-app-jackpot.vercel.app/og.png",
+    "buttonTitle": "🎰 Play JackPot",
+    "splashImageUrl": "https://base-mini-app-jackpot.vercel.app/icon.png",
+    "splashBackgroundColor": "#f7f7f7",
+    "subtitle": "Decentralized lottery on Base",
+    "description": "Social tips with a jackpot twist. Deposit USDC, first N claim randomized splits on Base.",
+    "primaryCategory": "games",
+    "tags": ["USDC", "tips", "lottery", "base", "onchain"],
+    "tagline": "Win big with social engagement",
+    "ogTitle": "JackPot - Win USDC Daily",
+    "ogDescription": "Social tips with a jackpot twist. Deposit USDC, first N claim randomized splits on Base.",
+    "ogImageUrl": "https://base-mini-app-jackpot.vercel.app/og.png",
+    "requiredChains": ["eip155:8453"],
+    "requiredCapabilities": [
+      "actions.signIn",
+      "wallet.getEthereumProvider"
+    ]
+  }
+}

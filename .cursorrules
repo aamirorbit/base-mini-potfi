@@ -1,0 +1,201 @@
+# PotFi iPhone App Design System - Cursor Rules
+
+## Design Philosophy
+Follow modern iPhone app design patterns with glassmorphism effects and clean, minimal aesthetics.
+
+## Visual Design System
+
+### Color Palette
+- **Primary**: Blue gradients (`from-blue-500 to-blue-700`, `from-blue-600 to-blue-700`)
+- **Secondary**: Golden/Yellow (`bg-yellow-500`, `bg-yellow-600`, `text-yellow-700`)
+- **Background**: Soft gradients (`bg-gradient-to-br from-blue-50 via-white to-purple-50`)
+- **Success**: Blue (`bg-blue-500`, `text-blue-600`)
+- **Warning**: Golden (`bg-yellow-500/10`, `text-yellow-700`)
+- **Error**: Golden (`bg-yellow-500/10`, `text-yellow-700`)
+- **Neutral**: Black/Gray (`bg-black`, `bg-gray-800/90`, `text-gray-900`)
+
+**IMPORTANT**: Only use blue and golden/yellow colors. No green, red, purple, or orange colors allowed.
+
+**Golden Color Usage**: Reserve golden/yellow colors for special cases only:
+- Warning states and alerts
+- Error messages
+- Special action buttons (like network switching)
+- Critical notifications
+- Use blue for regular icons, buttons, and UI elements
+
+### Glassmorphism Effects
+Always use these glass effect patterns:
+```css
+bg-white/70 backdrop-blur-xl rounded-md shadow-2xl border border-white/20
+bg-white/60 backdrop-blur-xl rounded-md shadow-xl border border-white/20
+bg-white/80 backdrop-blur-xl border-t border-white/20 shadow-2xl
+```
+
+### Border Radius
+**ALWAYS use `rounded-md`** for all components. No other border radius values allowed:
+- Cards: `rounded-md`
+- Buttons: `rounded-md`
+- Modals: `rounded-md`
+- Icons containers: `rounded-md`
+- All other elements: `rounded-md`
+
+### Component Patterns
+
+#### App Icon Container
+```tsx
+<div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-blue-600 rounded-md flex items-center justify-center mb-4 mx-auto shadow-lg">
+  <IconComponent className="w-10 h-10 text-white" />
+</div>
+```
+
+#### Glass Cards
+```tsx
+<div className="bg-white/70 backdrop-blur-xl rounded-md p-8 shadow-2xl border border-white/20">
+  {/* Content */}
+</div>
+```
+
+#### Status Cards
+```tsx
+<div className="bg-blue-500/10 backdrop-blur-xl border border-blue-200/50 text-blue-700 px-4 py-3 rounded-md shadow-lg">
+  <div className="flex items-center space-x-2">
+    <IconComponent className="w-4 h-4" />
+    <p className="text-sm font-medium">Status message</p>
+  </div>
+</div>
+```
+
+#### Warning/Error Cards
+```tsx
+<div className="bg-yellow-500/10 backdrop-blur-xl border border-yellow-200/50 text-yellow-700 px-4 py-3 rounded-md shadow-lg">
+  <div className="flex items-center space-x-2">
+    <IconComponent className="w-4 h-4" />
+    <p className="text-sm font-medium">Warning message</p>
+  </div>
+</div>
+```
+
+#### Bottom Action Bar (iPhone Style)
+```tsx
+<div className="bg-white/80 backdrop-blur-xl border-t border-white/20 shadow-2xl">
+  <div className="max-w-md mx-auto px-4 py-4 safe-area-inset-bottom">
+    {/* Buttons */}
+  </div>
+</div>
+```
+
+#### Bottom Navigation Menu (Mobile Style)
+```tsx
+<div className="bg-white/80 backdrop-blur-xl border-t border-white/20 shadow-2xl">
+  <div className="max-w-md mx-auto px-4 py-2 safe-area-inset-bottom">
+    <div className="flex items-center justify-around">
+      {/* Regular nav item */}
+      <button className="flex flex-col items-center py-2 px-3 rounded-md transition-all duration-200 text-gray-600 hover:text-blue-600 transform active:scale-95">
+        <IconComponent className="w-6 h-6 mb-1" />
+        <span className="text-xs font-medium">Label</span>
+      </button>
+      
+      {/* Primary action (center) */}
+      <Link href="/path" className="flex flex-col items-center py-2 px-4 rounded-md transition-all duration-200 text-gray-600 hover:text-blue-600 transform active:scale-95">
+        <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-3 rounded-md shadow-lg mb-1">
+          <IconComponent className="w-6 h-6 text-white" />
+        </div>
+        <span className="text-xs font-medium">Primary Action</span>
+      </Link>
+    </div>
+  </div>
+</div>
+```
+
+#### Primary Buttons
+```tsx
+<button className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold py-4 px-6 rounded-md text-base transition-all duration-200 shadow-xl transform active:scale-95">
+  Button Text
+</button>
+```
+
+#### Secondary Buttons
+```tsx
+<button className="bg-gray-800/90 backdrop-blur-sm hover:bg-gray-900 text-white font-medium py-4 px-6 rounded-md text-base transition-all duration-200 shadow-xl transform active:scale-95">
+  Button Text
+</button>
+```
+
+#### Golden/Warning Buttons
+```tsx
+<button className="bg-yellow-600 backdrop-blur-sm hover:bg-yellow-700 text-white font-medium py-4 px-6 rounded-md text-base transition-all duration-200 shadow-xl transform active:scale-95">
+  Button Text
+</button>
+```
+
+#### Modal Pattern
+```tsx
+<div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+  <div className="bg-white/90 backdrop-blur-xl rounded-md p-6 shadow-2xl border border-white/20 max-w-md w-full max-h-[80vh] overflow-y-auto">
+    {/* Modal content */}
+  </div>
+</div>
+```
+
+### Layout Structure
+
+#### Mobile-First Container
+```tsx
+<main className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex flex-col">
+  <div className="flex-1 px-4 sm:px-6 pt-8 sm:pt-12">
+    <div className="max-w-md mx-auto">
+      {/* Content */}
+    </div>
+  </div>
+  {/* Bottom action bar */}
+</main>
+```
+
+### Icon Usage
+- **ALWAYS use Lucide React icons** - never use emojis in UI components
+- Import from: `import { IconName } from 'lucide-react'`
+- Standard sizes: `w-4 h-4` for small, `w-5 h-5` for medium, `w-10 h-10` for large
+- Always use semantic icons that match the content
+
+### Animation & Interactions
+- **Transitions**: `transition-all duration-200`
+- **Button press**: `transform active:scale-95`
+- **Hover effects**: Subtle color changes, never dramatic
+- **Loading states**: Use spinners with `animate-spin`
+- **Status indicators**: `animate-pulse` for connection dots
+
+### Typography
+- **Headings**: `text-3xl sm:text-4xl font-bold text-gray-900`
+- **Body text**: `text-sm sm:text-base text-gray-600`
+- **Labels**: `text-sm font-medium text-gray-700`
+- **Captions**: `text-xs text-gray-500`
+
+### Spacing & Sizing
+- **Container max-width**: `max-w-md mx-auto` for mobile-first
+- **Card padding**: `p-6` for large cards, `p-4` for medium
+- **Button padding**: `py-4 px-6` for primary, `py-3 px-4` for secondary
+- **Space between elements**: `space-y-4` or `space-y-6`
+
+### Responsive Design
+- Always mobile-first approach
+- Use `sm:` prefix for larger screens
+- Maintain consistent spacing across breakpoints
+- Ensure touch targets are minimum 44px
+
+## Implementation Rules
+
+1. **Always use glassmorphism effects** for cards and overlays
+2. **Bottom action bars** for primary actions (iPhone style)
+3. **Lucide icons only** - no emojis in UI components
+4. **Gradient backgrounds** for visual depth
+5. **Consistent border radius**: `rounded-md` only
+6. **Proper shadows**: `shadow-xl` or `shadow-2xl` for depth
+7. **Smooth animations** on all interactive elements
+8. **Mobile-first responsive design**
+
+## Code Quality
+- Use TypeScript strict mode
+- Implement proper state management
+- Add comprehensive error handling
+- Use semantic HTML elements
+- Ensure accessibility compliance
