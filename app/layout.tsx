@@ -29,16 +29,21 @@ export const metadata: Metadata = {
     images: [`${appDomain}/og.png`],
   },
   other: {
-    // Farcaster Frame v2 tags (proper format, not JSON)
-    'fc:frame': 'vNext',
-    'fc:frame:image': `${appDomain}/og.png`,
-    'fc:frame:image:aspect_ratio': '1.91:1',
-    'fc:frame:button:1': '✨ Create Pot',
-    'fc:frame:button:1:action': 'link',
-    'fc:frame:button:1:target': `${appDomain}/create`,
-    'fc:frame:button:2': '👀 View Pots',
-    'fc:frame:button:2:action': 'link',
-    'fc:frame:button:2:target': `${appDomain}/view`,
+    // Farcaster Mini App embed metadata (proper format)
+    'fc:miniapp': JSON.stringify({
+      version: "1",
+      imageUrl: `${appDomain}/og.png`,
+      button: {
+        title: "Open PotFi",
+        action: {
+          type: "launch_frame",
+          name: "PotFi",
+          url: appDomain,
+          splashImageUrl: `${appDomain}/icon.png`,
+          splashBackgroundColor: "#f7f7f7"
+        }
+      }
+    })
   }
 }
 

@@ -70,26 +70,21 @@ export async function generateMetadata({
         images: [`${baseUrl}/api/frame/image?action=claim&potId=${potId}&amount=${amount}`],
       },
       other: {
-        // Farcaster Frame tags (use both property and name for compatibility)
-        'fc:frame': 'vNext',
-        'fc:frame:image': `${baseUrl}/api/frame/image?action=claim&potId=${potId}&amount=${amount}&standardClaim=${standardClaim}&remaining=${remaining}&jackpotProb=${jackpotProb}`,
-        'fc:frame:image:aspect_ratio': '1.91:1',
-        'fc:frame:button:1': `🎯 Claim ${standardClaim} USDC`,
-        'fc:frame:button:1:action': 'link',
-        'fc:frame:button:1:target': `${baseUrl}/claim/${potId}`,
-        'fc:frame:button:2': `💎 View Pot Details`,
-        'fc:frame:button:2:action': 'link',
-        'fc:frame:button:2:target': `${baseUrl}/claim/${potId}`,
-        // Add property versions for better compatibility
-        'property:fc:frame': 'vNext',
-        'property:fc:frame:image': `${baseUrl}/api/frame/image?action=claim&potId=${potId}&amount=${amount}&standardClaim=${standardClaim}&remaining=${remaining}&jackpotProb=${jackpotProb}`,
-        'property:fc:frame:image:aspect_ratio': '1.91:1',
-        'property:fc:frame:button:1': `🎯 Claim ${standardClaim} USDC`,
-        'property:fc:frame:button:1:action': 'link',
-        'property:fc:frame:button:1:target': `${baseUrl}/claim/${potId}`,
-        'property:fc:frame:button:2': `💎 View Pot Details`,
-        'property:fc:frame:button:2:action': 'link',
-        'property:fc:frame:button:2:target': `${baseUrl}/claim/${potId}`,
+        // Farcaster Mini App embed metadata (proper format)
+        'fc:miniapp': JSON.stringify({
+          version: "1",
+          imageUrl: `${baseUrl}/api/frame/image?action=claim&potId=${potId}&amount=${amount}&standardClaim=${standardClaim}&remaining=${remaining}&jackpotProb=${jackpotProb}`,
+          button: {
+            title: `Claim ${standardClaim} USDC`,
+            action: {
+              type: "launch_frame",
+              name: "PotFi - Claim Pot",
+              url: `${baseUrl}/claim/${potId}`,
+              splashImageUrl: `${baseUrl}/icon.png`,
+              splashBackgroundColor: "#f7f7f7"
+            }
+          }
+        })
       }
     }
   } else if (potDetails && !potDetails.active) {
@@ -145,12 +140,20 @@ export async function generateMetadata({
       images: [`${baseUrl}/og.png`],
     },
     other: {
-      'fc:frame': 'vNext',
-      'fc:frame:image': `${baseUrl}/og.png`,
-      'fc:frame:button:1': 'Claim Now',
-      'fc:frame:button:1:action': 'link',
-      'fc:frame:button:1:target': `${baseUrl}/claim/${potId}`,
-      'fc:frame:post_url': `${baseUrl}/api/frame/claim`,
+      'fc:miniapp': JSON.stringify({
+        version: "1",
+        imageUrl: `${baseUrl}/og.png`,
+        button: {
+          title: "Claim Now",
+          action: {
+            type: "launch_frame",
+            name: "PotFi - Claim Pot",
+            url: `${baseUrl}/claim/${potId}`,
+            splashImageUrl: `${baseUrl}/icon.png`,
+            splashBackgroundColor: "#f7f7f7"
+          }
+        }
+      })
     }
   }
 }
