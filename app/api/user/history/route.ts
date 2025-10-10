@@ -109,11 +109,11 @@ export async function GET(request: NextRequest) {
 
     // Calculate user stats
     const stats = {
-      totalDeposited: deposits.reduce((sum, t) => sum + t.amount, 0),
-      totalClaimed: claims.reduce((sum, t) => sum + t.amount, 0),
+      totalDeposited: deposits.reduce((sum: number, t: any) => sum + t.amount, 0),
+      totalClaimed: claims.reduce((sum: number, t: any) => sum + t.amount, 0),
       potsCreated: deposits.length,
       claimsMade: claims.length,
-      netProfit: claims.reduce((sum, t) => sum + t.amount, 0) - deposits.reduce((sum, t) => sum + t.amount, 0)
+      netProfit: claims.reduce((sum: number, t: any) => sum + t.amount, 0) - deposits.reduce((sum: number, t: any) => sum + t.amount, 0)
     }
 
     return NextResponse.json({
