@@ -332,7 +332,7 @@ export default function Claim() {
                 </details>
               </div>
 
-              <div className="space-y-3">
+              <div>
                 <button
                   disabled={busy || isClaiming || !address || !castId}
                   onClick={claim}
@@ -342,12 +342,6 @@ export default function Claim() {
                    busy ? 'Getting Permit...' : 
                    !castId ? 'Detecting Cast...' : 
                    'Claim PotFi'}
-                </button>
-                <button
-                  onClick={() => disconnect()}
-                  className="w-full bg-gray-800/90 backdrop-blur-sm hover:bg-gray-900 text-white font-medium py-4 px-6 rounded-md text-base transition-all duration-200 shadow-xl transform active:scale-95"
-                >
-                  Disconnect
                 </button>
               </div>
             </>

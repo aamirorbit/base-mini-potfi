@@ -28,9 +28,9 @@ export function getAppDomain(): string {
  */
 export const FARCASTER_ACCOUNT_ASSOCIATION = {
   accountAssociation: {
-    header: "eyJmaWQiOjYyOTMyNSwidHlwZSI6ImF1dGgiLCJrZXkiOiIweDE3YmM4QjRjYmY1YWFlMTUxOTNGYzc0ODdBNmE5M0ZCMUEwRmZFNzcifQ",
-    payload: "eyJkb21haW4iOiJiYXNlLW1pbmktYXBwLWphY2twb3QudmVyY2VsLmFwcCJ9",
-    signature: "G24ULr44JF+cCxor6Fs8lukSSAfvUOOy6qplgHloE/1kQDLtFnrA0z4S2941o1aZ6P1Z22q7FRuEl9CZyqtItBw="
+    "header": "eyJmaWQiOjEzNzQ1OTEsInR5cGUiOiJjdXN0b2R5Iiwia2V5IjoiMHg1MGE4NkNiNDNjQzg2NjJDZThmQUMyM0QxMDM1OTg2MjBDYjI0MTczIn0",
+    "payload": "eyJkb21haW4iOiJiYXNlLW1pbmktcG90ZmkudmVyY2VsLmFwcCJ9",
+    "signature": "MHgyZWYyYWJmOGEzZmZlYmQzNzBhMWI2NDgyMjQzYWFlMzcxNTk2NGIzYzRmM2QwMzgyYjM5ZDY1NDRkZDAzYTkxMTVlYzNjNGViOGVkNjJhOWE1YWI5YWU4MmQ3MzJkZjczZjY4OWEyYWM3MjY0OGIwNzM4ZDRmZjM5MmI5NmVhODFj"
   }
 }
 
