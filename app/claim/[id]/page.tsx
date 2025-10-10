@@ -326,6 +326,9 @@ export default function Claim() {
                     {castId ? "Override cast ID (optional)" : "Enter cast ID manually"}
                   </summary>
                   <input
+                    id="castId"
+                    name="castId"
+                    type="text"
                     value={castId}
                     onChange={(e) => setCastId(e.target.value)}
                     placeholder="Enter castId (0x...)"

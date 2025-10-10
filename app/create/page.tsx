@@ -313,10 +313,12 @@ export default function Create() {
           <div className="bg-white/70 backdrop-blur-xl border border-white/20 rounded-md p-5 mb-6 shadow-2xl">
             <div className="space-y-4">
               <div>
-                <label className="block text-gray-900 font-medium mb-2 text-sm">
+                <label htmlFor="amount" className="block text-gray-900 font-medium mb-2 text-sm">
                   Jackpot Amount (USDC)
                 </label>
                 <input
+                  id="amount"
+                  name="amount"
                   type="number"
                   value={amount}
                   onChange={(e) => setAmount(Number(e.target.value))}
@@ -329,10 +331,12 @@ export default function Create() {
               </div>
               
               <div>
-                <label className="block text-gray-900 font-medium mb-2 text-sm">
+                <label htmlFor="postId" className="block text-gray-900 font-medium mb-2 text-sm">
                   Original Post ID
                 </label>
                 <input
+                  id="postId"
+                  name="postId"
                   type="text"
                   value={postId}
                   onChange={(e) => setPostId(e.target.value)}
@@ -345,10 +349,12 @@ export default function Create() {
               </div>
               
               <div>
-                <label className="block text-gray-900 font-medium mb-2 text-sm">
+                <label htmlFor="timeout" className="block text-gray-900 font-medium mb-2 text-sm">
                   Timeout (seconds)
                 </label>
                 <input
+                  id="timeout"
+                  name="timeout"
                   type="number"
                   value={timeout}
                   onChange={(e) => setTimeoutSecs(Number(e.target.value))}
