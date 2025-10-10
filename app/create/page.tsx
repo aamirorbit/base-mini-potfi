@@ -1,10 +1,11 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
+import { useWriteContract, useWaitForTransactionReceipt, useAccount } from 'wagmi'
 import { erc20Abi, keccak256, encodePacked, decodeEventLog } from 'viem'
 import { jackpotAbi, jackpotAddress, USDC, ONE_USDC } from '@/lib/contracts'
 import { getAppDomain } from '@/lib/utils'
+import { useMiniKitWallet } from '@/hooks/useMiniKitWallet'
 import { Coins, AlertTriangle, CheckCircle, Copy, Share2, ArrowLeft, RefreshCw } from 'lucide-react'
 
 export default function Create() {
@@ -14,10 +15,38 @@ export default function Create() {
   const [potId, setPotId] = useState<string | null>(null)
   const [showSuccess, setShowSuccess] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string>('')
+  const [isFarcaster, setIsFarcaster] = useState(false)
+  const [mounted, setMounted] = useState(false)
   const usdcAmt = BigInt(Math.round(amount * 1_000_000)) // 6dp
 
+  // Wagmi hooks for fallback
+  const { address: wagmiAddress, isConnected: wagmiConnected } = useAccount()
   const { writeContract: approveUSDC, data: approveHash } = useWriteContract()
-  const { writeContract: createPot, data: createHash } = useWriteContract()
+  const { writeContract: createPotContract, data: createHash } = useWriteContract()
+  
+  // MiniKit hooks for Farcaster
+  const { 
+    address: miniKitAddress, 
+    isConnected: miniKitConnected,
+    isConnecting,
+    connect: miniKitConnect,
+    isOnBase,
+    switchToBase 
+  } = useMiniKitWallet()
+
+  // Detect Farcaster environment
+  useEffect(() => {
+    setMounted(true)
+    const userAgent = navigator.userAgent || ''
+    const isFarcasterApp = userAgent.includes('Farcaster') || 
+                          window.parent !== window || 
+                          window.location !== window.parent.location
+    setIsFarcaster(isFarcasterApp)
+  }, [])
+
+  // Use MiniKit in Farcaster, fallback to wagmi elsewhere
+  const address = isFarcaster ? miniKitAddress : wagmiAddress
+  const isConnected = isFarcaster ? miniKitConnected : wagmiConnected
   
   const { isLoading: isApproving, isSuccess: approveSuccess, error: approveError } = useWaitForTransactionReceipt({ hash: approveHash })
   const { isLoading: isCreating, isSuccess: createSuccess, error: createError, data: createReceipt } = useWaitForTransactionReceipt({ hash: createHash })
@@ -121,7 +150,7 @@ export default function Create() {
   async function create() {
     clearError()
     // createPot(address token, uint128 amount, uint128 standardClaim, uint32 timeoutSecs)
-    createPot({
+    createPotContract({
       abi: jackpotAbi, 
       address: jackpotAddress, 
       functionName: 'createPot',
@@ -309,7 +338,23 @@ export default function Create() {
             </div>
           </div>
           
+          {/* Connect Wallet for Farcaster */}
+          {mounted && isFarcaster && !isConnected && (
+            <div className="bg-white/70 backdrop-blur-xl border border-white/20 rounded-md p-6 mb-6 shadow-2xl text-center">
+              <p className="text-gray-600 mb-4 text-sm">Connect your wallet to create a pot</p>
+              <button
+                onClick={miniKitConnect}
+                disabled={isConnecting}
+                className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold py-4 px-6 rounded-md text-base transition-all duration-200 shadow-lg transform active:scale-95"
+              >
+                {isConnecting ? 'Connecting...' : 'Connect Wallet'}
+              </button>
+            </div>
+          )}
+          
           {/* Form */}
+          {mounted && isConnected && (
+          <>
           <div className="bg-white/70 backdrop-blur-xl border border-white/20 rounded-md p-5 mb-6 shadow-2xl">
             <div className="space-y-4">
               <div>
@@ -386,11 +431,27 @@ export default function Create() {
             )}
           </div>
 
+          {/* Network Warning for Farcaster */}
+          {mounted && isFarcaster && !isOnBase && (
+            <div className="mt-6 bg-yellow-500/10 backdrop-blur-xl border border-yellow-200/50 text-yellow-700 px-4 py-3 rounded-md shadow-2xl">
+              <div className="flex items-center space-x-2 mb-3">
+                <AlertTriangle className="w-4 h-4" />
+                <p className="text-sm font-medium">You need to be on Base Network</p>
+              </div>
+              <button
+                onClick={switchToBase}
+                className="w-full bg-yellow-600 hover:bg-yellow-700 text-white font-medium py-2.5 px-4 rounded-md text-sm transition-all duration-200 shadow-lg"
+              >
+                Switch to Base Network
+              </button>
+            </div>
+          )}
+
           {/* Action Buttons */}
           <div className="space-y-3">
             <button
               onClick={approve}
-              disabled={isApproving || amount < 1 || !postId}
+              disabled={isApproving || amount < 1 || !postId || (isFarcaster && !isOnBase)}
               className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 disabled:from-gray-300 disabled:to-gray-400 disabled:text-gray-500 text-white font-semibold py-4 px-6 rounded-md text-base transition-all duration-200 shadow-lg transform active:scale-95"
             >
               {isApproving ? 'Approving...' : 'Approve USDC'}
@@ -398,7 +459,7 @@ export default function Create() {
             
             <button
               onClick={create}
-              disabled={isCreating || !approveSuccess || amount < 1 || !postId}
+              disabled={isCreating || !approveSuccess || amount < 1 || !postId || (isFarcaster && !isOnBase)}
               className="w-full bg-yellow-600 backdrop-blur-sm hover:bg-yellow-700 disabled:bg-gray-300 disabled:text-gray-500 text-white font-semibold py-4 px-6 rounded-md text-base transition-all duration-200 shadow-lg transform active:scale-95"
             >
               {isCreating ? 'Creating...' : 'Create Pot'}
@@ -414,7 +475,9 @@ export default function Create() {
               </div>
             </div>
           )}
-        </div>
+          </>
+        )}
+      </div>
     </div>
   )
 }
