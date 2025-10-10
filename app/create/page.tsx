@@ -326,10 +326,10 @@ export default function Create() {
   }
 
   // Generate shareable URLs
-  const frameUrl = potId ? `${getAppDomain()}/p/${potId}` : ''
-  const farcasterShareUrl = potId && postId ? 
-    `https://warpcast.com/~/compose?text=🎰 PotFi Alert! ${amount} USDC jackpot available! Engage to claim!&embeds[]=${encodeURIComponent(frameUrl)}&parentCastId=${postId}` : 
-    potId ? `https://warpcast.com/~/compose?text=🎰 PotFi Alert! ${amount} USDC jackpot available! Engage to claim!&embeds[]=${encodeURIComponent(frameUrl)}` : ''
+  const claimUrl = potId ? `${getAppDomain()}/claim/${potId}` : ''
+  const farcasterShareUrl = claimUrl
+    ? `https://warpcast.com/~/compose?text=🎯 Claim my ${amount} USDC PotFi pot! Get 0.01 USDC per claim or hit the jackpot! 🎰&embeds[]=${encodeURIComponent(claimUrl)}`
+    : ''
 
   // Show error state
   if (errorMessage) {
@@ -393,9 +393,9 @@ export default function Create() {
         {/* Main Action Card */}
         <div className="bg-white/70 backdrop-blur-xl rounded-md p-6 shadow-2xl border border-white/20 mb-6">
           <div className="text-center mb-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-2">Share to Original Post</h2>
+            <h2 className="text-xl font-bold text-gray-900 mb-2">Share Your Pot</h2>
             <p className="text-gray-600 text-sm">
-              {postId ? 'Comment on your original post to promote the jackpot' : 'Share your PotFi to get engagement'}
+              Share your PotFi link to let others claim
             </p>
           </div>
           
@@ -407,13 +407,13 @@ export default function Create() {
           >
             <div className="flex items-center justify-center space-x-2">
               <Share2 className="w-5 h-5" />
-              <span>{postId ? 'Comment on Original Post' : 'Share on Farcaster'}</span>
+              <span>Share on Farcaster</span>
             </div>
           </a>
           
           <button
             onClick={() => {
-              navigator.clipboard.writeText(frameUrl)
+              navigator.clipboard.writeText(claimUrl)
               setCopied(true)
               setTimeout(() => setCopied(false), 2000)
             }}
@@ -592,7 +592,7 @@ export default function Create() {
               
               <div>
                 <label htmlFor="postId" className="block text-gray-900 font-medium mb-2 text-sm">
-                  Original Post ID
+                  Original Post ID (Cast Hash)
                 </label>
                 <input
                   id="postId"
@@ -601,10 +601,10 @@ export default function Create() {
                   value={postId}
                   onChange={(e) => setPostId(e.target.value)}
                   className="w-full p-3 rounded-md border border-gray-300 text-gray-900 text-base focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                  placeholder="0x... (Farcaster post hash)"
+                  placeholder="0x... (Farcaster cast hash)"
                 />
                 <p className="text-gray-500 text-xs mt-1">
-                  The post you want to promote with this jackpot
+                  Required to verify user engagement (like + comment + recast)
                 </p>
               </div>
               
@@ -628,11 +628,11 @@ export default function Create() {
             </div>
 
             {/* Validation warnings */}
-            {amount < 1 && (
+            {amount < 0.02 && (
               <div className="mt-6 bg-yellow-500/10 backdrop-blur-xl border border-yellow-200/50 text-yellow-700 px-4 py-3 rounded-md shadow-2xl">
                 <div className="flex items-center space-x-2">
                   <AlertTriangle className="w-4 h-4" />
-                  <p className="text-sm font-medium">Jackpot amount must be at least 1 USDC.</p>
+                  <p className="text-sm font-medium">Pot amount must be at least 0.02 USDC (2x standard claim).</p>
                 </div>
               </div>
             )}
@@ -640,7 +640,7 @@ export default function Create() {
               <div className="mt-6 bg-yellow-500/10 backdrop-blur-xl border border-yellow-200/50 text-yellow-700 px-4 py-3 rounded-md shadow-2xl">
                 <div className="flex items-center space-x-2">
                   <AlertTriangle className="w-4 h-4" />
-                  <p className="text-sm font-medium">Please enter the original post ID to promote.</p>
+                  <p className="text-sm font-medium">Post ID is required to verify user engagement.</p>
                 </div>
               </div>
             )}
@@ -668,8 +668,8 @@ export default function Create() {
               onClick={approve}
               disabled={
                 (isFarcaster ? farcasterApproving : isApproving) || 
-                amount < 1 || 
-                !postId || 
+                amount < 0.02 || 
+                !postId ||
                 (isFarcaster && !isOnBase)
               }
               className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 disabled:from-gray-300 disabled:to-gray-400 disabled:text-gray-500 text-white font-semibold py-4 px-6 rounded-md text-base transition-all duration-200 shadow-lg transform active:scale-95"
@@ -682,7 +682,7 @@ export default function Create() {
               disabled={
                 (isFarcaster ? farcasterCreating : isCreating) || 
                 (isFarcaster ? !farcasterApproved : !approveSuccess) || 
-                amount < 1 || 
+                amount < 0.02 || 
                 !postId || 
                 (isFarcaster && !isOnBase)
               }

@@ -54,7 +54,7 @@ export async function generateMetadata({
         description: `💰 Get ${standardClaim} USDC instantly or hit the ${amount} USDC jackpot!\n\n🎲 Current Jackpot Chance: ${jackpotProb}%\n💎 ${remaining} USDC still available\n\nConnect your wallet and claim now!`,
         images: [
           {
-            url: `${baseUrl}/og.png`,
+            url: `${baseUrl}/api/frame/image?action=claim&potId=${potId}&amount=${amount}&standardClaim=${standardClaim}&remaining=${remaining}&jackpotProb=${jackpotProb}`,
             width: 1200,
             height: 630,
             alt: 'PotFi - Claim Prize Pot'
@@ -67,15 +67,29 @@ export async function generateMetadata({
         card: 'summary_large_image',
         title: `🎯 Claim ${amount} USDC Pot`,
         description: `💰 ${standardClaim} USDC standard claim | 🎲 ${jackpotProb}% jackpot chance | 💎 ${remaining} USDC left!`,
-        images: [`${baseUrl}/og.png`],
+        images: [`${baseUrl}/api/frame/image?action=claim&potId=${potId}&amount=${amount}`],
       },
       other: {
+        // Farcaster Frame tags (use both property and name for compatibility)
         'fc:frame': 'vNext',
-        'fc:frame:image': `${baseUrl}/og.png`,
-        'fc:frame:button:1': `Claim ${standardClaim} USDC`,
+        'fc:frame:image': `${baseUrl}/api/frame/image?action=claim&potId=${potId}&amount=${amount}&standardClaim=${standardClaim}&remaining=${remaining}&jackpotProb=${jackpotProb}`,
+        'fc:frame:image:aspect_ratio': '1.91:1',
+        'fc:frame:button:1': `🎯 Claim ${standardClaim} USDC`,
         'fc:frame:button:1:action': 'link',
         'fc:frame:button:1:target': `${baseUrl}/claim/${potId}`,
-        'fc:frame:post_url': `${baseUrl}/api/frame/claim`,
+        'fc:frame:button:2': `💎 View Pot Details`,
+        'fc:frame:button:2:action': 'link',
+        'fc:frame:button:2:target': `${baseUrl}/claim/${potId}`,
+        // Add property versions for better compatibility
+        'property:fc:frame': 'vNext',
+        'property:fc:frame:image': `${baseUrl}/api/frame/image?action=claim&potId=${potId}&amount=${amount}&standardClaim=${standardClaim}&remaining=${remaining}&jackpotProb=${jackpotProb}`,
+        'property:fc:frame:image:aspect_ratio': '1.91:1',
+        'property:fc:frame:button:1': `🎯 Claim ${standardClaim} USDC`,
+        'property:fc:frame:button:1:action': 'link',
+        'property:fc:frame:button:1:target': `${baseUrl}/claim/${potId}`,
+        'property:fc:frame:button:2': `💎 View Pot Details`,
+        'property:fc:frame:button:2:action': 'link',
+        'property:fc:frame:button:2:target': `${baseUrl}/claim/${potId}`,
       }
     }
   } else if (potDetails && !potDetails.active) {
