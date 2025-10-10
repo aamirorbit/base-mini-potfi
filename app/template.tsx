@@ -40,7 +40,7 @@ export default function Template({ children }: TemplateProps) {
 
   return (
     <MobileLayout showBottomNav={shouldShowBottomNav}>
-      <div className="my-10">
+      <div className="mb-10">
       {children}
       </div>
     </MobileLayout>
