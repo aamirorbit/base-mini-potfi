@@ -203,11 +203,13 @@ export default function Claim() {
     <div>
           <div className="text-center mb-8">
             <div className="bg-white/70 backdrop-blur-xl rounded-md p-8 shadow-2xl border border-white/20 mb-6">
-              <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-blue-600 rounded-md flex items-center justify-center mb-4 mx-auto shadow-2xl">
-                <Coins className="w-10 h-10 text-white" />
-              </div>
+              <img 
+                src="/logo.png" 
+                alt="PotFi Logo" 
+                className="w-20 h-20 mx-auto mb-4 rounded-md shadow-2xl"
+              />
               <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">
-                Claim PotFi
+                Claim Pot
               </h1>
               <p className="text-gray-600 text-sm leading-relaxed">
                 #{id?.slice(0, 8)}...

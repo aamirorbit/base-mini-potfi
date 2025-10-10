@@ -295,11 +295,13 @@ export default function Create() {
           {/* Header */}
           <div className="text-center mb-6">
             <div className="bg-white/70 backdrop-blur-xl rounded-md p-6 shadow-2xl border border-white/20 mb-4">
-              <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-md flex items-center justify-center mb-3 mx-auto shadow-2xl">
-                <Coins className="w-8 h-8 text-white" />
-              </div>
+              <img 
+                src="/logo.png" 
+                alt="PotFi Logo" 
+                className="w-16 h-16 mx-auto mb-3 rounded-md shadow-2xl"
+              />
               <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1">
-                Create PotFi
+                Create Pot
               </h1>
               <p className="text-gray-600 text-sm leading-relaxed">
                 Set up your USDC jackpot and share it with the community

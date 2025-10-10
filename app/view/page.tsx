@@ -161,9 +161,11 @@ export default function ViewPots() {
       <div>
         <div className="text-center">
           <div className="bg-white/70 backdrop-blur-xl rounded-md p-8 shadow-2xl border border-white/20">
-            <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-blue-600 rounded-md flex items-center justify-center mb-6 mx-auto shadow-2xl">
-              <Eye className="w-10 h-10 text-white" />
-            </div>
+            <img 
+              src="/logo.png" 
+              alt="PotFi Logo" 
+              className="w-20 h-20 mx-auto mb-6 rounded-md shadow-2xl"
+            />
             <h1 className="text-3xl font-bold text-gray-900 mb-4">View Your Pots</h1>
             <p className="text-gray-600 mb-6">Connect your wallet to see your PotFi jackpots</p>
             
@@ -183,9 +185,11 @@ export default function ViewPots() {
       {/* Header */}
       <div className="text-center mb-6">
         <div className="bg-white/70 backdrop-blur-xl rounded-md p-6 shadow-2xl border border-white/20 mb-4">
-          <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-md flex items-center justify-center mb-3 mx-auto shadow-2xl">
-            <Eye className="w-8 h-8 text-white" />
-          </div>
+          <img 
+            src="/logo.png" 
+            alt="PotFi Logo" 
+            className="w-16 h-16 mx-auto mb-3 rounded-md shadow-2xl"
+          />
           <div className="flex items-center justify-between mb-2">
             <h1 className="text-2xl font-bold text-gray-900">Your Pots</h1>
             <button
@@ -209,9 +213,11 @@ export default function ViewPots() {
         // Empty State
         <div className="text-center">
           <div className="bg-white/70 backdrop-blur-xl rounded-md p-8 shadow-2xl border border-white/20 mb-6">
-            <div className="w-20 h-20 bg-gradient-to-br from-gray-400 to-gray-500 rounded-md flex items-center justify-center mb-6 mx-auto shadow-2xl">
-              <Coins className="w-10 h-10 text-white" />
-            </div>
+            <img 
+              src="/logo.png" 
+              alt="PotFi Logo" 
+              className="w-20 h-20 mx-auto mb-6 rounded-md shadow-2xl"
+            />
             <h2 className="text-2xl font-bold text-gray-900 mb-2">No Pots Yet</h2>
             <p className="text-gray-600 mb-6 leading-relaxed">
               You haven't created any PotFi jackpots yet. Start engaging your community with exciting rewards!
