@@ -1,4 +1,4 @@
-// contracts/JackPot.sol
+// contracts/PotFi.sol
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
@@ -8,7 +8,7 @@ import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol
 import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
-contract JackPot is ReentrancyGuard, Ownable {
+contract PotFi is ReentrancyGuard, Ownable {
     using SafeERC20 for IERC20;
 
     struct Pot {
@@ -49,10 +49,10 @@ contract JackPot is ReentrancyGuard, Ownable {
     mapping(bytes32 => bool) public usedPermit;                         // prevent replay
 
     // EIP-191 style signed payloads
-    // V1 (legacy, domain-less): keccak256("JackPotPermit(address,bytes32,uint256,bytes32)")
-    // V2 (recommended):        keccak256("JackPotPermit(address,bytes32,uint256,bytes32,address,uint256)")
-    bytes32 public constant PERMIT_TYPEHASH_V1 = keccak256("JackPotPermit(address,bytes32,uint256,bytes32)");
-    bytes32 public constant PERMIT_TYPEHASH_V2 = keccak256("JackPotPermit(address,bytes32,uint256,bytes32,address,uint256)");
+    // V1 (legacy, domain-less): keccak256("PotFiPermit(address,bytes32,uint256,bytes32)")
+    // V2 (recommended):        keccak256("PotFiPermit(address,bytes32,uint256,bytes32,address,uint256)")
+    bytes32 public constant PERMIT_TYPEHASH_V1 = keccak256("PotFiPermit(address,bytes32,uint256,bytes32)");
+    bytes32 public constant PERMIT_TYPEHASH_V2 = keccak256("PotFiPermit(address,bytes32,uint256,bytes32,address,uint256)");
 
     event PotCreated(bytes32 indexed id, address indexed creator, address token, uint256 amount, uint128 standardClaim);
     event StandardClaim(bytes32 indexed id, address indexed to, uint256 net, uint256 fee);
@@ -283,3 +283,4 @@ contract JackPot is ReentrancyGuard, Ownable {
         return usdcToken != address(0) && token == usdcToken; 
     }
 }
+

@@ -1,5 +1,5 @@
 /**
- * Utility functions for JackPot application
+ * Utility functions for PotFi application
  */
 
 /**
@@ -24,7 +24,7 @@ export function getAppDomain(): string {
 
 /**
  * Farcaster Account Association data
- * Used for connecting user accounts with the JackPot app
+ * Used for connecting user accounts with the PotFi app
  */
 export const FARCASTER_ACCOUNT_ASSOCIATION = {
   accountAssociation: {

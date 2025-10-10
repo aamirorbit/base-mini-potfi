@@ -10,14 +10,15 @@ const publicClient = createPublicClient({
 })
 
 // Simplified ABI for the functions we need
-const jackpotAbi = parseAbi([
-  'event PotCreated(bytes32 indexed id, address indexed creator, address token, uint256 amount, uint32 winners)',
-  'event Claimed(bytes32 indexed id, uint32 slot, address indexed to, uint256 net, uint256 fee)',
+const potfiAbi = parseAbi([
+  'event PotCreated(bytes32 indexed id, address indexed creator, address token, uint256 amount, uint128 standardClaim)',
+  'event StandardClaim(bytes32 indexed id, address indexed to, uint256 net, uint256 fee)',
+  'event JackpotClaim(bytes32 indexed id, address indexed to, uint256 net, uint256 fee, uint256 totalClaims)',
   'event Swept(bytes32 indexed id, address indexed to, uint256 amount)',
-  'function pots(bytes32) view returns (address creator, address token, uint128 amount, uint64 createdAt, uint32 winners, uint32 claimed, uint32 timeoutSecs, bytes32 seed, bool active)',
-  'function getAllocation(bytes32 id, uint32 index) view returns (uint128)',
+  'function pots(bytes32) view returns (address creator, address token, uint128 amount, uint128 claimedAmount, uint64 createdAt, uint32 claimed, uint32 timeoutSecs, uint128 standardClaim, bool active)',
   'function hasClaimed(bytes32, address) view returns (bool)',
-  'function slotTaken(bytes32, uint32) view returns (bool)'
+  'function getRemainingFunds(bytes32) view returns (uint256)',
+  'function getJackpotProbability(bytes32) view returns (uint256)'
 ])
 
 interface PotData {
@@ -79,22 +80,21 @@ export async function GET(request: NextRequest) {
         // Get pot data from contract
         const potData = await publicClient.readContract({
           address: jackpotAddress,
-          abi: jackpotAbi,
+          abi: potfiAbi,
           functionName: 'pots',
           args: [potId]
-        }) as [string, string, bigint, bigint, number, number, number, string, boolean]
+        }) as [string, string, bigint, bigint, bigint, number, number, bigint, boolean]
 
-        const [creator, token, amount, createdAt, winners, claimed, timeoutSecs, seed, active] = potData
+        const [creator, token, amount, claimedAmount, createdAt, claimed, timeoutSecs, standardClaim, active] = potData
 
-        // Get claim events for this pot
-        const claimLogs = await publicClient.getLogs({
+        // Get StandardClaim and JackpotClaim events for this pot
+        const standardClaimLogs = await publicClient.getLogs({
           address: jackpotAddress,
           event: {
             type: 'event',
-            name: 'Claimed',
+            name: 'StandardClaim',
             inputs: [
               { name: 'id', type: 'bytes32', indexed: true },
-              { name: 'slot', type: 'uint32' },
               { name: 'to', type: 'address', indexed: true },
               { name: 'net', type: 'uint256' },
               { name: 'fee', type: 'uint256' }
@@ -104,6 +104,26 @@ export async function GET(request: NextRequest) {
           fromBlock: 'earliest',
           toBlock: 'latest'
         })
+        
+        const jackpotClaimLogs = await publicClient.getLogs({
+          address: jackpotAddress,
+          event: {
+            type: 'event',
+            name: 'JackpotClaim',
+            inputs: [
+              { name: 'id', type: 'bytes32', indexed: true },
+              { name: 'to', type: 'address', indexed: true },
+              { name: 'net', type: 'uint256' },
+              { name: 'fee', type: 'uint256' },
+              { name: 'totalClaims', type: 'uint256' }
+            ]
+          },
+          args: { id: potId },
+          fromBlock: 'earliest',
+          toBlock: 'latest'
+        })
+        
+        const claimLogs = [...standardClaimLogs, ...jackpotClaimLogs]
 
         // Get sweep events for this pot
         const sweepLogs = await publicClient.getLogs({
@@ -124,31 +144,28 @@ export async function GET(request: NextRequest) {
 
         // Calculate amounts
         const totalAmount = Number(amount) / 1e6 // Convert from 6 decimals to USDC
-        const claimedAmount = claimLogs.reduce((sum, claim) => {
-          return sum + (Number(claim.args.net || 0) + Number(claim.args.fee || 0)) / 1e6
-        }, 0)
-        const remainingAmount = Math.max(0, totalAmount - claimedAmount)
+        const claimedAmountUSDC = Number(claimedAmount) / 1e6
+        const remainingAmount = Math.max(0, totalAmount - claimedAmountUSDC)
 
         // Determine status
         const expiryTime = Number(createdAt) * 1000 + (timeoutSecs * 1000)
         const isExpired = now > expiryTime
         const wasSwept = sweepLogs.length > 0
-        const jackpotHit = claimed === winners && remainingAmount <= 0.01 // Small tolerance for rounding
+        const jackpotHit = jackpotClaimLogs.length > 0 // Jackpot was hit if JackpotClaim event was emitted
         
         let status: 'active' | 'completed' | 'expired'
         if (active && !isExpired) {
           status = 'active'
-        } else if (jackpotHit || claimed === winners) {
+        } else if (jackpotHit || !active) {
           status = 'completed'
         } else {
           status = 'expired'
         }
 
-        // Find jackpot winner (last claim if jackpot hit)
+        // Find jackpot winner (from JackpotClaim event)
         let jackpotWinner: string | undefined
-        if (jackpotHit && claimLogs.length > 0) {
-          const lastClaim = claimLogs[claimLogs.length - 1]
-          jackpotWinner = lastClaim.args.to
+        if (jackpotHit && jackpotClaimLogs.length > 0) {
+          jackpotWinner = jackpotClaimLogs[0].args.to
         }
 
         const pot: PotData = {
@@ -156,10 +173,10 @@ export async function GET(request: NextRequest) {
           creator,
           token,
           amount: totalAmount,
-          claimedAmount,
+          claimedAmount: claimedAmountUSDC,
           remainingAmount,
           claimCount: claimed,
-          maxClaims: winners,
+          maxClaims: 0, // No max claims in new contract
           timeout: timeoutSecs,
           createdAt: Number(createdAt) * 1000, // Convert to milliseconds
           status,

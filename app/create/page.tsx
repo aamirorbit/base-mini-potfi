@@ -120,11 +120,12 @@ export default function Create() {
   
   async function create() {
     clearError()
+    // createPot(address token, uint128 amount, uint128 standardClaim, uint32 timeoutSecs)
     createPot({
       abi: jackpotAbi, 
       address: jackpotAddress, 
       functionName: 'createPot',
-      args: [USDC, usdcAmt, 1, timeout, ONE_USDC]
+      args: [USDC, usdcAmt, ONE_USDC, timeout]
     })
   }
 

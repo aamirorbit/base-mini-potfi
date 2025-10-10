@@ -225,14 +225,14 @@ export async function POST(request: NextRequest) {
     })
     
     // Prefer V2 (domain-separated) and fall back to V1 for older clients
-    const typeHashV2 = ethers.keccak256(ethers.toUtf8Bytes('JackPotPermit(address,bytes32,uint256,bytes32,address,uint256)'))
+    const typeHashV2 = ethers.keccak256(ethers.toUtf8Bytes('PotFiPermit(address,bytes32,uint256,bytes32,address,uint256)'))
     const v2 = ethers.keccak256(
       ethers.AbiCoder.defaultAbiCoder().encode(
         ['bytes32', 'address', 'bytes32', 'uint256', 'bytes32', 'address', 'uint256'],
         [typeHashV2, claimerAddress, potIdBytes32, deadline, castIdBytes32, jackpotAddress, BigInt(8453)] // Base mainnet chainId
       )
     )
-    const typeHashV1 = ethers.keccak256(ethers.toUtf8Bytes('JackPotPermit(address,bytes32,uint256,bytes32)'))
+    const typeHashV1 = ethers.keccak256(ethers.toUtf8Bytes('PotFiPermit(address,bytes32,uint256,bytes32)'))
     const v1 = ethers.keccak256(
       ethers.AbiCoder.defaultAbiCoder().encode(
         ['bytes32', 'address', 'bytes32', 'uint256', 'bytes32'],

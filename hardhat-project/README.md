@@ -1,6 +1,6 @@
-# JackPot Contract - Hardhat Deployment
+# PotFi Contract - Hardhat Deployment
 
-This is a Hardhat project for deploying and verifying the JackPot contract on Base network.
+This is a Hardhat project for deploying and verifying the PotFi contract on Base network.
 
 ## 🚀 Quick Start
 
@@ -91,7 +91,7 @@ The project is configured for:
 
 ## 🏗️ Contract Constructor Parameters
 
-The JackPot contract requires two constructor parameters:
+The PotFi contract requires two constructor parameters:
 
 1. **feeTreasury** (address): Where fees are sent (2.5% per claim)
 2. **gateSigner** (address): Backend signer for claim permits
@@ -105,12 +105,12 @@ By default, both are set to the deployer address. You can change them after depl
 ```
 hardhat-project/
 ├── contracts/
-│   └── JackPot.sol           # Main contract
+│   └── PotFi.sol             # Main contract
 ├── scripts/
 │   ├── deploy.js             # Deployment script
 │   └── verify-contract.js    # Verification script
 ├── test/
-│   └── JackPot.test.js       # Basic tests
+│   └── PotFi.test.js         # Basic tests
 ├── hardhat.config.cjs        # Hardhat configuration
 ├── package.json              # Dependencies and scripts
 └── .env.example              # Environment template

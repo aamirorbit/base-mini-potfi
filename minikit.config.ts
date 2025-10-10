@@ -2,16 +2,16 @@
 export default {
   // MiniKit configuration for Farcaster integration
   frame: {
-    title: 'JackPot - Decentralized Lottery',
-    description: 'A decentralized lottery system built on Base',
+    title: 'PotFi - Decentralized Prize Pots',
+    description: 'A decentralized prize pot system built on Base',
     image: '/og.png',
     buttons: [
       {
-        label: 'Buy Ticket',
+        label: 'Create Pot',
         action: 'post',
       },
       {
-        label: 'View JackPot',
+        label: 'View PotFi',
         action: 'link',
         target: 'https://base-mini-app-jackpot.vercel.app',
       },
@@ -25,9 +25,14 @@ export default {
   },
   // Contract configuration
   contracts: {
+    potfi: {
+      address: process.env.NEXT_PUBLIC_POTFI_CONTRACT_ADDRESS,
+      abi: './abis/PotFi.json',
+    },
+    // Legacy alias for backward compatibility
     jackpot: {
-      address: process.env.NEXT_PUBLIC_JACKPOT_CONTRACT_ADDRESS,
-      abi: './abis/JackPot.json',
+      address: process.env.NEXT_PUBLIC_POTFI_CONTRACT_ADDRESS || process.env.NEXT_PUBLIC_JACKPOT_CONTRACT_ADDRESS,
+      abi: './abis/PotFi.json',
     },
   },
 }

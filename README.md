@@ -1,16 +1,16 @@
-# JackPot - Farcaster Frame Implementation
+# PotFi - Farcaster Frame Implementation
 
 **Social tips with a jackpot twist. Deposit USDC, first N claim randomized splits on Base.**
 
 ## 🎯 **Pure Farcaster Frame Approach**
 
-This implementation provides a **pure frame-based experience** where creators can set up JackPots directly within Farcaster frames - no separate app needed!
+This implementation provides a **pure frame-based experience** where creators can set up Prize Pots directly within Farcaster frames - no separate app needed!
 
 ### **✅ What This Achieves:**
-- **True "strap on" functionality** - Add JackPot to any Farcaster post
+- **True "strap on" functionality** - Add PotFi to any Farcaster post
 - **Native Farcaster experience** - Users never leave Farcaster
 - **Simplified architecture** - No mini app complexity
-- **Viral engagement** - Posts get boosted with JackPot capability
+- **Viral engagement** - Posts get boosted with Prize Pot capability
 
 ## 🚀 **Quick Start**
 
@@ -31,11 +31,11 @@ npm run dev
 
 ### **Frame Endpoints** (New!)
 - `/api/frame` - Main frame entry point
-- `/api/frame/create` - Create JackPot flow
-- `/api/frame/claim` - Claim JackPot flow
+- `/api/frame/create` - Create Prize Pot flow
+- `/api/frame/claim` - Claim Prize Pot flow
 - `/api/frame/image` - Dynamic frame images
 
-### **Smart Contract** (`contracts/JackPot.sol`)
+### **Smart Contract** (`hardhat-project/contracts/PotFi.sol`)
 - **USDC-based lottery system** on Base
 - **Multiple winners** with randomized splits
 - **2.5% fee** per claim (charged to claimant)
@@ -54,14 +54,14 @@ npm run dev
 ### **Creator Flow:**
 ```
 1. Creator posts normally on Farcaster
-2. Creator adds JackPot frame to their post
+2. Creator adds PotFi frame to their post
 3. Creator sets up pot directly in the frame
-4. Post gets JackPot capability instantly
+4. Post gets Prize Pot capability instantly
 ```
 
 ### **User Flow:**
 ```
-1. User sees post with JackPot frame
+1. User sees post with PotFi frame
 2. User engages (Like + Comment + Recast)
 3. User claims directly in the frame
 4. User receives randomized USDC share
@@ -74,7 +74,7 @@ Create `.env.local`:
 ```bash
 # Base Network
 NEXT_PUBLIC_BASE_RPC_URL=https://mainnet.base.org
-NEXT_PUBLIC_JACKPOT_CONTRACT_ADDRESS=0x...
+NEXT_PUBLIC_POTFI_CONTRACT_ADDRESS=0x...
 
 # USDC on Base
 NEXT_PUBLIC_USDC_CONTRACT_ADDRESS=0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913
@@ -121,8 +121,8 @@ Update `public/.well-known/farcaster.json` with your domain.
 <!-- Main Frame -->
 <meta property="fc:frame" content="vNext" />
 <meta property="fc:frame:image" content="..." />
-<meta property="fc:frame:button:1" content="Create JackPot" />
-<meta property="fc:frame:button:2" content="Claim JackPot" />
+<meta property="fc:frame:button:1" content="Create Prize Pot" />
+<meta property="fc:frame:button:2" content="Claim Prize Pot" />
 ```
 
 ### **Frame Flows**
@@ -162,8 +162,8 @@ Update `public/.well-known/farcaster.json` with your domain.
 
 ### **Frame Endpoints**
 - `/api/frame` - Main frame entry point
-- `/api/frame/create` - Create JackPot flow
-- `/api/frame/claim` - Claim JackPot flow
+- `/api/frame/create` - Create Prize Pot flow
+- `/api/frame/claim` - Claim Prize Pot flow
 - `/api/frame/image` - Dynamic frame images
 
 ### **Gate Endpoints**
@@ -175,12 +175,12 @@ Update `public/.well-known/farcaster.json` with your domain.
 
 ### **Pages**
 - `/` - Home page with wallet connection
-- `/create` - Create new JackPot (legacy)
-- `/p/[id]` - Claim specific JackPot (legacy)
+- `/create` - Create new Prize Pot (legacy)
+- `/p/[id]` - Claim specific Prize Pot (legacy)
 
 ### **Frames** (New!)
-- **Create Frame** - Set up JackPot in frame
-- **Claim Frame** - Claim JackPot in frame
+- **Create Frame** - Set up Prize Pot in frame
+- **Claim Frame** - Claim Prize Pot in frame
 - **Success Frame** - Show results
 
 ## 🚀 **Base Mini Apps Guide Integration**

@@ -2,7 +2,7 @@ import hre from "hardhat";
 const { ethers } = hre;
 
 async function main() {
-  console.log("🚀 Starting JackPot contract deployment...");
+  console.log("🚀 Starting PotFi contract deployment...");
   
   // Get the deployer account
   const [deployer] = await ethers.getSigners();
@@ -21,18 +21,18 @@ async function main() {
   console.log("   Gate Signer:", gateSigner);
 
   // Deploy the contract
-  console.log("🔨 Deploying JackPot contract...");
-  const JackPot = await ethers.getContractFactory("JackPot");
-  const jackpot = await JackPot.deploy(feeTreasury, gateSigner);
+  console.log("🔨 Deploying PotFi contract...");
+  const PotFi = await ethers.getContractFactory("PotFi");
+  const potfi = await PotFi.deploy(feeTreasury, gateSigner);
 
   console.log("⏳ Waiting for deployment confirmation...");
-  await jackpot.waitForDeployment();
+  await potfi.waitForDeployment();
 
-  const contractAddress = await jackpot.getAddress();
-  console.log("✅ JackPot deployed to:", contractAddress);
+  const contractAddress = await potfi.getAddress();
+  console.log("✅ PotFi deployed to:", contractAddress);
 
   // Get deployment transaction details
-  const deploymentTx = jackpot.deploymentTransaction();
+  const deploymentTx = potfi.deploymentTransaction();
   if (deploymentTx) {
     console.log("📋 Deployment transaction hash:", deploymentTx.hash);
     console.log("⛽ Gas used:", deploymentTx.gasLimit?.toString());
@@ -41,10 +41,10 @@ async function main() {
   // Verify contract parameters
   console.log("\n🔍 Verifying deployed contract parameters:");
   try {
-    const deployedFeeTreasury = await jackpot.feeTreasury();
-    const deployedGateSigner = await jackpot.gateSigner();
-    const cooldownSecs = await jackpot.cooldownSecs();
-    const feeBps = await jackpot.FEE_BPS();
+    const deployedFeeTreasury = await potfi.feeTreasury();
+    const deployedGateSigner = await potfi.gateSigner();
+    const cooldownSecs = await potfi.cooldownSecs();
+    const feeBps = await potfi.FEE_BPS();
     
     console.log("   Fee Treasury:", deployedFeeTreasury);
     console.log("   Gate Signer:", deployedGateSigner);
@@ -62,12 +62,35 @@ async function main() {
   console.log("Chain ID:", (await ethers.provider.getNetwork()).chainId);
   console.log("Deployer:", deployer.address);
   
+  // Automatic verification
+  console.log("\n🔍 Starting automatic verification on BaseScan...");
+  console.log("⏳ Waiting 30 seconds for contract to propagate...");
+  await new Promise(resolve => setTimeout(resolve, 30000));
+  
+  try {
+    console.log("📝 Verifying contract...");
+    await hre.run("verify:verify", {
+      address: contractAddress,
+      constructorArguments: [feeTreasury, gateSigner],
+    });
+    console.log("✅ Contract verified successfully on BaseScan!");
+  } catch (error) {
+    if (error.message.toLowerCase().includes("already verified")) {
+      console.log("ℹ️  Contract is already verified");
+    } else {
+      console.error("⚠️  Automatic verification failed:");
+      console.error(error.message);
+      console.log("\n📝 You can verify manually using:");
+      console.log(`   npx hardhat verify --network base ${contractAddress} "${feeTreasury}" "${gateSigner}"`);
+    }
+  }
+  
   console.log("\n📝 Next steps:");
-  console.log("1. Verify the contract on BaseScan using:");
-  console.log(`   npx hardhat verify --network base ${contractAddress} "${feeTreasury}" "${gateSigner}"`);
-  console.log("2. Set USDC token address if needed:");
+  console.log("1. Set USDC token address if needed:");
   console.log(`   Contract method: setUsdcToken(address)`);
-  console.log("3. Update fee treasury or gate signer if needed");
+  console.log("2. Update fee treasury or gate signer if needed");
+  console.log("3. Update your .env.local with:");
+  console.log(`   NEXT_PUBLIC_POTFI_CONTRACT_ADDRESS=${contractAddress}`);
   
   return contractAddress;
 }
