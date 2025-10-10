@@ -111,6 +111,18 @@ export async function GET(request: NextRequest) {
     }
     
     // Parse logs from BaseScan response
+    type ParsedLog = {
+      args: {
+        id: `0x${string}`
+        creator: `0x${string}`
+        token?: `0x${string}`
+        amount: bigint
+        standardClaim: bigint
+      }
+      blockNumber: bigint
+      transactionHash: string
+    }
+    
     const potCreatedLogs = (data.result || []).map((log: any) => {
       try {
         return {
@@ -128,13 +140,13 @@ export async function GET(request: NextRequest) {
         console.error('Error parsing log:', error)
         return null
       }
-    }).filter((log: any) => log !== null)
+    }).filter((log: ParsedLog | null): log is ParsedLog => log !== null)
     
     console.log(`✅ Found ${potCreatedLogs.length} PotCreated events from BaseScan`)
 
     // Filter by creator if specified
     const filteredLogs = creatorAddress 
-      ? potCreatedLogs.filter(log => 
+      ? potCreatedLogs.filter((log: ParsedLog) => 
           log.args.creator?.toLowerCase() === creatorAddress.toLowerCase()
         )
       : potCreatedLogs
