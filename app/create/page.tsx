@@ -235,10 +235,10 @@ export default function Create() {
           }]
         })
 
-        console.log('CreatePot transaction sent:', txHash)
-        // Calculate potId and show success
-        const calculatedPotId = keccak256(encodePacked(['address', 'bytes32', 'uint256'], [address as `0x${string}`, postId as `0x${string}`, BigInt(Date.now())]))
-        setPotId(calculatedPotId)
+        console.log('✅ CreatePot transaction sent:', txHash)
+        
+        // Show success - pot will appear in "View Pots" once mined
+        setPotId(txHash) // Use transaction hash as identifier
         setShowSuccess(true)
         setFarcasterCreating(false)
         
@@ -320,13 +320,13 @@ export default function Create() {
             <CheckCircle className="w-12 h-12 text-white" />
           </div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            PotFi Created! 🎉
+            Transaction Sent! 🎉
           </h1>
           <p className="text-blue-700 text-lg mb-2">
-            {amount} USDC jackpot is now live
+            {amount} USDC pot is being created
           </p>
           <p className="text-gray-500 text-sm">
-            Users can now engage and claim!
+            Your pot will be live once confirmed on Base
           </p>
         </div>
 
@@ -385,8 +385,19 @@ export default function Create() {
           </div>
           
           <div className="mt-4 pt-3 border-t border-gray-200">
-            <p className="text-xs text-gray-500 break-all">
-              <span className="font-medium">ID:</span> {potId}
+            <p className="text-xs text-gray-500 mb-2">
+              <span className="font-medium">Transaction Hash:</span>
+            </p>
+            <a 
+              href={`https://basescan.org/tx/${potId}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-blue-600 hover:text-blue-800 break-all underline"
+            >
+              {potId}
+            </a>
+            <p className="text-xs text-gray-500 mt-3">
+              Your pot will appear in "View Pots" once the transaction is confirmed (usually within seconds).
             </p>
           </div>
         </div>
@@ -402,18 +413,27 @@ export default function Create() {
           </div>
         </div>
 
-        {/* Create Another Button */}
-        <button
-          onClick={() => {
-            setShowSuccess(false)
-            setPotId(null)
-            setAmount(50)
-            setPostId('')
-          }}
-          className="w-full bg-gray-800/90 backdrop-blur-sm hover:bg-gray-900 text-white font-medium py-4 px-6 rounded-md text-base transition-all duration-200 shadow-xl transform active:scale-95"
-        >
-          Create Another PotFi
-        </button>
+        {/* Action Buttons */}
+        <div className="space-y-3">
+          <a
+            href="/view"
+            className="block w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold py-4 px-6 rounded-md text-base transition-all duration-200 shadow-xl transform active:scale-95 text-center"
+          >
+            View My Pots
+          </a>
+          
+          <button
+            onClick={() => {
+              setShowSuccess(false)
+              setPotId(null)
+              setAmount(1)
+              setPostId('')
+            }}
+            className="w-full bg-gray-800/90 backdrop-blur-sm hover:bg-gray-900 text-white font-medium py-4 px-6 rounded-md text-base transition-all duration-200 shadow-xl transform active:scale-95"
+          >
+            Create Another Pot
+          </button>
+        </div>
       </div>
     )
   }
