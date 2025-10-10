@@ -43,6 +43,23 @@ interface PotData {
   canReclaim?: boolean // true if creator can reclaim funds
 }
 
+interface Transaction {
+  type: 'pot_created' | 'claim'
+  hash: string
+  amount: number
+  blockNum: number
+  timestamp: string | null
+  explorerUrl: string
+}
+
+interface UserStats {
+  totalDeposited: number
+  totalClaimed: number
+  potsCreated: number
+  claimsMade: number
+  netProfit: number
+}
+
 export default function ViewPots() {
   const [mounted, setMounted] = useState(false)
   const [pots, setPots] = useState<PotData[]>([])
@@ -50,6 +67,10 @@ export default function ViewPots() {
   const [error, setError] = useState('')
   const [filter, setFilter] = useState<'all' | 'active' | 'completed' | 'expired'>('all')
   const [isFarcaster, setIsFarcaster] = useState(false)
+  const [userHistory, setUserHistory] = useState<Transaction[]>([])
+  const [userStats, setUserStats] = useState<UserStats | null>(null)
+  const [historyLoading, setHistoryLoading] = useState(false)
+  const [showHistory, setShowHistory] = useState(false)
 
   // Wallet connections
   const { address: wagmiAddress, isConnected: wagmiConnected } = useAccount()
@@ -97,6 +118,27 @@ export default function ViewPots() {
       setPots([])
     } finally {
       setLoading(false)
+    }
+  }
+
+  async function loadUserHistory() {
+    if (!userAddress) return
+    
+    try {
+      setHistoryLoading(true)
+      const response = await fetch(`/api/user/history?address=${userAddress}`)
+      const data = await response.json()
+      
+      if (response.ok && data.success) {
+        setUserHistory(data.transactions || [])
+        setUserStats(data.stats)
+      } else {
+        console.error('Failed to load history:', data.error)
+      }
+    } catch (error) {
+      console.error('Error loading history:', error)
+    } finally {
+      setHistoryLoading(false)
     }
   }
 

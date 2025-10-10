@@ -1,24 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { Alchemy, Network } from 'alchemy-sdk'
-import { createPublicClient, http, parseAbi, getAddress } from 'viem'
+import { createPublicClient, http, parseAbi, getAddress, decodeEventLog } from 'viem'
 import { base } from 'viem/chains'
 import { jackpotAddress } from '@/lib/contracts'
 
-// Initialize Alchemy
-const alchemy = new Alchemy({
-  apiKey: process.env.ALCHEMY_API_KEY || process.env.NEXT_PUBLIC_ALCHEMY_API_KEY,
-  network: Network.BASE_MAINNET,
-})
+// BaseScan API key (free tier: 5 calls/second, 100k calls/day)
+const basescanApiKey = process.env.BASESCAN_API_KEY || process.env.NEXT_PUBLIC_BASESCAN_API_KEY
 
-// Fallback public client (for read operations not in Alchemy SDK)
+// Get Alchemy API key for contract reads (not for logs)
+const alchemyApiKey = process.env.ALCHEMY_API_KEY || process.env.NEXT_PUBLIC_ALCHEMY_API_KEY
+
+// Create public client for contract reads only (not for scanning logs)
+const rpcUrl = alchemyApiKey 
+  ? `https://base-mainnet.g.alchemy.com/v2/${alchemyApiKey}`
+  : 'https://mainnet.base.org'
+
 const publicClient = createPublicClient({
   chain: base,
-  transport: http(`https://base-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY || process.env.NEXT_PUBLIC_ALCHEMY_API_KEY}`, {
+  transport: http(rpcUrl, {
     retryCount: 3,
     retryDelay: 1000,
     timeout: 30000,
   })
 })
+
+console.log(`📊 Using BaseScan API: ${basescanApiKey ? '✅ Configured' : '⚠️  Not configured (limited to 1 call/5s)'}`)
+console.log(`🔗 Using RPC for reads: ${alchemyApiKey ? 'Alchemy' : 'Public Base RPC'}`)
 
 // Simplified ABI for the functions we need
 const potfiAbi = parseAbi([
@@ -55,47 +61,76 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const creatorAddress = searchParams.get('creator')
     
-    // Get current block number using Alchemy
-    const latestBlock = await alchemy.core.getBlockNumber()
+    console.log(`📊 Fetching pots${creatorAddress ? ` for creator ${creatorAddress}` : ' for all creators'}`)
     
-    // Only scan last 1 million blocks (roughly 3-4 weeks on Base)
-    // Base has ~2 second block time, so 1M blocks ≈ 23 days
-    const fromBlock = latestBlock > 1_000_000 ? latestBlock - 1_000_000 : 0
-    
-    console.log(`[Alchemy] Fetching PotCreated events from block ${fromBlock} to ${latestBlock}`)
-    
-    // PotCreated event signature: keccak256("PotCreated(bytes32,address,address,uint256,uint128)")
+    // Use BaseScan API to get event logs (much better than scanning blockchain!)
+    // PotCreated event signature
     const potCreatedTopic = '0xedbc7e1f4902e524d9cab0ffcc13f86772988eae02f52b3a34acaa7681b58fc4'
     
-    // Get all PotCreated events using Alchemy (much faster and more reliable)
-    const logsResponse = await alchemy.core.getLogs({
-      address: jackpotAddress,
-      topics: [potCreatedTopic],
-      fromBlock: `0x${fromBlock.toString(16)}`,
-      toBlock: 'latest'
-    })
+    // Build BaseScan API URL
+    const basescanUrl = new URL('https://api.basescan.org/api')
+    basescanUrl.searchParams.set('module', 'logs')
+    basescanUrl.searchParams.set('action', 'getLogs')
+    basescanUrl.searchParams.set('address', jackpotAddress)
+    basescanUrl.searchParams.set('topic0', potCreatedTopic)
     
-    console.log(`[Alchemy] Found ${logsResponse.length} PotCreated events`)
+    // Filter by creator if specified (topic1 is the indexed creator address)
+    if (creatorAddress) {
+      const paddedCreator = `0x000000000000000000000000${creatorAddress.slice(2).toLowerCase()}`
+      basescanUrl.searchParams.set('topic1', paddedCreator)
+      basescanUrl.searchParams.set('topic0_1_opr', 'and')
+    }
     
-    // Decode logs using viem
-    const potCreatedLogs = logsResponse.map(log => {
+    basescanUrl.searchParams.set('fromBlock', '0')
+    basescanUrl.searchParams.set('toBlock', 'latest')
+    
+    if (basescanApiKey) {
+      basescanUrl.searchParams.set('apikey', basescanApiKey)
+    }
+    
+    console.log('🔍 Fetching from BaseScan API...')
+    const response = await fetch(basescanUrl.toString())
+    const data = await response.json()
+    
+    if (data.status !== '1') {
+      // BaseScan error or no results
+      if (data.message === 'No records found') {
+        console.log('ℹ️  No pots found')
+        return NextResponse.json({
+          pots: [],
+          stats: {
+            totalPots: 0,
+            activePots: 0,
+            totalVolume: 0,
+            totalClaims: 0
+          },
+          success: true
+        })
+      }
+      throw new Error(data.message || 'BaseScan API error')
+    }
+    
+    // Parse logs from BaseScan response
+    const potCreatedLogs = (data.result || []).map((log: any) => {
       try {
         return {
           args: {
             id: log.topics[1] as `0x${string}`,
-            creator: `0x${log.topics[2]?.slice(26)}` as `0x${string}`, // Remove padding
+            creator: `0x${log.topics[2]?.slice(26)}` as `0x${string}`,
             token: log.data ? `0x${log.data.slice(26, 66)}` as `0x${string}` : undefined,
-            amount: log.data ? BigInt(`0x${log.data.slice(66, 130)}`) : BigInt(0),
-            standardClaim: log.data ? BigInt(`0x${log.data.slice(130, 162)}`) : BigInt(0)
+            amount: log.data ? BigInt(`0x${log.data.slice(2, 66)}`) : BigInt(0),
+            standardClaim: log.data ? BigInt(`0x${log.data.slice(66, 98)}`) : BigInt(0)
           },
-          blockNumber: BigInt(log.blockNumber || 0),
+          blockNumber: BigInt(parseInt(log.blockNumber, 16)),
           transactionHash: log.transactionHash
         }
       } catch (error) {
-        console.error('Error decoding log:', error)
+        console.error('Error parsing log:', error)
         return null
       }
-    }).filter(log => log !== null)
+    }).filter((log: any) => log !== null)
+    
+    console.log(`✅ Found ${potCreatedLogs.length} PotCreated events from BaseScan`)
 
     // Filter by creator if specified
     const filteredLogs = creatorAddress 
