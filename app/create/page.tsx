@@ -10,7 +10,7 @@ import { miniKitWallet } from '@/lib/minikit-wallet'
 import { Coins, AlertTriangle, CheckCircle, Copy, Share2, ArrowLeft, RefreshCw } from 'lucide-react'
 
 export default function Create() {
-  const [amount, setAmount] = useState(50)
+  const [amount, setAmount] = useState(1)
   const [timeout, setTimeoutSecs] = useState(43200) // 12h
   const [postId, setPostId] = useState('')
   const [potId, setPotId] = useState<string | null>(null)
@@ -471,7 +471,7 @@ export default function Create() {
                   placeholder="Enter jackpot amount"
                 />
                 <p className="text-gray-500 text-xs mt-1">
-                  Users claim 0.01 USDC each until one wins the full jackpot
+                  Users claim 0.01 USDC each until one wins the jackpot. Minimum: 1 USDC
                 </p>
               </div>
               

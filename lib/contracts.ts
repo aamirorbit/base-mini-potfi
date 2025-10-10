@@ -3,7 +3,7 @@ export const potfiAddress = process.env.NEXT_PUBLIC_POTFI_CONTRACT_ADDRESS as `0
 export const jackpotAddress = potfiAddress // Alias for backward compatibility
 export const USDC = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913' // Base USDC
 export const USDC_CONTRACT_ADDRESS = USDC // Alias for compatibility
-export const ONE_USDC = BigInt(1_000_000) // 1 USDC (6 decimals)
+export const ONE_USDC = BigInt(10_000) // 0.01 USDC standard claim (6 decimals)
 
 export const potfiAbi = [
   {
