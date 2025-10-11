@@ -12,6 +12,7 @@ import { base } from 'viem/chains'
 import { miniKitWallet } from '@/lib/minikit-wallet'
 import { Coins, Target, AlertTriangle, CheckCircle, Wifi, X, XCircle, Wallet } from 'lucide-react'
 import Link from 'next/link'
+import { ErrorModal } from '@/app/components/ErrorModal'
 
 export default function Claim() {
   const { id } = useParams() as { id: `0x${string}` }
@@ -25,6 +26,7 @@ export default function Claim() {
   const [showJackpotModal, setShowJackpotModal] = useState(false)
   const [potDetails, setPotDetails] = useState<any>(null)
   const [loadingPot, setLoadingPot] = useState(true)
+  const [showErrorModal, setShowErrorModal] = useState(false)
   
   // Wagmi hooks for fallback
   const { address: wagmiAddress, isConnected: wagmiConnected } = useAccount()
@@ -153,7 +155,9 @@ export default function Claim() {
       console.log('Jackpot info:', jackpotInfo)
     }
     if (transactionError || writeError) {
-      setErrorMessage(transactionError?.message || writeError?.message || 'Transaction failed')
+      const error = transactionError?.message || writeError?.message || 'Transaction failed'
+      setErrorMessage(error)
+      setShowErrorModal(true)
       setBusy(false)
       console.error('Transaction error:', transactionError || writeError)
     }
@@ -233,7 +237,9 @@ export default function Claim() {
           setMiniKitTxHash(hash)
         } catch (error: any) {
           console.error('MiniKit transaction error:', error)
-          setErrorMessage(error.message || 'Transaction failed')
+          const errorMsg = error.message || 'Transaction failed'
+          setErrorMessage(errorMsg)
+          setShowErrorModal(true)
           setBusy(false)
         }
       } else {
@@ -249,9 +255,11 @@ export default function Claim() {
       // Don't set busy to false immediately - let the transaction complete
       // The busy state will be managed by the transaction status
       
-    } catch (error) {
+    } catch (error: any) {
       console.error('Claim error:', error)
-      setErrorMessage('Network error. Please try again.')
+      const errorMsg = error?.message || 'Network error. Please try again.'
+      setErrorMessage(errorMsg)
+      setShowErrorModal(true)
       setBusy(false) // Only set false on API error
     }
   }
@@ -491,6 +499,23 @@ export default function Claim() {
           </div>
         </div>
       )}
+
+      {/* Error Modal */}
+      <ErrorModal
+        isOpen={showErrorModal}
+        onClose={() => {
+          setShowErrorModal(false)
+          setErrorMessage('')
+        }}
+        title="Claim Failed"
+        message={errorMessage}
+        onRetry={() => {
+          setErrorMessage('')
+          if (castId && address && !busy && !isTransactionPending) {
+            claim()
+          }
+        }}
+      />
     </div>
   )
 }

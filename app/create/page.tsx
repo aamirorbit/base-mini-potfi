@@ -9,6 +9,7 @@ import { useMiniKitWallet } from '@/hooks/useMiniKitWallet'
 import { miniKitWallet } from '@/lib/minikit-wallet'
 import { Coins, AlertTriangle, CheckCircle, Copy, Share2, ArrowLeft, RefreshCw, Clock, DollarSign, Users } from 'lucide-react'
 import Link from 'next/link'
+import { ErrorModal } from '@/app/components/ErrorModal'
 
 export default function Create() {
   const [amount, setAmount] = useState(1)
@@ -24,6 +25,7 @@ export default function Create() {
   const [farcasterCreating, setFarcasterCreating] = useState(false)
   const [isPotIdPending, setIsPotIdPending] = useState(false)
   const [copied, setCopied] = useState(false)
+  const [showErrorModal, setShowErrorModal] = useState(false)
   const usdcAmt = BigInt(Math.round(amount * 1_000_000)) // 6dp
 
   // Wagmi hooks for fallback
@@ -61,10 +63,14 @@ export default function Create() {
   // Handle transaction errors
   useEffect(() => {
     if (approveError) {
-      setErrorMessage(`Approval failed: ${approveError.message}`)
+      const errorMsg = `Approval failed: ${approveError.message}`
+      setErrorMessage(errorMsg)
+      setShowErrorModal(true)
     }
     if (createError) {
-      setErrorMessage(`Pot creation failed: ${createError.message}`)
+      const errorMsg = `Pot creation failed: ${createError.message}`
+      setErrorMessage(errorMsg)
+      setShowErrorModal(true)
     }
   }, [approveError, createError])
 
@@ -216,7 +222,9 @@ export default function Create() {
         
       } catch (error: any) {
         console.error('Approve error:', error)
-        setErrorMessage(error.message || 'Failed to approve USDC')
+        const errorMsg = error.message || 'Failed to approve USDC'
+        setErrorMessage(errorMsg)
+        setShowErrorModal(true)
         setFarcasterApproving(false)
       }
     } else {
@@ -328,7 +336,9 @@ export default function Create() {
         
       } catch (error: any) {
         console.error('CreatePot error:', error)
-        setErrorMessage(error.message || 'Failed to create pot')
+        const errorMsg = error.message || 'Failed to create pot'
+        setErrorMessage(errorMsg)
+        setShowErrorModal(true)
         setFarcasterCreating(false)
       }
     } else {
@@ -529,6 +539,18 @@ export default function Create() {
             Create Another
           </button>
         </div>
+
+        {/* Error Modal */}
+        <ErrorModal
+          isOpen={showErrorModal}
+          onClose={() => {
+            setShowErrorModal(false)
+            setErrorMessage('')
+          }}
+          title="Transaction Failed"
+          message={errorMessage}
+          onRetry={retry}
+        />
       </div>
     )
   }
@@ -686,6 +708,26 @@ export default function Create() {
           )}
         </>
       ) : null}
+
+      {/* Error Modal */}
+      <ErrorModal
+        isOpen={showErrorModal && !showSuccess}
+        onClose={() => {
+          setShowErrorModal(false)
+          setErrorMessage('')
+        }}
+        title="Transaction Failed"
+        message={errorMessage}
+        onRetry={() => {
+          setErrorMessage('')
+          // Retry logic based on which step failed
+          if (!farcasterApproved && !approveSuccess) {
+            approve()
+          } else {
+            create()
+          }
+        }}
+      />
     </div>
   )
 }
