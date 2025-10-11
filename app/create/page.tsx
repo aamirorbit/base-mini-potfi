@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useWriteContract, useWaitForTransactionReceipt, useAccount } from 'wagmi'
+import { useWriteContract, useWaitForTransactionReceipt, useAccount, useReadContract } from 'wagmi'
 import { erc20Abi, keccak256, encodePacked, decodeEventLog, encodeFunctionData } from 'viem'
 import { jackpotAbi, jackpotAddress, USDC, ONE_USDC } from '@/lib/contracts'
 import { getAppDomain } from '@/lib/utils'
@@ -59,6 +59,17 @@ export default function Create() {
   
   const { isLoading: isApproving, isSuccess: approveSuccess, error: approveError } = useWaitForTransactionReceipt({ hash: approveHash })
   const { isLoading: isCreating, isSuccess: createSuccess, error: createError, data: createReceipt } = useWaitForTransactionReceipt({ hash: createHash })
+  
+  // Check current USDC allowance
+  const { data: currentAllowance, refetch: refetchAllowance } = useReadContract({
+    address: USDC,
+    abi: erc20Abi,
+    functionName: 'allowance',
+    args: address ? [address as `0x${string}`, jackpotAddress] : undefined,
+    query: {
+      enabled: !!address
+    }
+  })
 
   // Handle transaction errors
   useEffect(() => {
@@ -86,9 +97,12 @@ export default function Create() {
     if (justApproved && notYetCreating && notYetCreated) {
       // Automatically start pot creation after approval
       console.log('Approval successful, starting pot creation...')
-      setTimeout(() => {
-        create()
-      }, 500) // Small delay to show approval success
+      // Refetch allowance before proceeding
+      refetchAllowance().then(() => {
+        setTimeout(() => {
+          create()
+        }, 500) // Small delay to show approval success
+      })
     }
   }, [farcasterApproved, approveSuccess, isFarcaster, farcasterCreating, isCreating, showSuccess])
 
@@ -176,6 +190,23 @@ export default function Create() {
   async function approve() {
     clearError()
     
+    // Check allowance again right before approving (double-check)
+    try {
+      const result = await refetchAllowance()
+      const allowance = result.data as bigint | undefined
+      
+      if (allowance && allowance >= usdcAmt) {
+        console.log('Allowance already sufficient, skipping approval')
+        // Mark as approved and proceed
+        if (isFarcaster) {
+          setFarcasterApproved(true)
+        }
+        return
+      }
+    } catch (error) {
+      console.error('Error checking allowance before approval:', error)
+    }
+    
     // Use MiniKit provider in Farcaster, wagmi elsewhere
     if (isFarcaster && mounted) {
       setFarcasterApproving(true)
@@ -222,6 +253,8 @@ export default function Create() {
               console.log('✅ Approval confirmed')
               setFarcasterApproved(true)
               setFarcasterApproving(false)
+              // Refetch allowance after approval
+              refetchAllowance()
             } else if (receipt && receipt.status === '0x0') {
               clearInterval(pollInterval)
               setErrorMessage('Approval transaction failed')
@@ -260,15 +293,36 @@ export default function Create() {
   async function handleCreatePot() {
     clearError()
     
-    // Check if approval is needed first
-    const needsApproval = isFarcaster ? !farcasterApproved : !approveSuccess
+    // First, check current allowance
+    let sufficientAllowance = false
+    
+    try {
+      // Refetch the latest allowance
+      const result = await refetchAllowance()
+      const allowance = result.data as bigint | undefined
+      
+      console.log('Current allowance:', allowance?.toString(), 'Required:', usdcAmt.toString())
+      
+      // Check if current allowance is sufficient
+      if (allowance && allowance >= usdcAmt) {
+        sufficientAllowance = true
+        console.log('Sufficient allowance already exists, skipping approval')
+      }
+    } catch (error) {
+      console.error('Error checking allowance:', error)
+      // Continue with approval if check fails
+    }
+    
+    // Check if we need approval
+    const alreadyApproved = isFarcaster ? farcasterApproved : approveSuccess
+    const needsApproval = !sufficientAllowance && !alreadyApproved
     
     if (needsApproval) {
       console.log('Starting approval process...')
       await approve()
       // create() will be called automatically after approval success
     } else {
-      console.log('Already approved, starting pot creation...')
+      console.log('Approval not needed or already done, starting pot creation...')
       await create()
     }
   }

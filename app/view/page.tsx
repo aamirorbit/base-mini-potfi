@@ -221,13 +221,13 @@ export default function ViewPots() {
           </div>
 
           {/* Compact Create Button */}
-          <Link
+          {/* <Link
             href="/create"
             className="flex items-center justify-center space-x-2 w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-medium py-3 px-4 rounded-md text-sm transition-all shadow-lg"
           >
             <Plus className="w-4 h-4" />
             <span>Create New Pot</span>
-          </Link>
+          </Link> */}
         </>
       )}
     </div>
