@@ -5,7 +5,7 @@ async function getPotDetails(potId: string) {
   try {
     // Get the base URL from headers
     const headersList = headers()
-    const host = headersList.get('host') || 'base-mini-potfi.vercel.app'
+    const host = headersList.get('host') || 'potfi.basecitizens.com'
     const protocol = process.env.NODE_ENV === 'development' ? 'http' : 'https'
     const baseUrl = `${protocol}://${host}`
     
@@ -38,7 +38,7 @@ export async function generateMetadata({
   const potDetails = await getPotDetails(potId)
   
   // Get base URL for OG images
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://base-mini-potfi.vercel.app'
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://potfi.basecitizens.com'
   
   if (potDetails && potDetails.active) {
     const amount = potDetails.amount || 0

@@ -101,7 +101,7 @@ Same money, but now there's:
 ```
 🚀 Ready to make tipping fun again?
 
-Try JackPot: https://base-mini-potfi.vercel.app
+Try JackPot: https://potfi.basecitizens.com
 
 • Create your first pot
 • Watch engagement explode

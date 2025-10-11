@@ -19,7 +19,7 @@ export function getAppDomain(): string {
   }
   
   // Production fallback - always use main domain for Mini App embeds
-  return 'https://base-mini-potfi.vercel.app'
+  return 'https://potfi.basecitizens.com'
 }
 
 /**

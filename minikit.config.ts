@@ -13,7 +13,7 @@ export default {
       {
         label: 'View PotFi',
         action: 'link',
-        target: 'https://base-mini-potfi.vercel.app',
+        target: 'https://potfi.basecitizens.com',
       },
     ],
   },
