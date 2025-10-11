@@ -165,26 +165,6 @@ export default function Home() {
         </div>
       ) : (
         <>
-          {/* Compact Stats */}
-          <div className="grid grid-cols-4 gap-2">
-            <div className="bg-white/70 backdrop-blur-xl rounded-md p-3 border border-white/20 text-center">
-              <p className="text-lg font-bold text-blue-600">{stats.active}</p>
-              <p className="text-xs text-gray-600">Active</p>
-            </div>
-            <div className="bg-white/70 backdrop-blur-xl rounded-md p-3 border border-white/20 text-center">
-              <p className="text-lg font-bold text-blue-600">{stats.activeValue.toFixed(0)}</p>
-              <p className="text-xs text-gray-600">Available</p>
-            </div>
-            <div className="bg-white/70 backdrop-blur-xl rounded-md p-3 border border-white/20 text-center">
-              <p className="text-lg font-bold text-blue-600">{stats.total}</p>
-              <p className="text-xs text-gray-600">Total</p>
-            </div>
-            <div className="bg-white/70 backdrop-blur-xl rounded-md p-3 border border-white/20 text-center">
-              <p className="text-lg font-bold text-blue-600">{stats.totalValue.toFixed(0)}</p>
-              <p className="text-xs text-gray-600">Created</p>
-            </div>
-          </div>
-
           {/* Compact Filter Tabs */}
           <div className="flex space-x-1 bg-white/60 backdrop-blur-xl rounded-md p-1 border border-white/20">
             {[
