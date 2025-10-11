@@ -1,18 +1,22 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useAccount } from 'wagmi'
+import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
 import { useMiniKitWallet } from '@/hooks/useMiniKitWallet'
+import { miniKitWallet } from '@/lib/minikit-wallet'
+import { jackpotAbi, jackpotAddress } from '@/lib/contracts'
+import { encodeFunctionData, pad } from 'viem'
 import Link from 'next/link'
 import { formatTimeRemaining, truncateAddress } from '@/lib/blockchain'
+import { ErrorModal } from '@/app/components/ErrorModal'
 import { 
   Eye, 
   Plus, 
   Clock, 
   CheckCircle, 
-  XCircle, 
-  Users, 
-  DollarSign, 
+  XCircle,
+  Users,
+  DollarSign,
   RefreshCw,
   Trophy,
   Timer,
@@ -45,10 +49,20 @@ export default function ViewPots() {
   const [error, setError] = useState('')
   const [filter, setFilter] = useState<'all' | 'active' | 'completed' | 'expired'>('all')
   const [isFarcaster, setIsFarcaster] = useState(false)
+  const [reclaimingPotId, setReclaimingPotId] = useState<string | null>(null)
+  const [errorMessage, setErrorMessage] = useState<string>('')
+  const [showErrorModal, setShowErrorModal] = useState(false)
+  const [successMessage, setSuccessMessage] = useState<string>('')
 
   // Wallet connections
   const { address: wagmiAddress, isConnected: wagmiConnected } = useAccount()
   const { address: miniKitAddress, isConnected: miniKitConnected } = useMiniKitWallet()
+  
+  // Wagmi hooks for reclaim
+  const { writeContract: reclaimContract, data: reclaimHash } = useWriteContract()
+  const { isLoading: isReclaiming, isSuccess: reclaimSuccess, error: reclaimError } = useWaitForTransactionReceipt({ 
+    hash: reclaimHash 
+  })
 
   useEffect(() => {
     setMounted(true)
@@ -88,9 +102,133 @@ export default function ViewPots() {
     }
   }
 
+  // Handle reclaim transaction completion
+  useEffect(() => {
+    if (reclaimSuccess) {
+      setSuccessMessage('Funds reclaimed successfully!')
+      setReclaimingPotId(null)
+      setTimeout(() => {
+        setSuccessMessage('')
+        loadUserPots() // Reload pots to update status
+      }, 3000)
+    }
+    if (reclaimError) {
+      const errorMsg = reclaimError.message || 'Reclaim transaction failed'
+      setErrorMessage(errorMsg)
+      setShowErrorModal(true)
+      setReclaimingPotId(null)
+    }
+  }, [reclaimSuccess, reclaimError])
+
   async function reclaimFunds(potId: string) {
-    alert('Reclaim function would be called here. In production, this will interact with the smart contract.')
-    await loadUserPots()
+    try {
+      setReclaimingPotId(potId)
+      setErrorMessage('')
+      
+      const confirmed = confirm(
+        `Reclaim remaining funds from this pot?\n\n` +
+        `This will transfer any unclaimed USDC back to your wallet.\n\n` +
+        `Continue?`
+      )
+      
+      if (!confirmed) {
+        setReclaimingPotId(null)
+        return
+      }
+
+      // Pad potId to bytes32
+      const potIdBytes32 = pad(potId as `0x${string}`, { size: 32 })
+
+      // Use MiniKit in Farcaster, wagmi elsewhere
+      if (isFarcaster) {
+        try {
+          const provider = miniKitWallet.getProvider()
+          if (!provider) {
+            setErrorMessage('Wallet not connected properly')
+            setShowErrorModal(true)
+            setReclaimingPotId(null)
+            return
+          }
+
+          // Encode the sweep function call
+          const data = encodeFunctionData({
+            abi: jackpotAbi,
+            functionName: 'sweep',
+            args: [potIdBytes32]
+          })
+
+          console.log('Sending sweep transaction via MiniKit...')
+          const txHash = await provider.request({
+            method: 'eth_sendTransaction',
+            params: [{
+              from: userAddress,
+              to: jackpotAddress,
+              data: data,
+            }]
+          })
+
+          console.log('✅ Sweep transaction sent:', txHash)
+          
+          // Poll for transaction receipt
+          let attempts = 0
+          const maxAttempts = 20
+          const pollInterval = setInterval(async () => {
+            attempts++
+            try {
+              const receipt = await provider.request({
+                method: 'eth_getTransactionReceipt',
+                params: [txHash]
+              })
+              
+              if (receipt && receipt.status === '0x1') {
+                clearInterval(pollInterval)
+                console.log('✅ Reclaim successful')
+                setSuccessMessage('Funds reclaimed successfully!')
+                setReclaimingPotId(null)
+                setTimeout(() => {
+                  setSuccessMessage('')
+                  loadUserPots()
+                }, 3000)
+              } else if (receipt && receipt.status === '0x0') {
+                clearInterval(pollInterval)
+                setErrorMessage('Reclaim transaction failed')
+                setShowErrorModal(true)
+                setReclaimingPotId(null)
+              } else if (attempts >= maxAttempts) {
+                clearInterval(pollInterval)
+                setReclaimingPotId(null)
+              }
+            } catch (error) {
+              if (attempts >= maxAttempts) {
+                clearInterval(pollInterval)
+                setReclaimingPotId(null)
+              }
+            }
+          }, 1000)
+          
+        } catch (error: any) {
+          console.error('Sweep error:', error)
+          const errorMsg = error.message || 'Failed to reclaim funds'
+          setErrorMessage(errorMsg)
+          setShowErrorModal(true)
+          setReclaimingPotId(null)
+        }
+      } else {
+        // Use wagmi for non-Farcaster environments
+        reclaimContract({
+          abi: jackpotAbi,
+          address: jackpotAddress,
+          functionName: 'sweep',
+          args: [potIdBytes32]
+        })
+      }
+    } catch (error: any) {
+      console.error('Reclaim error:', error)
+      const errorMsg = error?.message || 'Failed to reclaim funds'
+      setErrorMessage(errorMsg)
+      setShowErrorModal(true)
+      setReclaimingPotId(null)
+    }
   }
 
   const filteredPots = pots.filter(pot => {
@@ -216,7 +354,12 @@ export default function ViewPots() {
           {/* Compact Pots List */}
           <div className="space-y-3">
             {filteredPots.map((pot) => (
-              <PotCard key={pot.id} pot={pot} onReclaim={reclaimFunds} />
+              <PotCard 
+                key={pot.id} 
+                pot={pot} 
+                onReclaim={reclaimFunds}
+                isReclaiming={reclaimingPotId === pot.id}
+              />
             ))}
           </div>
 
@@ -230,11 +373,39 @@ export default function ViewPots() {
           </Link> */}
         </>
       )}
+
+      {/* Success Message */}
+      {successMessage && (
+        <div className="fixed bottom-4 right-4 bg-white/90 backdrop-blur-xl rounded-md p-3 border border-white/20 max-w-xs shadow-xl animate-in slide-in-from-bottom-5 z-50">
+          <div className="flex items-center space-x-2">
+            <CheckCircle className="w-5 h-5 text-blue-600" />
+            <p className="text-sm font-semibold text-gray-900">{successMessage}</p>
+          </div>
+        </div>
+      )}
+
+      {/* Error Modal */}
+      <ErrorModal
+        isOpen={showErrorModal}
+        onClose={() => {
+          setShowErrorModal(false)
+          setErrorMessage('')
+        }}
+        title="Reclaim Failed"
+        message={errorMessage}
+        onRetry={() => {
+          setShowErrorModal(false)
+          setErrorMessage('')
+          if (reclaimingPotId) {
+            reclaimFunds(reclaimingPotId)
+          }
+        }}
+      />
     </div>
   )
 }
 
-function PotCard({ pot, onReclaim }: { pot: PotData, onReclaim: (potId: string) => void }) {
+function PotCard({ pot, onReclaim, isReclaiming }: { pot: PotData, onReclaim: (potId: string) => void, isReclaiming: boolean }) {
   const [showDetails, setShowDetails] = useState(false)
   const [copied, setCopied] = useState(false)
   
@@ -323,10 +494,20 @@ function PotCard({ pot, onReclaim }: { pot: PotData, onReclaim: (potId: string) 
           {pot.canReclaim ? (
             <button
               onClick={() => onReclaim(pot.id)}
-              className="flex-1 bg-yellow-600 hover:bg-yellow-700 text-white text-xs font-medium py-2 px-3 rounded-md transition-all flex items-center justify-center space-x-1"
+              disabled={isReclaiming}
+              className="flex-1 bg-yellow-600 hover:bg-yellow-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white text-xs font-medium py-2 px-3 rounded-md transition-all flex items-center justify-center space-x-1"
             >
-              <Wallet className="w-3 h-3" />
-              <span>Reclaim</span>
+              {isReclaiming ? (
+                <>
+                  <RefreshCw className="w-3 h-3 animate-spin" />
+                  <span>Reclaiming...</span>
+                </>
+              ) : (
+                <>
+                  <Wallet className="w-3 h-3" />
+                  <span>Reclaim</span>
+                </>
+              )}
             </button>
           ) : (
             <button
