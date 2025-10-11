@@ -66,13 +66,31 @@ export default function Create() {
       const errorMsg = `Approval failed: ${approveError.message}`
       setErrorMessage(errorMsg)
       setShowErrorModal(true)
+      setFarcasterApproving(false)
     }
     if (createError) {
       const errorMsg = `Pot creation failed: ${createError.message}`
       setErrorMessage(errorMsg)
       setShowErrorModal(true)
+      setFarcasterCreating(false)
     }
   }, [approveError, createError])
+
+  // Auto-proceed to creation after approval success
+  useEffect(() => {
+    // Only auto-proceed if we just got approval and haven't started creating yet
+    const justApproved = (isFarcaster && farcasterApproved) || approveSuccess
+    const notYetCreating = !(isFarcaster ? farcasterCreating : isCreating)
+    const notYetCreated = !showSuccess
+    
+    if (justApproved && notYetCreating && notYetCreated) {
+      // Automatically start pot creation after approval
+      console.log('Approval successful, starting pot creation...')
+      setTimeout(() => {
+        create()
+      }, 500) // Small delay to show approval success
+    }
+  }, [farcasterApproved, approveSuccess, isFarcaster, farcasterCreating, isCreating, showSuccess])
 
   // Reset error when starting new actions
   const clearError = () => setErrorMessage('')
@@ -238,6 +256,23 @@ export default function Create() {
     }
   }
   
+  // Main function that handles both approval and creation
+  async function handleCreatePot() {
+    clearError()
+    
+    // Check if approval is needed first
+    const needsApproval = isFarcaster ? !farcasterApproved : !approveSuccess
+    
+    if (needsApproval) {
+      console.log('Starting approval process...')
+      await approve()
+      // create() will be called automatically after approval success
+    } else {
+      console.log('Already approved, starting pot creation...')
+      await create()
+    }
+  }
+
   async function create() {
     clearError()
     
@@ -670,40 +705,40 @@ export default function Create() {
             </div>
           )}
 
-          {/* Action Buttons */}
-          <div className="space-y-2">
-            <button
-              onClick={approve}
-              disabled={
-                (isFarcaster ? farcasterApproving : isApproving) || 
-                amount < 0.02 || 
-                !postId ||
-                (isFarcaster && !isOnBase)
-              }
-              className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 disabled:from-gray-300 disabled:to-gray-400 text-white font-medium py-2.5 px-4 rounded-md text-sm transition-all shadow-lg"
-            >
-              {(isFarcaster ? farcasterApproving : isApproving) ? 'Approving...' : 'Approve USDC'}
-            </button>
-            
-            <button
-              onClick={create}
-              disabled={
-                (isFarcaster ? farcasterCreating : isCreating) || 
-                (isFarcaster ? !farcasterApproved : !approveSuccess) || 
-                amount < 0.02 || 
-                !postId || 
-                (isFarcaster && !isOnBase)
-              }
-              className="w-full bg-yellow-600 hover:bg-yellow-700 disabled:bg-gray-300 text-white font-medium py-2.5 px-4 rounded-md text-sm transition-all shadow-lg"
-            >
-              {(isFarcaster ? farcasterCreating : isCreating) ? 'Creating...' : 'Create Pot'}
-            </button>
-          </div>
+          {/* Single Create Button */}
+          <button
+            onClick={handleCreatePot}
+            disabled={
+              (isFarcaster ? (farcasterApproving || farcasterCreating) : (isApproving || isCreating)) || 
+              amount < 0.02 || 
+              !postId ||
+              (isFarcaster && !isOnBase)
+            }
+            className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 disabled:from-gray-300 disabled:to-gray-400 text-white font-medium py-3 px-4 rounded-md text-sm transition-all shadow-lg"
+          >
+            {(isFarcaster ? farcasterApproving : isApproving) ? (
+              <span>Step 1/2: Approving USDC...</span>
+            ) : (isFarcaster ? farcasterCreating : isCreating) ? (
+              <span>Step 2/2: Creating Pot...</span>
+            ) : ((isFarcaster && farcasterApproved) || approveSuccess) ? (
+              <span>Creating Pot...</span>
+            ) : (
+              <span>Create Pot</span>
+            )}
+          </button>
 
-          {/* Success Message */}
-          {((isFarcaster && farcasterApproved) || approveSuccess) && (
-            <div className="bg-blue-50/50 border border-blue-200/50 px-3 py-2 rounded-md text-center">
-              <p className="text-xs text-blue-700">✓ USDC approved! Now create the pot.</p>
+          {/* Progress Indicator */}
+          {((isFarcaster ? farcasterApproving : isApproving) || 
+            (isFarcaster ? farcasterCreating : isCreating)) && (
+            <div className="bg-blue-50/50 border border-blue-200/50 px-3 py-2 rounded-md">
+              <div className="flex items-center space-x-2">
+                <div className="animate-spin w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full"></div>
+                <p className="text-xs text-blue-700">
+                  {(isFarcaster ? farcasterApproving : isApproving) 
+                    ? 'Please approve USDC in your wallet...' 
+                    : 'Please confirm pot creation in your wallet...'}
+                </p>
+              </div>
             </div>
           )}
         </>
@@ -720,12 +755,7 @@ export default function Create() {
         message={errorMessage}
         onRetry={() => {
           setErrorMessage('')
-          // Retry logic based on which step failed
-          if (!farcasterApproved && !approveSuccess) {
-            approve()
-          } else {
-            create()
-          }
+          handleCreatePot()
         }}
       />
     </div>
