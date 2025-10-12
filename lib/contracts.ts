@@ -21,7 +21,11 @@ export const potfiAbi = [
       {"indexed": true, "internalType": "address", "name": "creator", "type": "address"},
       {"indexed": false, "internalType": "address", "name": "token", "type": "address"},
       {"indexed": false, "internalType": "uint256", "name": "amount", "type": "uint256"},
-      {"indexed": false, "internalType": "uint128", "name": "standardClaim", "type": "uint128"}
+      {"indexed": false, "internalType": "uint128", "name": "standardClaim", "type": "uint128"},
+      {"indexed": false, "internalType": "bytes32", "name": "postId", "type": "bytes32"},
+      {"indexed": false, "internalType": "bool", "name": "requireLike", "type": "bool"},
+      {"indexed": false, "internalType": "bool", "name": "requireRecast", "type": "bool"},
+      {"indexed": false, "internalType": "bool", "name": "requireComment", "type": "bool"}
     ],
     "name": "PotCreated",
     "type": "event"
@@ -76,7 +80,11 @@ export const potfiAbi = [
       {"internalType": "address", "name": "token", "type": "address"},
       {"internalType": "uint128", "name": "amount", "type": "uint128"},
       {"internalType": "uint128", "name": "standardClaim", "type": "uint128"},
-      {"internalType": "uint32", "name": "timeoutSecs", "type": "uint32"}
+      {"internalType": "uint32", "name": "timeoutSecs", "type": "uint32"},
+      {"internalType": "bytes32", "name": "postId", "type": "bytes32"},
+      {"internalType": "bool", "name": "requireLike", "type": "bool"},
+      {"internalType": "bool", "name": "requireRecast", "type": "bool"},
+      {"internalType": "bool", "name": "requireComment", "type": "bool"}
     ],
     "name": "createPot",
     "outputs": [{"internalType": "bytes32", "name": "id", "type": "bytes32"}],
@@ -126,7 +134,30 @@ export const potfiAbi = [
       {"internalType": "uint32", "name": "claimed", "type": "uint32"},
       {"internalType": "uint32", "name": "timeoutSecs", "type": "uint32"},
       {"internalType": "uint128", "name": "standardClaim", "type": "uint128"},
-      {"internalType": "bool", "name": "active", "type": "bool"}
+      {"internalType": "bool", "name": "active", "type": "bool"},
+      {"internalType": "bytes32", "name": "postId", "type": "bytes32"},
+      {"internalType": "bool", "name": "requireLike", "type": "bool"},
+      {"internalType": "bool", "name": "requireRecast", "type": "bool"},
+      {"internalType": "bool", "name": "requireComment", "type": "bool"}
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [{"internalType": "bytes32", "name": "id", "type": "bytes32"}],
+    "name": "getPostId",
+    "outputs": [{"internalType": "bytes32", "name": "", "type": "bytes32"}],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [{"internalType": "bytes32", "name": "id", "type": "bytes32"}],
+    "name": "getPotRequirements",
+    "outputs": [
+      {"internalType": "bytes32", "name": "postId", "type": "bytes32"},
+      {"internalType": "bool", "name": "requireLike", "type": "bool"},
+      {"internalType": "bool", "name": "requireRecast", "type": "bool"},
+      {"internalType": "bool", "name": "requireComment", "type": "bool"}
     ],
     "stateMutability": "view",
     "type": "function"

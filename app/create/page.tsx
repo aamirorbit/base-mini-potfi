@@ -352,7 +352,7 @@ export default function Create() {
         const data = encodeFunctionData({
           abi: jackpotAbi,
           functionName: 'createPot',
-          args: [USDC, usdcAmt, ONE_USDC, timeout, postIdBytes32, requireLike, requireRecast, requireComment] as any
+          args: [USDC, usdcAmt, ONE_USDC, timeout, postIdBytes32, requireLike, requireRecast, requireComment]
         })
 
         console.log('Sending createPot transaction via MiniKit...')
@@ -446,7 +446,7 @@ export default function Create() {
         abi: jackpotAbi, 
         address: jackpotAddress, 
         functionName: 'createPot',
-        args: [USDC, usdcAmt, ONE_USDC, timeout, postIdBytes32, requireLike, requireRecast, requireComment] as any
+        args: [USDC, usdcAmt, ONE_USDC, timeout, postIdBytes32, requireLike, requireRecast, requireComment]
       })
     }
   }
