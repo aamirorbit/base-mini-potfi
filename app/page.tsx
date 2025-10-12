@@ -255,7 +255,8 @@ function PotCard({ pot }: { pot: PotData }) {
   const progress = (pot.claimedAmount / pot.amount) * 100
   const timeAgo = new Date(pot.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
   const standardClaim = pot.standardClaim || 0.01
-  const jackpotProb = pot.jackpotProbability || 0
+  // Ensure jackpot probability is at least 1% for active pots (default base chance)
+  const jackpotProb = pot.jackpotProbability || (pot.status === 'active' ? 1 : 0)
 
   return (
     <Link href={`/claim/${pot.id}`}>

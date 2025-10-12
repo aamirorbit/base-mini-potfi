@@ -366,7 +366,7 @@ export default function Claim() {
                     <p className="text-xs text-gray-600">Remaining</p>
                   </div>
                   <div className="bg-yellow-50/50 backdrop-blur-xl rounded-md p-3 border border-yellow-200/50 text-center">
-                    <p className="text-lg font-bold text-yellow-600">{potDetails.jackpotProbability}%</p>
+                    <p className="text-lg font-bold text-yellow-600">{(potDetails.jackpotProbability || 1).toFixed(1)}%</p>
                     <p className="text-xs text-gray-600">Jackpot</p>
                   </div>
                 </div>
