@@ -123,8 +123,8 @@ export async function POST(request: NextRequest) {
     const engagement = await neynarClient.checkEngagement(user.fid, castId)
     console.log('Final engagement check:', engagement)
     
-    // ✅ STARTER PLAN ACTIVE - Re-enabling engagement requirements
-    console.log('Starter plan active - checking engagement requirements')
+    // ✅ ALL ENGAGEMENT REQUIREMENTS ACTIVE
+    console.log('Checking all engagement requirements: Like, Recast, Comment')
     
     if (!engagement.liked) {
       return NextResponse.json(
@@ -141,38 +141,34 @@ export async function POST(request: NextRequest) {
       )
     }
     
-    // Make recast requirement optional for now while we test Starter plan
     if (!engagement.recasted) {
-      console.log('Recast not detected, but proceeding anyway for testing')
-      // return NextResponse.json(
-      //   { 
-      //     error: 'Please recast the cast to claim your allocation.',
-      //     debug: {
-      //       fid: user.fid,
-      //       castId,
-      //       engagement,
-      //       message: 'Recast not detected'
-      //     }
-      //   },
-      //   { status: 403 }
-      // )
+      return NextResponse.json(
+        { 
+          error: 'Please recast the cast to claim your allocation.',
+          debug: {
+            fid: user.fid,
+            castId,
+            engagement,
+            message: 'Recast not detected'
+          }
+        },
+        { status: 403 }
+      )
     }
     
-    // Make comment requirement optional for now while we debug
     if (!engagement.replied) {
-      console.log('Comment not detected, but proceeding anyway for debugging')
-      // return NextResponse.json(
-      //   { 
-      //     error: 'Please comment on the cast to claim your allocation.',
-      //     debug: {
-      //       fid: user.fid,
-      //       castId,
-      //       engagement,
-      //       message: 'Comment not detected'
-      //     }
-      //   },
-      //   { status: 403 }
-      // )
+      return NextResponse.json(
+        { 
+          error: 'Please comment on the cast to claim your allocation.',
+          debug: {
+            fid: user.fid,
+            castId,
+            engagement,
+            message: 'Comment not detected'
+          }
+        },
+        { status: 403 }
+      )
     }
 
     // 3. Get or initialize pot state
