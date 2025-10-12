@@ -29,14 +29,16 @@ console.log(`🔗 Using RPC: ${alchemyApiKey ? 'Alchemy (Growth Plan)' : 'Public
 
 // Simplified ABI for the functions we need
 const potfiAbi = parseAbi([
-  'event PotCreated(bytes32 indexed id, address indexed creator, address token, uint256 amount, uint128 standardClaim)',
+  'event PotCreated(bytes32 indexed id, address indexed creator, address token, uint256 amount, uint128 standardClaim, bytes32 postId, bool requireLike, bool requireRecast, bool requireComment)',
   'event StandardClaim(bytes32 indexed id, address indexed to, uint256 net, uint256 fee)',
   'event JackpotClaim(bytes32 indexed id, address indexed to, uint256 net, uint256 fee, uint256 totalClaims)',
   'event Swept(bytes32 indexed id, address indexed to, uint256 amount)',
-  'function pots(bytes32) view returns (address creator, address token, uint128 amount, uint128 claimedAmount, uint64 createdAt, uint32 claimed, uint32 timeoutSecs, uint128 standardClaim, bool active)',
+  'function pots(bytes32) view returns (address creator, address token, uint128 amount, uint128 claimedAmount, uint64 createdAt, uint32 claimed, uint32 timeoutSecs, uint128 standardClaim, bool active, bytes32 postId, bool requireLike, bool requireRecast, bool requireComment)',
   'function hasClaimed(bytes32, address) view returns (bool)',
   'function getRemainingFunds(bytes32) view returns (uint256)',
-  'function getJackpotProbability(bytes32) view returns (uint256)'
+  'function getJackpotProbability(bytes32) view returns (uint256)',
+  'function getPotRequirements(bytes32) view returns (bytes32 postId, bool requireLike, bool requireRecast, bool requireComment)',
+  'function getPostId(bytes32) view returns (bytes32)'
 ])
 
 interface PotData {
@@ -55,6 +57,10 @@ interface PotData {
   jackpotWinner?: string
   timeRemaining?: number
   canReclaim?: boolean
+  castId?: string
+  requireLike?: boolean
+  requireRecast?: boolean
+  requireComment?: boolean
 }
 
 export async function GET(request: NextRequest) {
@@ -117,9 +123,9 @@ export async function GET(request: NextRequest) {
           abi: potfiAbi,
           functionName: 'pots',
           args: [potId]
-        }) as [string, string, bigint, bigint, bigint, number, number, bigint, boolean]
+        }) as [string, string, bigint, bigint, bigint, number, number, bigint, boolean, `0x${string}`, boolean, boolean, boolean]
 
-        const [creator, token, amount, claimedAmount, createdAt, claimed, timeoutSecs, standardClaim, active] = potData
+        const [creator, token, amount, claimedAmount, createdAt, claimed, timeoutSecs, standardClaim, active, postId, requireLike, requireRecast, requireComment] = potData
 
         // Get StandardClaim and JackpotClaim events for this pot
         const standardClaimLogs = await publicClient.getLogs({
@@ -217,7 +223,11 @@ export async function GET(request: NextRequest) {
           jackpotHit: status === 'completed' ? jackpotHit : undefined,
           jackpotWinner,
           timeRemaining: status === 'active' ? Math.max(0, Math.floor((expiryTime - now) / 1000)) : undefined,
-          canReclaim: status === 'expired' && remainingAmount > 0.01 && !wasSwept
+          canReclaim: status === 'expired' && remainingAmount > 0.01 && !wasSwept,
+          castId: postId || undefined,
+          requireLike,
+          requireRecast,
+          requireComment
         }
 
         pots.push(pot)
@@ -296,9 +306,9 @@ export async function POST(request: NextRequest) {
       abi: potfiAbi,
       functionName: 'pots',
       args: [potId as `0x${string}`]
-    }) as [string, string, bigint, bigint, bigint, number, number, bigint, boolean]
+    }) as [string, string, bigint, bigint, bigint, number, number, bigint, boolean, `0x${string}`, boolean, boolean, boolean]
 
-    const [creator, token, amount, claimedAmount, createdAt, claimed, timeoutSecs, standardClaim, active] = potData
+    const [creator, token, amount, claimedAmount, createdAt, claimed, timeoutSecs, standardClaim, active, postId, requireLike, requireRecast, requireComment] = potData
 
     // Get remaining funds
     const remainingFunds = await publicClient.readContract({
@@ -329,6 +339,10 @@ export async function POST(request: NextRequest) {
       timeoutSecs,
       active,
       jackpotProbability: Number(jackpotProbability) / 100, // Convert from basis points to percentage
+      castId: postId || undefined,
+      requireLike,
+      requireRecast,
+      requireComment,
       success: true
     })
 

@@ -105,6 +105,12 @@ export default function Claim() {
         if (response.ok && data.success) {
           setPotDetails(data)
           console.log('Pot details:', data)
+          
+          // Auto-populate cast ID if available
+          if (data.castId && !castId) {
+            setCastId(data.castId)
+            console.log('✅ Auto-populated cast ID from pot:', data.castId)
+          }
         } else {
           setErrorMessage('Failed to load pot details')
         }
@@ -386,26 +392,45 @@ export default function Claim() {
                   </div>
                 )}
                 
-                {/* Manual Cast ID Input - Always visible */}
-                <div className="mb-3">
-                  <label htmlFor="castId" className="block text-xs font-medium text-gray-700 mb-1.5">
-                    {castId ? '✓ Cast ID' : 'Enter Cast ID'}
-                  </label>
-                  <input
-                    id="castId"
-                    name="castId"
-                    type="text"
-                    value={castId}
-                    onChange={(e) => setCastId(e.target.value)}
-                    placeholder="Enter the cast hash (0x...)"
-                    className="w-full rounded-md px-3 py-2.5 text-sm bg-white text-gray-900 placeholder-gray-400 border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">
-                    {castId 
-                      ? `Cast: ${castId.slice(0, 12)}...${castId.slice(-6)}` 
-                      : "Paste the hash of the cast you engaged with"}
-                  </p>
-                </div>
+                {/* Cast ID Status - Read-only if auto-populated */}
+                {castId && potDetails?.castId ? (
+                  <div className="mb-3">
+                    <div className="bg-blue-50/50 border border-blue-200/50 px-3 py-2.5 rounded-md">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <p className="text-xs font-medium text-blue-700 mb-1">✓ Cast Detected</p>
+                          <p className="text-xs text-blue-600 font-mono break-all">
+                            {castId.slice(0, 18)}...{castId.slice(-10)}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Automatically linked to the creator's post
+                    </p>
+                  </div>
+                ) : (
+                  // Show input if no cast ID is stored with the pot
+                  <div className="mb-3">
+                    <label htmlFor="castId" className="block text-xs font-medium text-gray-700 mb-1.5">
+                      {castId ? '✓ Cast ID' : 'Enter Cast ID'}
+                    </label>
+                    <input
+                      id="castId"
+                      name="castId"
+                      type="text"
+                      value={castId}
+                      onChange={(e) => setCastId(e.target.value)}
+                      placeholder="Enter the cast hash (0x...)"
+                      className="w-full rounded-md px-3 py-2.5 text-sm bg-white text-gray-900 placeholder-gray-400 border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      {castId 
+                        ? `Cast: ${castId.slice(0, 12)}...${castId.slice(-6)}` 
+                        : "Paste the hash of the cast you engaged with"}
+                    </p>
+                  </div>
+                )}
                 
                 {/* Error Message */}
                 {errorMessage && (

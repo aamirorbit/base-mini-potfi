@@ -3,6 +3,29 @@ import { neynarClient } from '@/lib/neynar'
 import { ethers } from 'ethers'
 import { jackpotAddress } from '@/lib/contracts'
 import crypto from 'crypto'
+import { createPublicClient, http, parseAbi } from 'viem'
+import { base } from 'viem/chains'
+
+// Create RPC client
+const alchemyApiKey = process.env.ALCHEMY_API_KEY || process.env.NEXT_PUBLIC_ALCHEMY_API_KEY
+const rpcUrl = alchemyApiKey 
+  ? `https://base-mainnet.g.alchemy.com/v2/${alchemyApiKey}`
+  : 'https://mainnet.base.org'
+
+const publicClient = createPublicClient({
+  chain: base,
+  transport: http(rpcUrl, {
+    retryCount: 3,
+    retryDelay: 1000,
+    timeout: 30000,
+  })
+})
+
+// ABI for pot requirements
+const potfiAbi = parseAbi([
+  'function getPotRequirements(bytes32) view returns (bytes32 postId, bool requireLike, bool requireRecast, bool requireComment)',
+  'function getPostId(bytes32) view returns (bytes32)'
+])
 
 // Pot state tracking (in production, use Redis or database)
 interface PotState {
@@ -119,14 +142,22 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // 2. Verify engagement requirements (Like + Comment + Recast)
+    // 2. Get pot requirements from smart contract
+    const requirements = await publicClient.readContract({
+      address: jackpotAddress,
+      abi: potfiAbi,
+      functionName: 'getPotRequirements',
+      args: [potId as `0x${string}`]
+    }) as [`0x${string}`, boolean, boolean, boolean]
+
+    const [contractCastId, requireLike, requireRecast, requireComment] = requirements
+    console.log('Pot requirements from contract:', { contractCastId, requireLike, requireRecast, requireComment })
+    
+    // Verify engagement requirements based on pot configuration
     const engagement = await neynarClient.checkEngagement(user.fid, castId)
-    console.log('Final engagement check:', engagement)
+    console.log('Engagement check:', engagement)
     
-    // ✅ ALL ENGAGEMENT REQUIREMENTS ACTIVE
-    console.log('Checking all engagement requirements: Like, Recast, Comment')
-    
-    if (!engagement.liked) {
+    if (requireLike && !engagement.liked) {
       return NextResponse.json(
         { 
           error: 'Please like the cast to claim your allocation.',
@@ -141,7 +172,7 @@ export async function POST(request: NextRequest) {
       )
     }
     
-    if (!engagement.recasted) {
+    if (requireRecast && !engagement.recasted) {
       return NextResponse.json(
         { 
           error: 'Please recast the cast to claim your allocation.',
@@ -156,7 +187,7 @@ export async function POST(request: NextRequest) {
       )
     }
     
-    if (!engagement.replied) {
+    if (requireComment && !engagement.replied) {
       return NextResponse.json(
         { 
           error: 'Please comment on the cast to claim your allocation.',

@@ -15,6 +15,9 @@ export default function Create() {
   const [amount, setAmount] = useState(1)
   const [timeout, setTimeoutSecs] = useState(43200) // 12h
   const [postId, setPostId] = useState('')
+  const [requireLike, setRequireLike] = useState(true) // Default: require like
+  const [requireRecast, setRequireRecast] = useState(true) // Default: require recast
+  const [requireComment, setRequireComment] = useState(true) // Default: require comment
   const [potId, setPotId] = useState<string | null>(null)
   const [showSuccess, setShowSuccess] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string>('')
@@ -186,6 +189,7 @@ export default function Create() {
       console.error('Error initializing pot state:', error)
     }
   }
+
   
   async function approve() {
     clearError()
@@ -341,11 +345,14 @@ export default function Create() {
           return
         }
 
+        // Convert postId to bytes32
+        const postIdBytes32 = postId.startsWith('0x') ? postId as `0x${string}` : `0x${postId}` as `0x${string}`
+        
         // Encode the createPot function call
         const data = encodeFunctionData({
           abi: jackpotAbi,
           functionName: 'createPot',
-          args: [USDC, usdcAmt, ONE_USDC, timeout]
+          args: [USDC, usdcAmt, ONE_USDC, timeout, postIdBytes32, requireLike, requireRecast, requireComment] as any
         })
 
         console.log('Sending createPot transaction via MiniKit...')
@@ -431,12 +438,15 @@ export default function Create() {
         setFarcasterCreating(false)
       }
     } else {
+      // Convert postId to bytes32
+      const postIdBytes32 = postId.startsWith('0x') ? postId as `0x${string}` : `0x${postId}` as `0x${string}`
+      
       // Use wagmi for non-Farcaster environments
       createPotContract({
         abi: jackpotAbi, 
         address: jackpotAddress, 
         functionName: 'createPot',
-        args: [USDC, usdcAmt, ONE_USDC, timeout]
+        args: [USDC, usdcAmt, ONE_USDC, timeout, postIdBytes32, requireLike, requireRecast, requireComment] as any
       })
     }
   }
@@ -721,6 +731,45 @@ export default function Create() {
               />
               <p className="text-gray-500 text-xs mt-1">
                 Default: 43,200 seconds (12 hours)
+              </p>
+            </div>
+
+            {/* Engagement Requirements */}
+            <div>
+              <label className="block text-gray-900 font-medium mb-2 text-xs">
+                Claim Requirements
+              </label>
+              <div className="space-y-2">
+                <label className="flex items-center space-x-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={requireLike}
+                    onChange={(e) => setRequireLike(e.target.checked)}
+                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+                  />
+                  <span className="text-sm text-gray-700">Require Like</span>
+                </label>
+                <label className="flex items-center space-x-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={requireRecast}
+                    onChange={(e) => setRequireRecast(e.target.checked)}
+                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+                  />
+                  <span className="text-sm text-gray-700">Require Recast</span>
+                </label>
+                <label className="flex items-center space-x-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={requireComment}
+                    onChange={(e) => setRequireComment(e.target.checked)}
+                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+                  />
+                  <span className="text-sm text-gray-700">Require Comment</span>
+                </label>
+              </div>
+              <p className="text-gray-500 text-xs mt-2">
+                Users must complete selected actions to claim
               </p>
             </div>
           </div>

@@ -21,6 +21,10 @@ contract PotFi is ReentrancyGuard, Ownable {
         uint32  timeoutSecs;   // e.g., 43_200 (12h)
         uint128 standardClaim; // standard claim amount (e.g., 0.01 USDC)
         bool    active;
+        bytes32 postId;        // Farcaster cast ID
+        bool    requireLike;   // Require like to claim
+        bool    requireRecast; // Require recast to claim
+        bool    requireComment;// Require comment to claim
     }
 
     // ---- Admin constants / params ----
@@ -54,7 +58,17 @@ contract PotFi is ReentrancyGuard, Ownable {
     bytes32 public constant PERMIT_TYPEHASH_V1 = keccak256("PotFiPermit(address,bytes32,uint256,bytes32)");
     bytes32 public constant PERMIT_TYPEHASH_V2 = keccak256("PotFiPermit(address,bytes32,uint256,bytes32,address,uint256)");
 
-    event PotCreated(bytes32 indexed id, address indexed creator, address token, uint256 amount, uint128 standardClaim);
+    event PotCreated(
+        bytes32 indexed id, 
+        address indexed creator, 
+        address token, 
+        uint256 amount, 
+        uint128 standardClaim,
+        bytes32 postId,
+        bool requireLike,
+        bool requireRecast,
+        bool requireComment
+    );
     event StandardClaim(bytes32 indexed id, address indexed to, uint256 net, uint256 fee);
     event JackpotClaim(bytes32 indexed id, address indexed to, uint256 net, uint256 fee, uint256 totalClaims);
     event Swept(bytes32 indexed id, address indexed to, uint256 amount);
@@ -87,12 +101,17 @@ contract PotFi is ReentrancyGuard, Ownable {
         address token,
         uint128 amount,
         uint128 standardClaim, // e.g., 1e4 for 0.01 USDC (6 decimals)
-        uint32 timeoutSecs
+        uint32 timeoutSecs,
+        bytes32 postId,
+        bool requireLike,
+        bool requireRecast,
+        bool requireComment
     ) external returns (bytes32 id) {
         require(token != address(0), "token");
         require(timeoutSecs > 0, "timeout");
         require(standardClaim > 0, "standard-claim");
         require(amount >= standardClaim * 2, "too-small"); // At least 2 claims worth
+        require(postId != bytes32(0), "postId-required"); // Cast ID is required
 
         // If it's USDC, apply hard bounds (optional for other tokens)
         if (_isUSDC(token)) {
@@ -116,8 +135,12 @@ contract PotFi is ReentrancyGuard, Ownable {
         p.standardClaim = standardClaim;
         p.claimed = 0;
         p.active = true;
+        p.postId = postId;
+        p.requireLike = requireLike;
+        p.requireRecast = requireRecast;
+        p.requireComment = requireComment;
 
-        emit PotCreated(id, msg.sender, token, amount, standardClaim);
+        emit PotCreated(id, msg.sender, token, amount, standardClaim, postId, requireLike, requireRecast, requireComment);
     }
 
     // --- Claim ---
@@ -227,6 +250,22 @@ contract PotFi is ReentrancyGuard, Ownable {
     function getJackpotProbability(bytes32 id) external view returns (uint256) {
         Pot storage p = pots[id];
         return _getJackpotChance(p);
+    }
+
+    // Get pot's cast ID and engagement requirements
+    function getPotRequirements(bytes32 id) external view returns (
+        bytes32 postId,
+        bool requireLike,
+        bool requireRecast,
+        bool requireComment
+    ) {
+        Pot storage p = pots[id];
+        return (p.postId, p.requireLike, p.requireRecast, p.requireComment);
+    }
+
+    // Get just the cast ID for a pot
+    function getPostId(bytes32 id) external view returns (bytes32) {
+        return pots[id].postId;
     }
 
     // --- Internals ---

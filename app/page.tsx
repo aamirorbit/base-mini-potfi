@@ -37,6 +37,7 @@ interface PotData {
   timeRemaining?: number
   jackpotProbability?: number
   standardClaim?: number
+  castId?: string
 }
 
 export default function Home() {
