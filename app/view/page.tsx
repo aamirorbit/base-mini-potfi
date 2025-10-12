@@ -9,6 +9,7 @@ import { encodeFunctionData, pad } from 'viem'
 import Link from 'next/link'
 import { formatTimeRemaining, truncateAddress } from '@/lib/blockchain'
 import { ErrorModal } from '@/app/components/ErrorModal'
+import { ConfirmModal } from '@/app/components/ConfirmModal'
 import { 
   Eye, 
   Plus, 
@@ -53,6 +54,8 @@ export default function ViewPots() {
   const [errorMessage, setErrorMessage] = useState<string>('')
   const [showErrorModal, setShowErrorModal] = useState(false)
   const [successMessage, setSuccessMessage] = useState<string>('')
+  const [showConfirmModal, setShowConfirmModal] = useState(false)
+  const [potToReclaim, setPotToReclaim] = useState<string | null>(null)
 
   // Wallet connections
   const { address: wagmiAddress, isConnected: wagmiConnected } = useAccount()
@@ -121,20 +124,17 @@ export default function ViewPots() {
   }, [reclaimSuccess, reclaimError])
 
   async function reclaimFunds(potId: string) {
+    setPotToReclaim(potId)
+    setShowConfirmModal(true)
+  }
+
+  async function executeReclaim() {
+    const potId = potToReclaim
+    if (!potId) return
+
     try {
       setReclaimingPotId(potId)
       setErrorMessage('')
-      
-      const confirmed = confirm(
-        `Reclaim remaining funds from this pot?\n\n` +
-        `This will transfer any unclaimed USDC back to your wallet.\n\n` +
-        `Continue?`
-      )
-      
-      if (!confirmed) {
-        setReclaimingPotId(null)
-        return
-      }
 
       // Pad potId to bytes32
       const potIdBytes32 = pad(potId as `0x${string}`, { size: 32 })
@@ -400,6 +400,20 @@ export default function ViewPots() {
             reclaimFunds(reclaimingPotId)
           }
         }}
+      />
+
+      {/* Confirm Modal */}
+      <ConfirmModal
+        isOpen={showConfirmModal}
+        onClose={() => {
+          setShowConfirmModal(false)
+          setPotToReclaim(null)
+        }}
+        onConfirm={executeReclaim}
+        title="Reclaim Funds"
+        message={`Reclaim remaining funds from this pot?\n\nThis will transfer any unclaimed USDC back to your wallet.\n\nContinue?`}
+        confirmText="Reclaim"
+        cancelText="Cancel"
       />
     </div>
   )
