@@ -10,7 +10,7 @@ import { sdk } from '@farcaster/miniapp-sdk'
 import { pad, createWalletClient, custom, PublicClient, createPublicClient, http } from 'viem'
 import { base } from 'viem/chains'
 import { miniKitWallet } from '@/lib/minikit-wallet'
-import { Coins, Target, AlertTriangle, CheckCircle, Wifi, X, XCircle, Wallet } from 'lucide-react'
+import { Coins, Target, AlertTriangle, CheckCircle, Wifi, X, XCircle, Wallet, ExternalLink } from 'lucide-react'
 import Link from 'next/link'
 import { ErrorModal } from '@/app/components/ErrorModal'
 
@@ -430,6 +430,19 @@ export default function Claim() {
                         : "Paste the hash of the cast you engaged with"}
                     </p>
                   </div>
+                )}
+                
+                {/* View Cast Button */}
+                {castId && (
+                  <a
+                    href={`https://farcaster.xyz/~/conversations/${castId}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full mb-3 flex items-center justify-center space-x-2 bg-white hover:bg-gray-50 border border-gray-300 text-gray-700 font-medium py-2.5 px-4 rounded-md text-sm transition-all shadow-sm"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                    <span>View Cast to Engage</span>
+                  </a>
                 )}
                 
                 {/* Error Message */}
