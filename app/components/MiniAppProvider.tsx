@@ -16,16 +16,17 @@ export function MiniAppProvider({ children }: MiniAppProviderProps) {
   useEffect(() => {
     const initializeMiniApp = async () => {
       try {
-        // Check if we're in a Farcaster environment
-        const isFarcasterEnv = typeof window !== 'undefined' && 
-          (window.parent !== window || 
-           navigator.userAgent.includes('Farcaster') ||
-           window.location !== window.parent.location)
+        // Check if we're in a mini app environment (Farcaster or Base app)
+        const userAgent = typeof window !== 'undefined' ? navigator.userAgent : ''
+        const isInIframe = typeof window !== 'undefined' && window.parent !== window
+        const isFarcasterUA = userAgent.includes('Farcaster')
+        const isBaseApp = userAgent.includes('Base') || userAgent.includes('Coinbase')
+        const isMiniAppEnv = isInIframe || isFarcasterUA || isBaseApp
         
-        setIsFarcaster(isFarcasterEnv)
+        setIsFarcaster(isMiniAppEnv)
         
-        if (!isFarcasterEnv) {
-          console.log('Not in Farcaster environment, skipping Mini App initialization')
+        if (!isMiniAppEnv) {
+          console.log('Not in mini app environment, skipping Mini App initialization')
           setIsReady(true)
           return
         }

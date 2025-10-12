@@ -56,11 +56,12 @@ export default function Home() {
     setMounted(true)
     if (typeof window !== 'undefined') {
       const userAgent = navigator.userAgent || ''
-      setIsFarcaster(
-        window.parent !== window || 
-        userAgent.includes('Farcaster') ||
-        window.location !== window.parent.location
-      )
+      const isInIframe = window.parent !== window
+      const isFarcasterUA = userAgent.includes('Farcaster')
+      const isBaseApp = userAgent.includes('Base') || userAgent.includes('Coinbase')
+      
+      // Detect any mini app context (Farcaster or Base app)
+      setIsFarcaster(isInIframe || isFarcasterUA || isBaseApp)
     }
   }, [])
 

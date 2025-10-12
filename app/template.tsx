@@ -13,6 +13,7 @@ interface TemplateProps {
 
 export default function Template({ children }: TemplateProps) {
   const pathname = usePathname()
+  const [isMiniApp, setIsMiniApp] = useState(false)
   const [isFarcaster, setIsFarcaster] = useState(false)
   const [mounted, setMounted] = useState(false)
 
@@ -22,9 +23,26 @@ export default function Template({ children }: TemplateProps) {
 
   useEffect(() => {
     setMounted(true)
-    // Detect if running in Farcaster
+    // Detect if running in any mini app context (Farcaster or Base app)
     if (typeof window !== 'undefined') {
-      setIsFarcaster(window.parent !== window)
+      const userAgent = navigator.userAgent || ''
+      const isInIframe = window.parent !== window
+      const isFarcasterUA = userAgent.includes('Farcaster')
+      const isBaseApp = userAgent.includes('Base') || userAgent.includes('Coinbase')
+      
+      // Check if we're in any mini app environment
+      const inMiniApp = isInIframe || isFarcasterUA || isBaseApp
+      
+      setIsMiniApp(inMiniApp)
+      setIsFarcaster(inMiniApp) // Use MiniKit wallet for any mini app context
+      
+      console.log('Mini App Detection:', {
+        isInIframe,
+        isFarcasterUA,
+        isBaseApp,
+        inMiniApp,
+        userAgent: userAgent.substring(0, 100)
+      })
     }
   }, [])
 
@@ -39,7 +57,8 @@ export default function Template({ children }: TemplateProps) {
     return <>{children}</>
   }
 
-  if (!isFarcaster) {
+  // Show landing page only if NOT in any mini app context
+  if (!isMiniApp) {
     return <LandingPage />
   }
 
