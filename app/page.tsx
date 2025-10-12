@@ -5,6 +5,7 @@ import { useAccount } from 'wagmi'
 import { useMiniKitWallet } from '@/hooks/useMiniKitWallet'
 import { useEffect, useState } from 'react'
 import { formatTimeRemaining } from '@/lib/blockchain'
+
 import { 
   Coins, 
   Plus, 
@@ -117,6 +118,7 @@ export default function Home() {
     )
   }
 
+  // Show actual app if in Farcaster
   return (
     <div className="space-y-4">
       {/* Compact Header */}

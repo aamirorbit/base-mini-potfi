@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
         url: `${appDomain}`,
         name: "JackPot",
         splashImageUrl: `${appDomain}/icon.png`,
-        splashBackgroundColor: "#667eea"
+        splashBackgroundColor: "#0000FF"
       }
     }
   }
@@ -59,7 +59,7 @@ export async function GET(request: NextRequest) {
     <title>🎰 JackPot Frame</title>
   </head>
   <body>
-    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; font-family: Arial, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-align: center;">
+    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; font-family: Arial, sans-serif; background: linear-gradient(135deg, #0000FF 0%, #0000aa 100%); color: white; text-align: center;">
       <h1 style="font-size: 3rem; margin-bottom: 1rem;">🎰 JackPot</h1>
       <p style="font-size: 1.2rem;">Social tips with a jackpot twist!</p>
     </div>

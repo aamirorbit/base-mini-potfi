@@ -5,6 +5,7 @@ import { useAccount } from 'wagmi'
 import { useMiniKitWallet } from '@/hooks/useMiniKitWallet'
 import { useEffect, useState } from 'react'
 import MobileLayout from './components/MobileLayout'
+import LandingPage from './components/LandingPage'
 
 interface TemplateProps {
   children: React.ReactNode
@@ -36,6 +37,10 @@ export default function Template({ children }: TemplateProps) {
   // API routes and frame routes should not be wrapped
   if (pathname.startsWith('/api') || pathname.startsWith('/frame')) {
     return <>{children}</>
+  }
+
+  if (!isFarcaster) {
+    return <LandingPage />
   }
 
   return (
