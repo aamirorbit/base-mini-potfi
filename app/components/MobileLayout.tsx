@@ -1,8 +1,8 @@
 'use client'
 
 import Link from 'next/link'
-import { useAccount, useDisconnect } from 'wagmi'
-import { Home as HomeIcon, Plus, Eye, Wifi, LogOut } from 'lucide-react'
+import { useAccount } from 'wagmi'
+import { Home as HomeIcon, Plus, Eye, MessageCircle } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 import { useMiniKitWallet } from '@/hooks/useMiniKitWallet'
 import { useState, useEffect } from 'react'
@@ -18,8 +18,7 @@ export default function MobileLayout({ children, showBottomNav = true }: MobileL
 
   // Wallet connections
   const { address: wagmiAddress, isConnected: wagmiConnected } = useAccount()
-  const { disconnect: wagmiDisconnect } = useDisconnect()
-  const { address: miniKitAddress, isConnected: miniKitConnected, disconnect: miniKitDisconnect } = useMiniKitWallet()
+  const { address: miniKitAddress, isConnected: miniKitConnected } = useMiniKitWallet()
   
   const pathname = usePathname()
 
@@ -33,7 +32,6 @@ export default function MobileLayout({ children, showBottomNav = true }: MobileL
 
   const isConnected = isFarcaster ? miniKitConnected : wagmiConnected
   const userAddress = isFarcaster ? miniKitAddress : wagmiAddress
-  const disconnect = isFarcaster ? miniKitDisconnect : wagmiDisconnect
 
   // Truncate address for display
   const truncatedAddress = userAddress ? `${userAddress.slice(0, 6)}...${userAddress.slice(-4)}` : ''
@@ -51,14 +49,16 @@ export default function MobileLayout({ children, showBottomNav = true }: MobileL
                 <span className="text-sm font-medium text-gray-700">{truncatedAddress}</span>
               </div>
               
-              {/* Disconnect Button */}
-              <button
-                onClick={() => disconnect()}
-                className="flex items-center space-x-1 px-3 py-1.5 text-xs font-medium text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-md transition-all duration-200"
+              {/* Support Button */}
+              <a
+                href="https://t.me/+_fXXrjRRqu41Yzdk"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center space-x-1 px-3 py-1.5 text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-all duration-200 shadow-sm"
               >
-                <LogOut className="w-3 h-3" />
-                <span>Disconnect</span>
-              </button>
+                <MessageCircle className="w-3 h-3" />
+                <span>Support</span>
+              </a>
             </div>
           </div>
         </div>
