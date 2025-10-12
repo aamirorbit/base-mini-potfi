@@ -106,7 +106,7 @@ export default function LandingPage() {
                 className="w-full sm:w-auto inline-flex items-center justify-center space-x-2.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold py-4 px-8 rounded-xl text-base transition-all duration-200 shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30"
               >
                 <Share2 className="w-5 h-5" />
-                <span>Share on Warpcast</span>
+                <span>Open on Farcaster</span>
               </a>
 
               <button
@@ -391,7 +391,7 @@ export default function LandingPage() {
                 className="inline-flex items-center justify-center space-x-2.5 bg-white/10 hover:bg-white/20 text-white font-semibold py-4 px-8 rounded-xl text-base transition-all duration-200 border border-white/20"
               >
                 <Share2 className="w-5 h-5" />
-                <span>Share on Warpcast</span>
+                <span>Open on Farcaster</span>
               </a>
             </div>
           </div>
@@ -415,7 +415,7 @@ export default function LandingPage() {
               className="w-full sm:w-auto inline-flex items-center justify-center space-x-2.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold py-4 px-8 rounded-xl text-base transition-all duration-200 shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30"
             >
               <Share2 className="w-5 h-5" />
-              <span>Share on Warpcast</span>
+              <span>Open on Farcaster</span>
             </a>
             <button
               onClick={handleShare}
