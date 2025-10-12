@@ -27,7 +27,7 @@ export default function LandingPage() {
   const appUrl = typeof window !== 'undefined' ? window.location.origin : 'https://potfi.basecitizens.com'
 
   const handleCopyLink = async () => {
-    const linkUrl = 'https://potfi.basecitizens.com'
+    const linkUrl = 'https://farcaster.xyz/miniapps/Pd09ynp5_akx/potfi'
     try {
       await navigator.clipboard.writeText(linkUrl)
       setCopied(true)
@@ -39,13 +39,14 @@ export default function LandingPage() {
 
   const handleShare = async () => {
     const shareText = '🎯 Check out PotFi - Create prize pots and reward your community with instant USDC claims & jackpot chances!'
+    const shareUrl = 'https://farcaster.xyz/miniapps/Pd09ynp5_akx/potfi'
     
     if (navigator.share) {
       try {
         await navigator.share({
           title: 'PotFi - Decentralized Prize Pots',
           text: shareText,
-          url: appUrl
+          url: shareUrl
         })
       } catch (err) {
         // User cancelled or error occurred
@@ -53,7 +54,7 @@ export default function LandingPage() {
       }
     } else {
       // Fallback: copy to clipboard
-      navigator.clipboard.writeText(`${shareText}\n${appUrl}`)
+      navigator.clipboard.writeText(`${shareText}\n${shareUrl}`)
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     }
@@ -100,7 +101,7 @@ export default function LandingPage() {
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-4">
               <a
-                href="https://warpcast.com/~/composer?text=Create%20prize%20pots%20and%20reward%20your%20community%20with%20PotFi!%20%F0%9F%8E%AF&embeds[]=https://potfi.basecitizens.com"
+                href="https://farcaster.xyz/miniapps/Pd09ynp5_akx/potfi"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-full sm:w-auto inline-flex items-center justify-center space-x-2.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold py-4 px-8 rounded-xl text-base transition-all duration-200 shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30"
@@ -376,22 +377,22 @@ export default function LandingPage() {
 
             <div className="flex flex-col sm:flex-row gap-4 items-center justify-center">
               <a
-                href="https://warpcast.com/~/add-cast-action?actionType=post&name=Create%20Prize%20Pot&icon=gift&postUrl=https%3A%2F%2Fpotfi.basecitizens.com%2Fapi%2Fframe%2Fcreate"
+                href="https://farcaster.xyz/miniapps/Pd09ynp5_akx/potfi"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center justify-center space-x-2.5 bg-white hover:bg-gray-50 text-blue-700 font-semibold py-4 px-8 rounded-xl text-base transition-all duration-200 shadow-lg"
               >
-                <Plus className="w-5 h-5" />
-                <span>Add Cast Action</span>
+                <Share2 className="w-5 h-5" />
+                <span>Open on Farcaster</span>
               </a>
               <a
-                href="https://warpcast.com/~/composer?text=Create%20prize%20pots%20on%20Base!%20%F0%9F%8E%AF&embeds[]=https://potfi.basecitizens.com"
+                href="https://warpcast.com/~/add-cast-action?actionType=post&name=Create%20Prize%20Pot&icon=gift&postUrl=https%3A%2F%2Fpotfi.basecitizens.com%2Fapi%2Fframe%2Fcreate"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center justify-center space-x-2.5 bg-white/10 hover:bg-white/20 text-white font-semibold py-4 px-8 rounded-xl text-base transition-all duration-200 border border-white/20"
               >
-                <Share2 className="w-5 h-5" />
-                <span>Open on Farcaster</span>
+                <Plus className="w-5 h-5" />
+                <span>Add Cast Action</span>
               </a>
             </div>
           </div>
@@ -409,7 +410,7 @@ export default function LandingPage() {
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <a
-              href="https://warpcast.com/~/composer?text=Create%20prize%20pots%20on%20Base!%20%F0%9F%8E%AF&embeds[]=https://potfi.basecitizens.com"
+              href="https://farcaster.xyz/miniapps/Pd09ynp5_akx/potfi"
               target="_blank"
               rel="noopener noreferrer"
               className="w-full sm:w-auto inline-flex items-center justify-center space-x-2.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold py-4 px-8 rounded-xl text-base transition-all duration-200 shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30"
