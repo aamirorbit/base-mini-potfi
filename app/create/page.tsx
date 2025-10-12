@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { useWriteContract, useWaitForTransactionReceipt, useAccount, useReadContract } from 'wagmi'
-import { erc20Abi, keccak256, encodePacked, decodeEventLog, encodeFunctionData } from 'viem'
+import { erc20Abi, keccak256, encodePacked, decodeEventLog, encodeFunctionData, createPublicClient, http } from 'viem'
+import { base } from 'viem/chains'
 import { jackpotAbi, jackpotAddress, USDC, ONE_USDC } from '@/lib/contracts'
 import { getAppDomain, castIdToBytes32 } from '@/lib/utils'
 import { useMiniKitWallet } from '@/hooks/useMiniKitWallet'
@@ -372,19 +373,23 @@ export default function Create() {
         setShowSuccess(true)
         setIsPotIdPending(true)
         
-        // Poll for transaction receipt to get real potId
+        // Use public RPC client to poll for receipt (MiniKit provider doesn't support eth_getTransactionReceipt)
         console.log('⏳ Waiting for transaction to be mined...')
+        const publicClient = createPublicClient({
+          chain: base,
+          transport: http()
+        })
+        
         let attempts = 0
-        const maxAttempts = 20 // 20 seconds max
+        const maxAttempts = 30 // 30 seconds max
         const pollInterval = setInterval(async () => {
           attempts++
           try {
-            const receipt = await provider.request({
-              method: 'eth_getTransactionReceipt',
-              params: [txHash]
+            const receipt = await publicClient.getTransactionReceipt({
+              hash: txHash as `0x${string}`
             })
             
-            if (receipt && receipt.status === '0x1') {
+            if (receipt && receipt.status === 'success') {
               // Transaction successful, extract potId
               clearInterval(pollInterval)
               console.log('✅ Transaction mined:', receipt)
@@ -407,24 +412,20 @@ export default function Create() {
                 }
               }
               setFarcasterCreating(false)
-            } else if (receipt && receipt.status === '0x0') {
+            } else if (receipt && receipt.status === 'reverted') {
               // Transaction failed
               clearInterval(pollInterval)
               console.error('❌ Transaction failed')
               setErrorMessage('Transaction failed. Please try again.')
               setShowSuccess(false)
               setFarcasterCreating(false)
-            } else if (attempts >= maxAttempts) {
-              // Timeout - transaction still pending
-              clearInterval(pollInterval)
-              console.warn('⏱️ Transaction still pending after 20 seconds')
-              setIsPotIdPending(false)
-              setFarcasterCreating(false)
             }
-          } catch (error) {
-            console.error('Error polling receipt:', error)
+          } catch (error: any) {
+            // Receipt not yet available, continue polling
             if (attempts >= maxAttempts) {
               clearInterval(pollInterval)
+              console.warn('⏱️ Transaction still pending after 30 seconds')
+              setIsPotIdPending(false)
               setFarcasterCreating(false)
             }
           }
@@ -569,19 +570,19 @@ export default function Create() {
         <div className="bg-white/70 backdrop-blur-xl rounded-md p-3 border border-white/20 space-y-2 text-xs">
           <div className="flex justify-between">
             <span className="text-gray-600">Amount</span>
-            <span className="font-medium">{amount} USDC</span>
+            <span className="font-semibold text-gray-900">{amount} USDC</span>
           </div>
           <div className="flex justify-between">
             <span className="text-gray-600">Standard Claim</span>
-            <span className="font-medium">0.01 USDC</span>
+            <span className="font-semibold text-gray-900">0.01 USDC</span>
           </div>
           <div className="flex justify-between">
             <span className="text-gray-600">Max Claims</span>
-            <span className="font-medium">~{Math.floor(amount / 0.01)}</span>
+            <span className="font-semibold text-gray-900">~{Math.floor(amount / 0.01)}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-gray-600">Timeout</span>
-            <span className="font-medium">{Math.floor(timeout / 3600)}h</span>
+            <span className="font-semibold text-gray-900">{Math.floor(timeout / 3600)}h</span>
           </div>
           
           {isPotIdPending ? (

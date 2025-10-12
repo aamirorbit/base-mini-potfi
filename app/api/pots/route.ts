@@ -90,9 +90,13 @@ export async function GET(request: NextRequest) {
         inputs: [
           { name: 'id', type: 'bytes32', indexed: true },
           { name: 'creator', type: 'address', indexed: true },
-          { name: 'token', type: 'address' },
-          { name: 'amount', type: 'uint256' },
-          { name: 'standardClaim', type: 'uint128' }
+          { name: 'token', type: 'address', indexed: false },
+          { name: 'amount', type: 'uint256', indexed: false },
+          { name: 'standardClaim', type: 'uint128', indexed: false },
+          { name: 'postId', type: 'bytes32', indexed: false },
+          { name: 'requireLike', type: 'bool', indexed: false },
+          { name: 'requireRecast', type: 'bool', indexed: false },
+          { name: 'requireComment', type: 'bool', indexed: false }
         ]
       },
       args: creatorAddress ? { creator: creatorAddress as `0x${string}` } : undefined,
