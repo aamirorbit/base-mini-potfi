@@ -5,7 +5,6 @@ import { useAccount } from 'wagmi'
 import { useMiniKitWallet } from '@/hooks/useMiniKitWallet'
 import { useEffect, useState } from 'react'
 import MobileLayout from './components/MobileLayout'
-import LandingPage from './components/LandingPage'
 
 interface TemplateProps {
   children: React.ReactNode
@@ -13,7 +12,6 @@ interface TemplateProps {
 
 export default function Template({ children }: TemplateProps) {
   const pathname = usePathname()
-  const [isMiniApp, setIsMiniApp] = useState(false)
   const [isFarcaster, setIsFarcaster] = useState(false)
   const [mounted, setMounted] = useState(false)
 
@@ -30,11 +28,9 @@ export default function Template({ children }: TemplateProps) {
       const isFarcasterUA = userAgent.includes('Farcaster')
       const isBaseApp = userAgent.includes('Base') || userAgent.includes('Coinbase')
       
-      // Check if we're in any mini app environment
+      // Use MiniKit wallet for any mini app context
       const inMiniApp = isInIframe || isFarcasterUA || isBaseApp
-      
-      setIsMiniApp(inMiniApp)
-      setIsFarcaster(inMiniApp) // Use MiniKit wallet for any mini app context
+      setIsFarcaster(inMiniApp)
       
       console.log('Mini App Detection:', {
         isInIframe,
@@ -57,11 +53,7 @@ export default function Template({ children }: TemplateProps) {
     return <>{children}</>
   }
 
-  // Show landing page only if NOT in any mini app context
-  if (!isMiniApp) {
-    return <LandingPage />
-  }
-
+  // Always show the app interface
   return (
     <MobileLayout showBottomNav={shouldShowBottomNav}>
       <div className="mb-10">
