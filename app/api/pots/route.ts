@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createPublicClient, http, parseAbi, getAddress, decodeEventLog } from 'viem'
 import { base } from 'viem/chains'
 import { jackpotAddress } from '@/lib/contracts'
+import { bytes32ToCastId } from '@/lib/utils'
 
 // Alchemy API key (required for production use)
 const alchemyApiKey = process.env.ALCHEMY_API_KEY || process.env.NEXT_PUBLIC_ALCHEMY_API_KEY
@@ -224,7 +225,7 @@ export async function GET(request: NextRequest) {
           jackpotWinner,
           timeRemaining: status === 'active' ? Math.max(0, Math.floor((expiryTime - now) / 1000)) : undefined,
           canReclaim: status === 'expired' && remainingAmount > 0.01 && !wasSwept,
-          castId: postId || undefined,
+          castId: postId ? bytes32ToCastId(postId) : undefined,
           requireLike,
           requireRecast,
           requireComment
@@ -339,7 +340,7 @@ export async function POST(request: NextRequest) {
       timeoutSecs,
       active,
       jackpotProbability: Number(jackpotProbability) / 100, // Convert from basis points to percentage
-      castId: postId || undefined,
+      castId: postId ? bytes32ToCastId(postId) : undefined,
       requireLike,
       requireRecast,
       requireComment,

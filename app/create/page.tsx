@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useWriteContract, useWaitForTransactionReceipt, useAccount, useReadContract } from 'wagmi'
 import { erc20Abi, keccak256, encodePacked, decodeEventLog, encodeFunctionData } from 'viem'
 import { jackpotAbi, jackpotAddress, USDC, ONE_USDC } from '@/lib/contracts'
-import { getAppDomain } from '@/lib/utils'
+import { getAppDomain, castIdToBytes32 } from '@/lib/utils'
 import { useMiniKitWallet } from '@/hooks/useMiniKitWallet'
 import { miniKitWallet } from '@/lib/minikit-wallet'
 import { Coins, AlertTriangle, CheckCircle, Copy, Share2, ArrowLeft, RefreshCw, Clock, DollarSign, Users } from 'lucide-react'
@@ -345,8 +345,8 @@ export default function Create() {
           return
         }
 
-        // Convert postId to bytes32
-        const postIdBytes32 = postId.startsWith('0x') ? postId as `0x${string}` : `0x${postId}` as `0x${string}`
+        // Convert postId to bytes32 (pad if necessary since Farcaster cast IDs are 20 bytes)
+        const postIdBytes32 = castIdToBytes32(postId)
         
         // Encode the createPot function call
         const data = encodeFunctionData({
@@ -438,8 +438,8 @@ export default function Create() {
         setFarcasterCreating(false)
       }
     } else {
-      // Convert postId to bytes32
-      const postIdBytes32 = postId.startsWith('0x') ? postId as `0x${string}` : `0x${postId}` as `0x${string}`
+      // Convert postId to bytes32 (pad if necessary since Farcaster cast IDs are 20 bytes)
+      const postIdBytes32 = castIdToBytes32(postId)
       
       // Use wagmi for non-Farcaster environments
       createPotContract({

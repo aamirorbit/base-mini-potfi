@@ -3,6 +3,53 @@
  */
 
 /**
+ * Convert a Farcaster cast ID (bytes20) to bytes32 by padding with zeros
+ * Farcaster cast IDs are 20 bytes, but Solidity uses bytes32 for storage
+ */
+export function castIdToBytes32(castId: string): `0x${string}` {
+  const cleanCastId = castId.startsWith('0x') ? castId : `0x${castId}`
+  
+  // If already 32 bytes, return as is
+  if (cleanCastId.length === 66) { // 0x + 64 hex chars
+    return cleanCastId as `0x${string}`
+  }
+  
+  // Pad to 32 bytes (add zeros to the right)
+  const paddingNeeded = 66 - cleanCastId.length
+  return (cleanCastId + '0'.repeat(paddingNeeded)) as `0x${string}`
+}
+
+/**
+ * Convert a bytes32 cast ID back to bytes20 by removing padding zeros
+ * Returns the original Farcaster cast ID format
+ */
+export function bytes32ToCastId(bytes32: string): string {
+  if (!bytes32 || bytes32 === '0x0000000000000000000000000000000000000000000000000000000000000000') {
+    return ''
+  }
+  
+  // Remove 0x prefix
+  const hex = bytes32.startsWith('0x') ? bytes32.slice(2) : bytes32
+  
+  // Find the last non-zero character (cast IDs are padded on the right)
+  let lastNonZero = hex.length
+  for (let i = hex.length - 1; i >= 0; i--) {
+    if (hex[i] !== '0') {
+      lastNonZero = i + 1
+      break
+    }
+  }
+  
+  // If the result is 40 chars (20 bytes), it's likely a cast ID
+  if (lastNonZero <= 40) {
+    return '0x' + hex.slice(0, Math.max(lastNonZero, 40))
+  }
+  
+  // Otherwise return as is
+  return '0x' + hex.slice(0, lastNonZero)
+}
+
+/**
  * Get the app domain dynamically from environment variables
  * Works on Vercel with automatic domain detection
  */
