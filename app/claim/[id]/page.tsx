@@ -9,7 +9,6 @@ import { useMiniKitWallet } from '@/hooks/useMiniKitWallet'
 import { useSmartWallet } from '@/hooks/useSmartWallet'
 import { getPaymasterCapability } from '@/lib/paymaster'
 import { detectBaseAppEnvironment } from '@/lib/environment'
-import { useViewCast } from '@coinbase/onchainkit/minikit'
 import { sdk } from '@farcaster/miniapp-sdk'
 import { pad, createWalletClient, custom, PublicClient, createPublicClient, http, encodeFunctionData } from 'viem'
 import { base } from 'viem/chains'
@@ -52,9 +51,6 @@ export default function Claim() {
   
   // Smart wallet with Base Account capabilities
   const smartWallet = useSmartWallet(isBaseApp)
-  
-  // OnchainKit hook for viewing cast in Base app
-  const { viewCast } = useViewCast()
 
   useEffect(() => {
     setMounted(true)
@@ -508,10 +504,17 @@ export default function Claim() {
                   </div>
                 )}
                 
-                {/* Cast Engagement Button - Uses OnchainKit */}
+                {/* Cast Engagement Button - Uses Farcaster SDK */}
                 {castId && (
                   <button
-                    onClick={() => viewCast({ hash: castId })}
+                    onClick={async () => {
+                      try {
+                        console.log('🔍 Opening cast with hash:', castId)
+                        await sdk.actions.viewCast({ hash: castId })
+                      } catch (error) {
+                        console.error('❌ Error opening cast:', error)
+                      }
+                    }}
                     className="w-full mb-3 flex items-center justify-center space-x-2 bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 font-medium py-2.5 px-4 rounded-md text-sm transition-all shadow-sm active:scale-95"
                   >
                     <ExternalLink className="w-4 h-4" />
