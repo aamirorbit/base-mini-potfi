@@ -207,6 +207,8 @@ export default function Claim() {
       if (!res.ok) {
         // Handle API errors (403, 404, etc.)
         setErrorMessage(data.error || `Error: ${res.status} ${res.statusText}`)
+        setShowErrorModal(true)
+        setBusy(false)
         return
       }
       

@@ -112,8 +112,9 @@ export default function Create() {
     const justApproved = (isBaseApp && baseAppApproved) || approveSuccess
     const notYetCreating = !(isBaseApp ? baseAppCreating : isCreating)
     const notYetCreated = !showSuccess
+    const noPotId = !potId
     
-    if (justApproved && notYetCreating && notYetCreated) {
+    if (justApproved && notYetCreating && notYetCreated && noPotId) {
       // Automatically start pot creation after approval
       console.log('✅ Approval successful, starting pot creation...')
       // Refetch allowance before proceeding
@@ -123,7 +124,7 @@ export default function Create() {
         }, 500) // Small delay to show approval success
       })
     }
-  }, [baseAppApproved, approveSuccess, isBaseApp, baseAppCreating, isCreating, showSuccess])
+  }, [baseAppApproved, approveSuccess, isBaseApp, baseAppCreating, isCreating, showSuccess, potId])
 
   // Reset error when starting new actions
   const clearError = () => setErrorMessage('')
@@ -234,6 +235,7 @@ export default function Create() {
         const provider = miniKitWallet.getProvider()
         if (!provider) {
           setErrorMessage('Wallet not connected properly')
+          setShowErrorModal(true)
           setBaseAppApproving(false)
           return
         }
@@ -278,6 +280,7 @@ export default function Create() {
             } else if (receipt && receipt.status === '0x0') {
               clearInterval(pollInterval)
               setErrorMessage('Approval transaction failed')
+              setShowErrorModal(true)
               setBaseAppApproving(false)
             } else if (attempts >= maxAttempts) {
               clearInterval(pollInterval)
@@ -429,6 +432,12 @@ export default function Create() {
   async function create() {
     clearError()
     
+    // Prevent multiple creation attempts
+    if (potId || showSuccess) {
+      console.log('⚠️ Pot already created, skipping duplicate creation')
+      return
+    }
+    
     // Use MiniKit provider in Base app, wagmi elsewhere
     if (isBaseApp && mounted) {
       setBaseAppCreating(true)
@@ -436,6 +445,7 @@ export default function Create() {
         const provider = miniKitWallet.getProvider()
         if (!provider) {
           setErrorMessage('Wallet not connected properly')
+          setShowErrorModal(true)
           setBaseAppCreating(false)
           return
         }
@@ -511,6 +521,7 @@ export default function Create() {
               clearInterval(pollInterval)
               console.error('❌ Transaction failed')
               setErrorMessage('Transaction failed. Please try again.')
+              setShowErrorModal(true)
               setShowSuccess(false)
               setBaseAppCreating(false)
             }
@@ -533,6 +544,12 @@ export default function Create() {
         setBaseAppCreating(false)
       }
     } else {
+      // Prevent multiple creation attempts in wagmi path
+      if (potId || showSuccess) {
+        console.log('⚠️ Pot already created, skipping duplicate creation')
+        return
+      }
+      
       // Convert postId to bytes32 for contract
       const postIdBytes32 = castIdToBytes32(postId)
       
