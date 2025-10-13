@@ -504,33 +504,15 @@ export default function Claim() {
                   </div>
                 )}
                 
-                {/* Cast Engagement Info */}
+                {/* Cast Engagement Link */}
                 {castId && (
-                  isBaseApp ? (
-                    // In Base app - show instructions without external link
-                    <div className="mb-3 bg-blue-50/50 border border-blue-200/50 px-4 py-3 rounded-md">
-                      <p className="text-xs font-medium text-blue-900 mb-2">📱 Engage in Base App</p>
-                      <p className="text-xs text-blue-700 mb-2">
-                        Find the post in your Base feed to like, recast, and comment.
-                      </p>
-                      <div className="bg-white/50 px-3 py-2 rounded-md">
-                        <p className="text-xs text-gray-600 font-mono break-all">
-                          Cast: {getShortCastId(castId)}
-                        </p>
-                      </div>
-                    </div>
-                  ) : (
-                    // In standalone browser - show external link
-                    <a
-                      href={getCastUrl(castId, false) || '#'}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="w-full mb-3 flex items-center justify-center space-x-2 bg-white hover:bg-gray-50 border border-gray-300 text-gray-700 font-medium py-2.5 px-4 rounded-md text-sm transition-all shadow-sm"
-                    >
-                      <ExternalLink className="w-4 h-4" />
-                      <span>View on Warpcast to Engage</span>
-                    </a>
-                  )
+                  <a
+                    href={getCastUrl(castId, isBaseApp) || '#'}
+                    className="w-full mb-3 flex items-center justify-center space-x-2 bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 font-medium py-2.5 px-4 rounded-md text-sm transition-all shadow-sm"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                    <span>{isBaseApp ? 'View Cast in Base' : 'View on Warpcast'}</span>
+                  </a>
                 )}
                 
                 {/* Error Message */}
