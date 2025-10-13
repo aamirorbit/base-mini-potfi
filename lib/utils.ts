@@ -144,3 +144,43 @@ export function truncateAddress(address: string): string {
 export function generatePotId(): string {
   return Math.random().toString(36).substring(2, 15)
 }
+
+/**
+ * Extract cast hash from Base/Warpcast URL or return the input if it's already a hash
+ * Supports formats:
+ * - https://base.app/post/0xb4f1758757e564a5e61219b320bebb747845db8a
+ * - base.app/post/0xb4f1758757e564a5e61219b320bebb747845db8a
+ * - https://warpcast.com/~/conversations/0xb4f1758757e564a5e61219b320bebb747845db8a
+ * - 0xb4f1758757e564a5e61219b320bebb747845db8a (already a hash)
+ */
+export function extractCastHash(input: string): string {
+  if (!input) return ''
+  
+  const trimmed = input.trim()
+  
+  // If it's already a hash (starts with 0x and is hex), return it
+  if (/^0x[a-fA-F0-9]{40,}$/.test(trimmed)) {
+    return trimmed
+  }
+  
+  // Try to extract from Base app URL: base.app/post/{hash}
+  const baseMatch = trimmed.match(/base\.app\/post\/(0x[a-fA-F0-9]{40,})/)
+  if (baseMatch) {
+    return baseMatch[1]
+  }
+  
+  // Try to extract from Warpcast URL: warpcast.com/~/conversations/{hash}
+  const warpcastMatch = trimmed.match(/warpcast\.com\/~\/conversations\/(0x[a-fA-F0-9]{40,})/)
+  if (warpcastMatch) {
+    return warpcastMatch[1]
+  }
+  
+  // Try to extract any 0x-prefixed hex string that looks like a hash
+  const genericMatch = trimmed.match(/(0x[a-fA-F0-9]{40,})/)
+  if (genericMatch) {
+    return genericMatch[1]
+  }
+  
+  // Return original input if no pattern matches
+  return trimmed
+}

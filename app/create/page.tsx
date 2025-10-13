@@ -5,7 +5,7 @@ import { useWriteContract, useWaitForTransactionReceipt, useAccount, useReadCont
 import { erc20Abi, keccak256, encodePacked, decodeEventLog, encodeFunctionData, createPublicClient, http } from 'viem'
 import { base } from 'viem/chains'
 import { jackpotAbi, jackpotAddress, USDC, ONE_USDC } from '@/lib/contracts'
-import { getAppDomain, castIdToBytes32 } from '@/lib/utils'
+import { getAppDomain, castIdToBytes32, extractCastHash } from '@/lib/utils'
 import { detectBaseAppEnvironment, getShareCastUrl } from '@/lib/environment'
 import { useMiniKitWallet } from '@/hooks/useMiniKitWallet'
 import { useSmartWallet } from '@/hooks/useSmartWallet'
@@ -825,12 +825,28 @@ export default function Create() {
                 name="postId"
                 type="text"
                 value={postId}
-                onChange={(e) => setPostId(e.target.value)}
+                onChange={(e) => {
+                  const input = e.target.value
+                  // Automatically extract hash from URLs or use as-is
+                  const hash = extractCastHash(input)
+                  setPostId(hash)
+                }}
+                onPaste={(e) => {
+                  // Handle paste events specially to extract hash immediately
+                  const pastedText = e.clipboardData.getData('text')
+                  const hash = extractCastHash(pastedText)
+                  if (hash !== pastedText) {
+                    e.preventDefault()
+                    setPostId(hash)
+                  }
+                }}
                 className="w-full p-2.5 rounded-md border border-gray-300 text-gray-900 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="0x..."
+                placeholder="Paste Base URL (base.app/post/...) or cast hash"
               />
               <p className="text-gray-500 text-xs mt-1">
-                Required to verify engagement
+                {postId 
+                  ? `✓ Cast: ${postId.slice(0, 12)}...${postId.slice(-6)}` 
+                  : "Paste Base URL or cast hash to verify engagement"}
               </p>
             </div>
             

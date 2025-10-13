@@ -9,6 +9,7 @@ import { useMiniKitWallet } from '@/hooks/useMiniKitWallet'
 import { useSmartWallet } from '@/hooks/useSmartWallet'
 import { getPaymasterCapability } from '@/lib/paymaster'
 import { detectBaseAppEnvironment } from '@/lib/environment'
+import { extractCastHash } from '@/lib/utils'
 import { sdk } from '@farcaster/miniapp-sdk'
 import { pad, createWalletClient, custom, PublicClient, createPublicClient, http, encodeFunctionData } from 'viem'
 import { base } from 'viem/chains'
@@ -505,70 +506,127 @@ export default function Claim() {
                       name="castId"
                       type="text"
                       value={castId}
-                      onChange={(e) => setCastId(e.target.value)}
-                      placeholder="Enter the cast hash (0x...)"
+                      onChange={(e) => {
+                        const input = e.target.value
+                        // Automatically extract hash from URLs or use as-is
+                        const hash = extractCastHash(input)
+                        setCastId(hash)
+                      }}
+                      onPaste={(e) => {
+                        // Handle paste events specially to extract hash immediately
+                        const pastedText = e.clipboardData.getData('text')
+                        const hash = extractCastHash(pastedText)
+                        if (hash !== pastedText) {
+                          e.preventDefault()
+                          setCastId(hash)
+                        }
+                      }}
+                      placeholder="Paste Base URL or cast hash (0x...)"
                       className="w-full rounded-md px-3 py-2.5 text-sm bg-white text-gray-900 placeholder-gray-400 border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     />
                     <p className="text-xs text-gray-500 mt-1">
                       {castId 
-                        ? `Cast: ${castId.slice(0, 12)}...${castId.slice(-6)}` 
-                        : "Paste the hash of the cast you engaged with"}
+                        ? `✓ Cast: ${castId.slice(0, 12)}...${castId.slice(-6)}` 
+                        : "Paste Base URL (base.app/post/...) or cast hash"}
                     </p>
                   </div>
                 )}
                 
-                {/* Cast Engagement Button - Uses Farcaster SDK */}
+                {/* Cast Post Preview - Opens with viewCast */}
                 {castId && (
-                  <button
-                    onClick={async () => {
-                      const logs: string[] = []
-                      try {
-                        logs.push(`🔍 Opening cast: ${castId.slice(0, 12)}...`)
-                        logs.push(`SDK available: ${typeof sdk !== 'undefined'}`)
-                        logs.push(`SDK.actions available: ${typeof sdk?.actions !== 'undefined'}`)
-                        logs.push(`viewCast available: ${typeof sdk?.actions?.viewCast === 'function'}`)
-                        
-                        console.log('🔍 Opening cast with hash:', castId)
-                        console.log('🔍 SDK available:', typeof sdk !== 'undefined')
-                        console.log('🔍 SDK.actions available:', typeof sdk?.actions !== 'undefined')
-                        console.log('🔍 viewCast available:', typeof sdk?.actions?.viewCast === 'function')
-                        
-                        // Validate cast hash format (should be 0x followed by hex)
-                        if (!castId.startsWith('0x')) {
-                          logs.push(`⚠️ Warning: Cast hash should start with 0x`)
-                          console.warn('⚠️ Cast hash should start with 0x:', castId)
+                  <div className="mb-3">
+                    <p className="text-xs font-medium text-gray-700 mb-2">
+                      📌 Required Post to Engage:
+                    </p>
+                    <button
+                      onClick={async () => {
+                        const logs: string[] = []
+                        try {
+                          logs.push(`🔍 Opening cast: ${castId.slice(0, 12)}...`)
+                          logs.push(`SDK available: ${typeof sdk !== 'undefined'}`)
+                          logs.push(`SDK.actions available: ${typeof sdk?.actions !== 'undefined'}`)
+                          logs.push(`viewCast available: ${typeof sdk?.actions?.viewCast === 'function'}`)
+                          
+                          console.log('🔍 Opening cast with hash:', castId)
+                          console.log('🔍 SDK available:', typeof sdk !== 'undefined')
+                          console.log('🔍 SDK.actions available:', typeof sdk?.actions !== 'undefined')
+                          console.log('🔍 viewCast available:', typeof sdk?.actions?.viewCast === 'function')
+                          
+                          // Validate cast hash format (should be 0x followed by hex)
+                          if (!castId.startsWith('0x')) {
+                            logs.push(`⚠️ Warning: Cast hash should start with 0x`)
+                            console.warn('⚠️ Cast hash should start with 0x:', castId)
+                          }
+                          
+                          logs.push(`Calling viewCast...`)
+                          setDebugInfo([...logs])
+                          
+                          // Call viewCast
+                          await sdk.actions.viewCast({ hash: castId })
+                          
+                          logs.push(`✅ ViewCast called successfully!`)
+                          setDebugInfo([...logs])
+                          console.log('✅ ViewCast called successfully')
+                        } catch (error: any) {
+                          logs.push(`❌ Error: ${error?.message || 'Unknown error'}`)
+                          logs.push(`Error name: ${error?.name || 'N/A'}`)
+                          setDebugInfo([...logs])
+                          
+                          console.error('❌ Error opening cast:', error)
+                          console.error('❌ Error details:', {
+                            message: error?.message,
+                            name: error?.name,
+                            stack: error?.stack
+                          })
+                          
+                          // Show user-friendly error
+                          setErrorMessage(`Could not open cast: ${error?.message || 'Unknown error'}`)
                         }
-                        
-                        logs.push(`Calling viewCast...`)
-                        setDebugInfo([...logs])
-                        
-                        // Call viewCast
-                        await sdk.actions.viewCast({ hash: castId })
-                        
-                        logs.push(`✅ ViewCast called successfully!`)
-                        setDebugInfo([...logs])
-                        console.log('✅ ViewCast called successfully')
-                      } catch (error: any) {
-                        logs.push(`❌ Error: ${error?.message || 'Unknown error'}`)
-                        logs.push(`Error name: ${error?.name || 'N/A'}`)
-                        setDebugInfo([...logs])
-                        
-                        console.error('❌ Error opening cast:', error)
-                        console.error('❌ Error details:', {
-                          message: error?.message,
-                          name: error?.name,
-                          stack: error?.stack
-                        })
-                        
-                        // Show user-friendly error
-                        setErrorMessage(`Could not open cast: ${error?.message || 'Unknown error'}`)
-                      }
-                    }}
-                    className="w-full mb-3 flex items-center justify-center space-x-2 bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 font-medium py-2.5 px-4 rounded-md text-sm transition-all shadow-sm active:scale-95"
-                  >
-                    <ExternalLink className="w-4 h-4" />
-                    <span>View Cast to Engage</span>
-                  </button>
+                      }}
+                      className="w-full bg-gradient-to-br from-blue-50 to-white hover:from-blue-100 hover:to-blue-50 border-2 border-blue-200 rounded-md p-4 transition-all shadow-md hover:shadow-lg active:scale-98 text-left"
+                    >
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex items-center space-x-2">
+                          <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-md flex items-center justify-center shadow-sm">
+                            <Coins className="w-4 h-4 text-white" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-bold text-gray-900">Creator's Post</p>
+                            <p className="text-xs text-gray-500">Tap to view on Base</p>
+                          </div>
+                        </div>
+                        <ExternalLink className="w-5 h-5 text-blue-600" />
+                      </div>
+                      
+                      <div className="bg-white/80 rounded-md p-3 mb-3">
+                        <p className="text-xs font-mono text-gray-700 break-all">
+                          base.app/post/{castId.slice(0, 20)}...{castId.slice(-10)}
+                        </p>
+                      </div>
+                      
+                      <div className="flex items-center justify-between text-xs">
+                        <div className="flex items-center space-x-4 text-gray-600">
+                          <span className="flex items-center space-x-1">
+                            <span>👍</span>
+                            <span>Like</span>
+                          </span>
+                          <span className="flex items-center space-x-1">
+                            <span>💬</span>
+                            <span>Comment</span>
+                          </span>
+                          <span className="flex items-center space-x-1">
+                            <span>🔄</span>
+                            <span>Recast</span>
+                          </span>
+                        </div>
+                        <span className="text-blue-600 font-medium">Open →</span>
+                      </div>
+                    </button>
+                    
+                    <p className="text-xs text-gray-500 mt-2 text-center">
+                      Complete all 3 actions to be eligible for claim
+                    </p>
+                  </div>
                 )}
                 
                 {/* Debug Panel */}
