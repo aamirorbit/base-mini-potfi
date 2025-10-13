@@ -532,58 +532,24 @@ export default function Claim() {
                   </div>
                 )}
                 
-                {/* Cast Post Preview - Opens with viewCast */}
+                {/* Cast Post Preview - Simple link */}
                 {castId && (
                   <div className="mb-3">
                     <p className="text-xs font-medium text-gray-700 mb-2">
                       📌 Required Post to Engage:
                     </p>
-                    <button
-                      onClick={async () => {
-                        const logs: string[] = []
-                        try {
-                          logs.push(`🔍 Opening cast: ${castId.slice(0, 12)}...`)
-                          logs.push(`SDK available: ${typeof sdk !== 'undefined'}`)
-                          logs.push(`SDK.actions available: ${typeof sdk?.actions !== 'undefined'}`)
-                          logs.push(`viewCast available: ${typeof sdk?.actions?.viewCast === 'function'}`)
-                          
-                          console.log('🔍 Opening cast with hash:', castId)
-                          console.log('🔍 SDK available:', typeof sdk !== 'undefined')
-                          console.log('🔍 SDK.actions available:', typeof sdk?.actions !== 'undefined')
-                          console.log('🔍 viewCast available:', typeof sdk?.actions?.viewCast === 'function')
-                          
-                          // Validate cast hash format (should be 0x followed by hex)
-                          if (!castId.startsWith('0x')) {
-                            logs.push(`⚠️ Warning: Cast hash should start with 0x`)
-                            console.warn('⚠️ Cast hash should start with 0x:', castId)
-                          }
-                          
-                          logs.push(`Calling viewCast...`)
-                          setDebugInfo([...logs])
-                          
-                          // Call viewCast
-                          await sdk.actions.viewCast({ hash: castId })
-                          
-                          logs.push(`✅ ViewCast called successfully!`)
-                          setDebugInfo([...logs])
-                          console.log('✅ ViewCast called successfully')
-                        } catch (error: any) {
-                          logs.push(`❌ Error: ${error?.message || 'Unknown error'}`)
-                          logs.push(`Error name: ${error?.name || 'N/A'}`)
-                          setDebugInfo([...logs])
-                          
-                          console.error('❌ Error opening cast:', error)
-                          console.error('❌ Error details:', {
-                            message: error?.message,
-                            name: error?.name,
-                            stack: error?.stack
-                          })
-                          
-                          // Show user-friendly error
-                          setErrorMessage(`Could not open cast: ${error?.message || 'Unknown error'}`)
-                        }
+                    <a
+                      href={`https://base.app/post/${castId}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={() => {
+                        console.log('🔍 Opening Base URL:', `https://base.app/post/${castId}`)
+                        setDebugInfo([
+                          `🔍 Opening: base.app/post/${castId.slice(0, 10)}...`,
+                          `✅ Link clicked - opening in new tab`
+                        ])
                       }}
-                      className="w-full bg-gradient-to-br from-blue-50 to-white hover:from-blue-100 hover:to-blue-50 border-2 border-blue-200 rounded-md p-4 transition-all shadow-md hover:shadow-lg active:scale-98 text-left"
+                      className="block w-full bg-gradient-to-br from-blue-50 to-white hover:from-blue-100 hover:to-blue-50 border-2 border-blue-200 rounded-md p-4 transition-all shadow-md hover:shadow-lg active:scale-98 no-underline"
                     >
                       <div className="flex items-start justify-between mb-3">
                         <div className="flex items-center space-x-2">
@@ -621,7 +587,7 @@ export default function Claim() {
                         </div>
                         <span className="text-blue-600 font-medium">Open →</span>
                       </div>
-                    </button>
+                    </a>
                     
                     <p className="text-xs text-gray-500 mt-2 text-center">
                       Complete all 3 actions to be eligible for claim
@@ -649,15 +615,9 @@ export default function Claim() {
                       </div>
                       
                       <div className="border-b border-gray-700 pb-1 mb-2">
-                        <p className="text-gray-400">SDK Status:</p>
-                        <p className={typeof sdk !== 'undefined' ? 'text-green-400' : 'text-red-400'}>
-                          {typeof sdk !== 'undefined' ? '✓ Available' : '✗ Not available'}
-                        </p>
-                        <p className={typeof sdk?.actions !== 'undefined' ? 'text-green-400' : 'text-red-400'}>
-                          {typeof sdk?.actions !== 'undefined' ? '✓ Actions available' : '✗ Actions not available'}
-                        </p>
-                        <p className={typeof sdk?.actions?.viewCast === 'function' ? 'text-green-400' : 'text-red-400'}>
-                          {typeof sdk?.actions?.viewCast === 'function' ? '✓ viewCast available' : '✗ viewCast not available'}
+                        <p className="text-gray-400">Post URL:</p>
+                        <p className="text-blue-400 break-all text-xs">
+                          {castId ? `https://base.app/post/${castId}` : 'Not set'}
                         </p>
                       </div>
                       

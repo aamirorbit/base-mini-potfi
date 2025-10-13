@@ -84,20 +84,39 @@ export class NeynarClient {
       console.log('Neynar getUserByAddress response:', JSON.stringify(data, null, 2))
       
       // Handle different possible response structures
+      
+      // Most common: object with address as key, containing array of users
+      // Example: { "0xabcd...": [{ fid: 123, ... }] }
+      if (typeof data === 'object' && !Array.isArray(data)) {
+        const addresses = Object.keys(data)
+        if (addresses.length > 0) {
+          const users = data[addresses[0]]
+          if (Array.isArray(users) && users.length > 0) {
+            console.log('✅ Found user in address-keyed response:', users[0].username)
+            return users[0]
+          }
+        }
+      }
+      
+      // Alternative format: { users: [...] }
       if (data.users && data.users.length > 0) {
+        console.log('✅ Found user in users array:', data.users[0].username)
         return data.users[0]
       }
       
       // Some APIs return data directly in an array
       if (Array.isArray(data) && data.length > 0) {
+        console.log('✅ Found user in direct array:', data[0].username)
         return data[0]
       }
       
       // Check if there's a single user object
       if (data.user) {
+        console.log('✅ Found user in user field:', data.user.username)
         return data.user
       }
       
+      console.log('❌ No user found in any expected format')
       return null
     } catch (error) {
       console.error('Error fetching user by address:', error)
