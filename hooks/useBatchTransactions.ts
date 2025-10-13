@@ -52,9 +52,9 @@ export function useBatchTransactions(): UseBatchTransactionsReturn {
         const callsFormatted = calls.map(call => ({
           to: call.address,
           data: encodeFunctionData({
-            abi: call.abi,
+            abi: call.abi as any,
             functionName: call.functionName,
-            args: call.args || []
+            args: call.args as any[] || []
           }),
           value: call.value ? `0x${call.value.toString(16)}` : undefined
         }))
@@ -89,9 +89,9 @@ export function useBatchTransactions(): UseBatchTransactionsReturn {
           
           const hash = await walletClient.writeContract({
             address: call.address,
-            abi: call.abi,
+            abi: call.abi as any,
             functionName: call.functionName,
-            args: call.args || [],
+            args: (call.args || []) as any[],
             value: call.value
           })
 

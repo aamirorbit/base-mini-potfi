@@ -44,18 +44,18 @@ export function useBaseAccountCapabilities(address?: string): BaseAccountCapabil
         const caps = await publicClient.request({
           method: 'wallet_getCapabilities',
           params: [address]
-        } as any)
+        } as any) as Record<string, any>
 
         console.log('Base Account Capabilities:', caps)
 
         // Base chain ID is 0x2105 (8453 in decimal)
         const baseChainId = '0x2105'
-        const baseCapabilities = caps?.[baseChainId]
+        const baseCapabilities = caps?.[baseChainId] as Record<string, any> | undefined
 
         if (baseCapabilities) {
-          const hasAtomicBatch = baseCapabilities.atomicBatch?.supported === true
-          const hasPaymaster = baseCapabilities.paymasterService?.supported === true
-          const hasAuxFunds = baseCapabilities.auxiliaryFunds?.supported === true
+          const hasAtomicBatch = baseCapabilities?.atomicBatch?.supported === true
+          const hasPaymaster = baseCapabilities?.paymasterService?.supported === true
+          const hasAuxFunds = baseCapabilities?.auxiliaryFunds?.supported === true
 
           setCapabilities({
             atomicBatch: hasAtomicBatch,
