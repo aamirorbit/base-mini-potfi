@@ -21,18 +21,18 @@ export default function Template({ children }: TemplateProps) {
 
   useEffect(() => {
     setMounted(true)
-    // Detect if running in any mini app context (Farcaster or Base app)
+    // Detect if running in Base Mini App or Farcaster context
     if (typeof window !== 'undefined') {
       const userAgent = navigator.userAgent || ''
       const isInIframe = window.parent !== window
       const isFarcasterUA = userAgent.includes('Farcaster')
       const isBaseApp = userAgent.includes('Base') || userAgent.includes('Coinbase')
       
-      // Use MiniKit wallet for any mini app context
+      // Use MiniKit wallet for Base Mini App context
       const inMiniApp = isInIframe || isFarcasterUA || isBaseApp
       setIsFarcaster(inMiniApp)
       
-      console.log('Mini App Detection:', {
+      console.log('Mini App Detection (Base/Farcaster):', {
         isInIframe,
         isFarcasterUA,
         isBaseApp,

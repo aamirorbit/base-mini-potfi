@@ -4,28 +4,22 @@
     "payload": "eyJkb21haW4iOiJwb3RmaS5iYXNlY2l0aXplbnMuY29tIn0",
     "signature": "MHhkMGFmNWYxNmQwNzUxMzNhY2E5NDg5MjUyZGIzYmEwNGEzMmMwZGJlN2UwMDM0Y2NiZDYzMmM2NWYwOWJlMDQ3NDE2ZmYyYmI2NjUxZGQ0NTBhYTUwMzFhNTZhYmZjNmMzOWI5MzYzMDAxYTk3NmM2NmIyOWFmODI3ZjMzNGQyMjFj"
   },
-  "miniapp": {
+  "frame": {
     "version": "1",
     "name": "PotFi",
     "iconUrl": "https://potfi.basecitizens.com/icon.png",
     "homeUrl": "https://potfi.basecitizens.com",
-    "imageUrl": "https://potfi.basecitizens.com/og.png",
-    "buttonTitle": "🎰 Play PotFi",
     "splashImageUrl": "https://potfi.basecitizens.com/icon.png",
-    "splashBackgroundColor": "#f7f7f7",
+    "splashBackgroundColor": "#3B82F6",
     "subtitle": "Decentralized lottery on Base",
     "description": "Social tips with a PotFi twist. Deposit USDC, first N claim randomized splits on Base.",
     "primaryCategory": "games",
     "tags": ["USDC", "tips", "lottery", "base", "onchain"],
+    "heroImageUrl": "https://potfi.basecitizens.com/og.png",
     "tagline": "Win big with social engagement",
     "ogTitle": "PotFi - Win USDC Daily",
     "ogDescription": "Social tips with a PotFi twist. Deposit USDC, first N claim randomized splits on Base.",
-    "ogImageUrl": "https://potfi.basecitizens.com/og.png",
-    "requiredChains": ["eip155:8453"],
-    "requiredCapabilities": [
-      "actions.signIn",
-      "wallet.getEthereumProvider"
-    ]
+    "ogImageUrl": "https://potfi.basecitizens.com/og.png"
   },
   "baseBuilder": {
     "allowedAddresses": ["0x5654A4725D48de054652013F808a276892cB35DE"]
