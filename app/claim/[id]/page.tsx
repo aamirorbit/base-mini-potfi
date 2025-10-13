@@ -30,6 +30,8 @@ export default function Claim() {
   const [potDetails, setPotDetails] = useState<any>(null)
   const [loadingPot, setLoadingPot] = useState(true)
   const [showErrorModal, setShowErrorModal] = useState(false)
+  const [debugInfo, setDebugInfo] = useState<string[]>([])
+  const [showDebug, setShowDebug] = useState(true)
   
   // Wagmi hooks for fallback
   const { address: wagmiAddress, isConnected: wagmiConnected } = useAccount()
@@ -450,6 +452,17 @@ export default function Claim() {
                 </div>
               )}
 
+              {/* Debug Toggle Button */}
+              {!showDebug && (
+                <button
+                  onClick={() => setShowDebug(true)}
+                  className="w-full bg-gray-800 text-white text-xs py-2 px-3 rounded-md mb-2 flex items-center justify-center space-x-1"
+                >
+                  <span>🐛</span>
+                  <span>Show Debug Info</span>
+                </button>
+              )}
+
               {/* Instructions */}
               <div className="bg-white/70 backdrop-blur-xl rounded-md p-4 border border-white/20">
                 <h3 className="text-sm font-bold text-gray-900 mb-2">Required Actions</h3>
@@ -508,11 +521,47 @@ export default function Claim() {
                 {castId && (
                   <button
                     onClick={async () => {
+                      const logs: string[] = []
                       try {
+                        logs.push(`🔍 Opening cast: ${castId.slice(0, 12)}...`)
+                        logs.push(`SDK available: ${typeof sdk !== 'undefined'}`)
+                        logs.push(`SDK.actions available: ${typeof sdk?.actions !== 'undefined'}`)
+                        logs.push(`viewCast available: ${typeof sdk?.actions?.viewCast === 'function'}`)
+                        
                         console.log('🔍 Opening cast with hash:', castId)
+                        console.log('🔍 SDK available:', typeof sdk !== 'undefined')
+                        console.log('🔍 SDK.actions available:', typeof sdk?.actions !== 'undefined')
+                        console.log('🔍 viewCast available:', typeof sdk?.actions?.viewCast === 'function')
+                        
+                        // Validate cast hash format (should be 0x followed by hex)
+                        if (!castId.startsWith('0x')) {
+                          logs.push(`⚠️ Warning: Cast hash should start with 0x`)
+                          console.warn('⚠️ Cast hash should start with 0x:', castId)
+                        }
+                        
+                        logs.push(`Calling viewCast...`)
+                        setDebugInfo([...logs])
+                        
+                        // Call viewCast
                         await sdk.actions.viewCast({ hash: castId })
-                      } catch (error) {
+                        
+                        logs.push(`✅ ViewCast called successfully!`)
+                        setDebugInfo([...logs])
+                        console.log('✅ ViewCast called successfully')
+                      } catch (error: any) {
+                        logs.push(`❌ Error: ${error?.message || 'Unknown error'}`)
+                        logs.push(`Error name: ${error?.name || 'N/A'}`)
+                        setDebugInfo([...logs])
+                        
                         console.error('❌ Error opening cast:', error)
+                        console.error('❌ Error details:', {
+                          message: error?.message,
+                          name: error?.name,
+                          stack: error?.stack
+                        })
+                        
+                        // Show user-friendly error
+                        setErrorMessage(`Could not open cast: ${error?.message || 'Unknown error'}`)
                       }
                     }}
                     className="w-full mb-3 flex items-center justify-center space-x-2 bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 font-medium py-2.5 px-4 rounded-md text-sm transition-all shadow-sm active:scale-95"
@@ -520,6 +569,60 @@ export default function Claim() {
                     <ExternalLink className="w-4 h-4" />
                     <span>View Cast to Engage</span>
                   </button>
+                )}
+                
+                {/* Debug Panel */}
+                {showDebug && (
+                  <div className="bg-gray-900 text-white rounded-md p-3 text-xs font-mono mb-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="font-bold text-blue-400">🐛 Debug Info</span>
+                      <button
+                        onClick={() => setShowDebug(false)}
+                        className="text-gray-400 hover:text-white"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                    
+                    <div className="space-y-1 text-xs">
+                      <div className="border-b border-gray-700 pb-1 mb-2">
+                        <p className="text-gray-400">Cast ID:</p>
+                        <p className="text-green-400 break-all">{castId || 'Not set'}</p>
+                      </div>
+                      
+                      <div className="border-b border-gray-700 pb-1 mb-2">
+                        <p className="text-gray-400">SDK Status:</p>
+                        <p className={typeof sdk !== 'undefined' ? 'text-green-400' : 'text-red-400'}>
+                          {typeof sdk !== 'undefined' ? '✓ Available' : '✗ Not available'}
+                        </p>
+                        <p className={typeof sdk?.actions !== 'undefined' ? 'text-green-400' : 'text-red-400'}>
+                          {typeof sdk?.actions !== 'undefined' ? '✓ Actions available' : '✗ Actions not available'}
+                        </p>
+                        <p className={typeof sdk?.actions?.viewCast === 'function' ? 'text-green-400' : 'text-red-400'}>
+                          {typeof sdk?.actions?.viewCast === 'function' ? '✓ viewCast available' : '✗ viewCast not available'}
+                        </p>
+                      </div>
+                      
+                      {debugInfo.length > 0 && (
+                        <div className="border-t border-gray-700 pt-2 mt-2">
+                          <p className="text-gray-400 mb-1">Last Action:</p>
+                          {debugInfo.map((log, i) => (
+                            <p key={i} className="text-yellow-400">{log}</p>
+                          ))}
+                        </div>
+                      )}
+                      
+                      <button
+                        onClick={() => {
+                          setDebugInfo([])
+                          console.clear()
+                        }}
+                        className="mt-2 text-xs text-gray-400 hover:text-white underline"
+                      >
+                        Clear logs
+                      </button>
+                    </div>
+                  </div>
                 )}
                 
                 {/* Error Message */}
