@@ -75,9 +75,9 @@ export function getAppDomain(): string {
  */
 export const FARCASTER_ACCOUNT_ASSOCIATION = {
   accountAssociation: {
-    "header": "",
-    "payload": "",
-    "signature": ""
+    "header": "eyJmaWQiOjYyOTMyNSwidHlwZSI6ImF1dGgiLCJrZXkiOiIweDE3YmM4QjRjYmY1YWFlMTUxOTNGYzc0ODdBNmE5M0ZCMUEwRmZFNzcifQ",
+    "payload": "eyJkb21haW4iOiJwb3RmaS5iYXNlY2l0aXplbnMuY29tIn0",
+    "signature": "yYcWbJUwmrzvTnKzw0o812vCwwQC2CTcwcMtUxpxrEUp1ywWMrFPJ4HDoJXxqIOFiw7JWwYvgDULpAH0/l4H+Rs="
   }
 }
 
