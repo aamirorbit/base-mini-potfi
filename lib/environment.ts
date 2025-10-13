@@ -54,24 +54,18 @@ export function detectBaseAppEnvironment(): MiniAppEnvironment {
 }
 
 /**
- * Get appropriate cast URL for viewing and engaging with posts
- * Returns Base app deep link when in Base app
- * Returns Warpcast URL for standalone browser
+ * Get cast URL using Base app deep link
+ * Always returns farcaster:// protocol which opens within Base app
+ * This protocol only works in Base/Farcaster apps, not in browsers
  */
-export function getCastUrl(castId: string, isBaseApp: boolean = false): string | undefined {
+export function getCastUrl(castId: string): string | undefined {
   if (!castId) return undefined
   
   // Clean cast ID
   const cleanCastId = castId.startsWith('0x') ? castId : `0x${castId}`
   
-  // In Base app, use Farcaster deep link to open cast within the app
-  // This keeps users in the Base app instead of redirecting to browser
-  if (isBaseApp) {
-    return `farcaster://casts/${cleanCastId}`
-  }
-  
-  // For standalone browser, use Warpcast
-  return `https://warpcast.com/~/conversations/${cleanCastId}`
+  // Use Farcaster deep link - opens within Base app
+  return `farcaster://casts/${cleanCastId}`
 }
 
 /**

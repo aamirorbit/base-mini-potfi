@@ -8,7 +8,7 @@ import { jackpotAbi, jackpotAddress } from '@/lib/contracts'
 import { useMiniKitWallet } from '@/hooks/useMiniKitWallet'
 import { useSmartWallet } from '@/hooks/useSmartWallet'
 import { getPaymasterCapability } from '@/lib/paymaster'
-import { detectBaseAppEnvironment, getCastUrl, getShortCastId } from '@/lib/environment'
+import { detectBaseAppEnvironment, getCastUrl } from '@/lib/environment'
 import { sdk } from '@farcaster/miniapp-sdk'
 import { pad, createWalletClient, custom, PublicClient, createPublicClient, http, encodeFunctionData } from 'viem'
 import { base } from 'viem/chains'
@@ -507,11 +507,11 @@ export default function Claim() {
                 {/* Cast Engagement Link */}
                 {castId && (
                   <a
-                    href={getCastUrl(castId, isBaseApp) || '#'}
+                    href={getCastUrl(castId) || '#'}
                     className="w-full mb-3 flex items-center justify-center space-x-2 bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 font-medium py-2.5 px-4 rounded-md text-sm transition-all shadow-sm"
                   >
                     <ExternalLink className="w-4 h-4" />
-                    <span>{isBaseApp ? 'View Cast in Base' : 'View on Warpcast'}</span>
+                    <span>View Cast to Engage</span>
                   </a>
                 )}
                 
