@@ -1,14 +1,18 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useWriteContract, useWaitForTransactionReceipt, useAccount, useReadContract } from 'wagmi'
 import { erc20Abi, keccak256, encodePacked, decodeEventLog, encodeFunctionData, createPublicClient, http } from 'viem'
 import { base } from 'viem/chains'
 import { jackpotAbi, jackpotAddress, USDC, ONE_USDC } from '@/lib/contracts'
 import { getAppDomain, castIdToBytes32 } from '@/lib/utils'
+import { detectBaseAppEnvironment, getShareCastUrl } from '@/lib/environment'
 import { useMiniKitWallet } from '@/hooks/useMiniKitWallet'
+import { useSmartWallet } from '@/hooks/useSmartWallet'
+import { useBatchTransactions } from '@/hooks/useBatchTransactions'
+import { getPaymasterCapability } from '@/lib/paymaster'
 import { miniKitWallet } from '@/lib/minikit-wallet'
-import { Coins, AlertTriangle, CheckCircle, Copy, Share2, ArrowLeft, RefreshCw, Clock, DollarSign, Users } from 'lucide-react'
+import { Coins, AlertTriangle, CheckCircle, Copy, Share2, ArrowLeft, RefreshCw, Clock, DollarSign, Users, Zap } from 'lucide-react'
 import Link from 'next/link'
 import { ErrorModal } from '@/app/components/ErrorModal'
 
@@ -22,11 +26,11 @@ export default function Create() {
   const [potId, setPotId] = useState<string | null>(null)
   const [showSuccess, setShowSuccess] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string>('')
-  const [isFarcaster, setIsFarcaster] = useState(false)
+  const [isBaseApp, setIsBaseApp] = useState(false)
   const [mounted, setMounted] = useState(false)
-  const [farcasterApproved, setFarcasterApproved] = useState(false)
-  const [farcasterApproving, setFarcasterApproving] = useState(false)
-  const [farcasterCreating, setFarcasterCreating] = useState(false)
+  const [baseAppApproved, setBaseAppApproved] = useState(false)
+  const [baseAppApproving, setBaseAppApproving] = useState(false)
+  const [baseAppCreating, setBaseAppCreating] = useState(false)
   const [isPotIdPending, setIsPotIdPending] = useState(false)
   const [copied, setCopied] = useState(false)
   const [showErrorModal, setShowErrorModal] = useState(false)
@@ -37,7 +41,7 @@ export default function Create() {
   const { writeContract: approveUSDC, data: approveHash } = useWriteContract()
   const { writeContract: createPotContract, data: createHash } = useWriteContract()
   
-  // MiniKit hooks for Farcaster
+  // MiniKit hooks for Base app
   const { 
     address: miniKitAddress, 
     isConnected: miniKitConnected,
@@ -46,20 +50,31 @@ export default function Create() {
     isOnBase,
     switchToBase 
   } = useMiniKitWallet()
+  
+  // Smart wallet with Base Account capabilities
+  const smartWallet = useSmartWallet(isBaseApp)
+  
+  // Batch transactions hook
+  const { writeBatch } = useBatchTransactions()
 
-  // Detect Farcaster environment
+  // Detect Base app environment
   useEffect(() => {
     setMounted(true)
-    const userAgent = navigator.userAgent || ''
-    const isFarcasterApp = userAgent.includes('Farcaster') || 
-                          window.parent !== window || 
-                          window.location !== window.parent.location
-    setIsFarcaster(isFarcasterApp)
+    const env = detectBaseAppEnvironment()
+    setIsBaseApp(env.isBaseApp)
   }, [])
 
-  // Use MiniKit in Farcaster, fallback to wagmi elsewhere
-  const address = isFarcaster ? miniKitAddress : wagmiAddress
-  const isConnected = isFarcaster ? miniKitConnected : wagmiConnected
+  // Use MiniKit in Base app, fallback to wagmi in browser
+  const address = isBaseApp ? miniKitAddress : wagmiAddress
+  const isConnected = isBaseApp ? miniKitConnected : wagmiConnected
+  
+  // Get paymaster capabilities for sponsored gas
+  const paymasterCapability = useMemo(() => {
+    if (smartWallet.canSponsorGas && smartWallet.chainId) {
+      return getPaymasterCapability(smartWallet.chainId)
+    }
+    return undefined
+  }, [smartWallet.canSponsorGas, smartWallet.chainId])
   
   const { isLoading: isApproving, isSuccess: approveSuccess, error: approveError } = useWaitForTransactionReceipt({ hash: approveHash })
   const { isLoading: isCreating, isSuccess: createSuccess, error: createError, data: createReceipt } = useWaitForTransactionReceipt({ hash: createHash })
@@ -81,26 +96,26 @@ export default function Create() {
       const errorMsg = `Approval failed: ${approveError.message}`
       setErrorMessage(errorMsg)
       setShowErrorModal(true)
-      setFarcasterApproving(false)
+      setBaseAppApproving(false)
     }
     if (createError) {
       const errorMsg = `Pot creation failed: ${createError.message}`
       setErrorMessage(errorMsg)
       setShowErrorModal(true)
-      setFarcasterCreating(false)
+      setBaseAppCreating(false)
     }
   }, [approveError, createError])
 
   // Auto-proceed to creation after approval success
   useEffect(() => {
     // Only auto-proceed if we just got approval and haven't started creating yet
-    const justApproved = (isFarcaster && farcasterApproved) || approveSuccess
-    const notYetCreating = !(isFarcaster ? farcasterCreating : isCreating)
+    const justApproved = (isBaseApp && baseAppApproved) || approveSuccess
+    const notYetCreating = !(isBaseApp ? baseAppCreating : isCreating)
     const notYetCreated = !showSuccess
     
     if (justApproved && notYetCreating && notYetCreated) {
       // Automatically start pot creation after approval
-      console.log('Approval successful, starting pot creation...')
+      console.log('✅ Approval successful, starting pot creation...')
       // Refetch allowance before proceeding
       refetchAllowance().then(() => {
         setTimeout(() => {
@@ -108,7 +123,7 @@ export default function Create() {
         }, 500) // Small delay to show approval success
       })
     }
-  }, [farcasterApproved, approveSuccess, isFarcaster, farcasterCreating, isCreating, showSuccess])
+  }, [baseAppApproved, approveSuccess, isBaseApp, baseAppCreating, isCreating, showSuccess])
 
   // Reset error when starting new actions
   const clearError = () => setErrorMessage('')
@@ -203,8 +218,8 @@ export default function Create() {
       if (allowance && allowance >= usdcAmt) {
         console.log('Allowance already sufficient, skipping approval')
         // Mark as approved and proceed
-        if (isFarcaster) {
-          setFarcasterApproved(true)
+        if (isBaseApp) {
+          setBaseAppApproved(true)
         }
         return
       }
@@ -212,14 +227,14 @@ export default function Create() {
       console.error('Error checking allowance before approval:', error)
     }
     
-    // Use MiniKit provider in Farcaster, wagmi elsewhere
-    if (isFarcaster && mounted) {
-      setFarcasterApproving(true)
+    // Use MiniKit provider in Base app, wagmi elsewhere
+    if (isBaseApp && mounted) {
+      setBaseAppApproving(true)
       try {
         const provider = miniKitWallet.getProvider()
         if (!provider) {
           setErrorMessage('Wallet not connected properly')
-          setFarcasterApproving(false)
+          setBaseAppApproving(false)
           return
         }
 
@@ -256,22 +271,22 @@ export default function Create() {
             if (receipt && receipt.status === '0x1') {
               clearInterval(pollInterval)
               console.log('✅ Approval confirmed')
-              setFarcasterApproved(true)
-              setFarcasterApproving(false)
+              setBaseAppApproved(true)
+              setBaseAppApproving(false)
               // Refetch allowance after approval
               refetchAllowance()
             } else if (receipt && receipt.status === '0x0') {
               clearInterval(pollInterval)
               setErrorMessage('Approval transaction failed')
-              setFarcasterApproving(false)
+              setBaseAppApproving(false)
             } else if (attempts >= maxAttempts) {
               clearInterval(pollInterval)
-              setFarcasterApproving(false)
+              setBaseAppApproving(false)
             }
           } catch (error) {
             if (attempts >= maxAttempts) {
               clearInterval(pollInterval)
-              setFarcasterApproving(false)
+              setBaseAppApproving(false)
             }
           }
         }, 1000)
@@ -281,10 +296,10 @@ export default function Create() {
         const errorMsg = error.message || 'Failed to approve USDC'
         setErrorMessage(errorMsg)
         setShowErrorModal(true)
-        setFarcasterApproving(false)
+        setBaseAppApproving(false)
       }
     } else {
-      // Use wagmi for non-Farcaster environments
+      // Use wagmi for standalone browser
       approveUSDC({ 
         abi: erc20Abi, 
         address: USDC, 
@@ -319,10 +334,14 @@ export default function Create() {
     }
     
     // Check if we need approval
-    const alreadyApproved = isFarcaster ? farcasterApproved : approveSuccess
+    const alreadyApproved = isBaseApp ? baseAppApproved : approveSuccess
     const needsApproval = !sufficientAllowance && !alreadyApproved
     
-    if (needsApproval) {
+    // Try to use Base Account batch transactions if available
+    if (needsApproval && smartWallet.capabilities.atomicBatch && !smartWallet.capabilities.isLoading) {
+      console.log('🚀 Using Base Account batch transaction for approve + create')
+      await handleBatchCreate()
+    } else if (needsApproval) {
       console.log('Starting approval process...')
       await approve()
       // create() will be called automatically after approval success
@@ -332,21 +351,96 @@ export default function Create() {
     }
   }
 
+  // Batch transaction for approve + create (Base Account only)
+  async function handleBatchCreate() {
+    clearError()
+    setBaseAppApproving(true)
+    setBaseAppCreating(true)
+    
+    try {
+      const postIdBytes32 = castIdToBytes32(postId)
+      
+      // Prepare batch calls
+      const calls = [
+        {
+          address: USDC as `0x${string}`,
+          abi: erc20Abi,
+          functionName: 'approve',
+          args: [jackpotAddress, usdcAmt]
+        },
+        {
+          address: jackpotAddress as `0x${string}`,
+          abi: jackpotAbi,
+          functionName: 'createPot',
+          args: [USDC, usdcAmt, ONE_USDC, timeout, postIdBytes32, requireLike, requireRecast, requireComment]
+        }
+      ]
+      
+      console.log('Executing batch transaction with paymaster...', calls)
+      
+      // Execute batch with paymaster capability for gas-free transaction
+      const capabilities = paymasterCapability || {}
+      const hash = await writeBatch(calls, capabilities)
+      
+      if (hash) {
+        console.log('✅ Batch transaction submitted:', hash)
+        setPotId(hash)
+        setShowSuccess(true)
+        setIsPotIdPending(true)
+        
+        // Wait for transaction to be mined
+        const publicClient = createPublicClient({
+          chain: base,
+          transport: http()
+        })
+        
+        const receipt = await publicClient.waitForTransactionReceipt({ hash })
+        
+        if (receipt.status === 'success') {
+          console.log('✅ Batch transaction confirmed')
+          
+          // Extract pot ID from logs
+          const potCreatedLog = receipt.logs.find((log: any) => 
+            log.address.toLowerCase() === jackpotAddress.toLowerCase() &&
+            log.topics.length >= 2
+          )
+          
+          if (potCreatedLog && potCreatedLog.topics[1]) {
+            const realPotId = potCreatedLog.topics[1]
+            console.log('🎯 Real pot ID extracted:', realPotId)
+            setPotId(realPotId)
+            setIsPotIdPending(false)
+            initializePotState(realPotId, amount)
+          }
+        }
+        
+        setBaseAppApproving(false)
+        setBaseAppCreating(false)
+      }
+    } catch (error: any) {
+      console.error('Batch transaction error:', error)
+      setErrorMessage(error.message || 'Batch transaction failed')
+      setShowErrorModal(true)
+      setBaseAppApproving(false)
+      setBaseAppCreating(false)
+    }
+  }
+
   async function create() {
     clearError()
     
-    // Use MiniKit provider in Farcaster, wagmi elsewhere
-    if (isFarcaster && mounted) {
-      setFarcasterCreating(true)
+    // Use MiniKit provider in Base app, wagmi elsewhere
+    if (isBaseApp && mounted) {
+      setBaseAppCreating(true)
       try {
         const provider = miniKitWallet.getProvider()
         if (!provider) {
           setErrorMessage('Wallet not connected properly')
-          setFarcasterCreating(false)
+          setBaseAppCreating(false)
           return
         }
 
-        // Convert postId to bytes32 (pad if necessary since Farcaster cast IDs are 20 bytes)
+        // Convert postId to bytes32 for contract
         const postIdBytes32 = castIdToBytes32(postId)
         
         // Encode the createPot function call
@@ -411,14 +505,14 @@ export default function Create() {
                   initializePotState(realPotId, amount)
                 }
               }
-              setFarcasterCreating(false)
+              setBaseAppCreating(false)
             } else if (receipt && receipt.status === 'reverted') {
               // Transaction failed
               clearInterval(pollInterval)
               console.error('❌ Transaction failed')
               setErrorMessage('Transaction failed. Please try again.')
               setShowSuccess(false)
-              setFarcasterCreating(false)
+              setBaseAppCreating(false)
             }
           } catch (error: any) {
             // Receipt not yet available, continue polling
@@ -426,7 +520,7 @@ export default function Create() {
               clearInterval(pollInterval)
               console.warn('⏱️ Transaction still pending after 30 seconds')
               setIsPotIdPending(false)
-              setFarcasterCreating(false)
+              setBaseAppCreating(false)
             }
           }
         }, 1000) // Poll every second
@@ -436,13 +530,13 @@ export default function Create() {
         const errorMsg = error.message || 'Failed to create pot'
         setErrorMessage(errorMsg)
         setShowErrorModal(true)
-        setFarcasterCreating(false)
+        setBaseAppCreating(false)
       }
     } else {
-      // Convert postId to bytes32 (pad if necessary since Farcaster cast IDs are 20 bytes)
+      // Convert postId to bytes32 for contract
       const postIdBytes32 = castIdToBytes32(postId)
       
-      // Use wagmi for non-Farcaster environments
+      // Use wagmi for standalone browser
       createPotContract({
         abi: jackpotAbi, 
         address: jackpotAddress, 
@@ -461,8 +555,11 @@ export default function Create() {
 
   // Generate shareable URLs
   const claimUrl = potId ? `${getAppDomain()}/claim/${potId}` : ''
-  const farcasterShareUrl = claimUrl
-    ? `https://warpcast.com/~/compose?text=🎯 Claim my ${amount} USDC PotFi pot! Get 0.01 USDC per claim or hit the jackpot! 🎰&embeds[]=${encodeURIComponent(claimUrl)}`
+  const shareUrl = claimUrl
+    ? getShareCastUrl(
+        `🎯 Claim my ${amount} USDC PotFi pot! Get 0.01 USDC per claim or hit the jackpot! 🎰`,
+        claimUrl
+      )
     : ''
 
   if (!mounted) {
@@ -527,14 +624,14 @@ export default function Create() {
           <h2 className="text-sm font-bold text-gray-900 mb-3">Share Your Pot</h2>
           
           <a
-            href={farcasterShareUrl}
+            href={shareUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-medium py-2.5 px-4 rounded-md text-sm transition-all shadow-lg inline-block text-center mb-2"
           >
             <div className="flex items-center justify-center space-x-2">
               <Share2 className="w-4 h-4" />
-              <span>Share on Farcaster</span>
+              <span>Share on Warpcast</span>
             </div>
           </a>
           
@@ -663,8 +760,8 @@ export default function Create() {
         <p className="text-xs text-gray-600">Set up your USDC jackpot</p>
       </div>
       
-      {/* Connect Wallet for Farcaster */}
-      {isFarcaster && !isConnected ? (
+      {/* Connect Wallet for Base app */}
+      {isBaseApp && !isConnected ? (
         <div className="text-center py-8">
           <Coins className="w-12 h-12 text-gray-400 mx-auto mb-3" />
           <h2 className="text-lg font-bold text-gray-900 mb-1">Connect Wallet</h2>
@@ -679,6 +776,26 @@ export default function Create() {
         </div>
       ) : isConnected ? (
         <>
+          {/* Gas Sponsorship Status */}
+          {smartWallet.canSponsorGas && (
+            <div className="bg-blue-50/50 backdrop-blur-xl border border-blue-200/50 text-blue-700 px-4 py-3 rounded-md shadow-lg">
+              <div className="flex items-center space-x-2">
+                <Zap className="w-4 h-4" />
+                <p className="text-sm font-medium">Gas-free transactions enabled</p>
+              </div>
+            </div>
+          )}
+          
+          {/* Batch Transaction Status */}
+          {smartWallet.capabilities.atomicBatch && (
+            <div className="bg-blue-50/50 backdrop-blur-xl border border-blue-200/50 text-blue-700 px-4 py-3 rounded-md shadow-lg">
+              <div className="flex items-center space-x-2">
+                <CheckCircle className="w-4 h-4" />
+                <p className="text-sm font-medium">One-click pot creation available</p>
+              </div>
+            </div>
+          )}
+
           {/* Form */}
           <div className="bg-white/70 backdrop-blur-xl rounded-md p-4 border border-white/20 space-y-3">
             <div>
@@ -793,8 +910,8 @@ export default function Create() {
             </div>
           )}
 
-          {/* Network Warning for Farcaster */}
-          {isFarcaster && !isOnBase && (
+          {/* Network Warning for Base app */}
+          {isBaseApp && !isOnBase && (
             <div className="bg-yellow-500/10 border border-yellow-200/50 text-yellow-700 px-3 py-2 rounded-md">
               <div className="flex items-center space-x-2 mb-2">
                 <AlertTriangle className="w-4 h-4" />
@@ -813,18 +930,18 @@ export default function Create() {
           <button
             onClick={handleCreatePot}
             disabled={
-              (isFarcaster ? (farcasterApproving || farcasterCreating) : (isApproving || isCreating)) || 
+              (isBaseApp ? (baseAppApproving || baseAppCreating) : (isApproving || isCreating)) || 
               amount < 0.02 || 
               !postId ||
-              (isFarcaster && !isOnBase)
+              (isBaseApp && !isOnBase)
             }
             className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 disabled:from-gray-300 disabled:to-gray-400 text-white font-medium py-3 px-4 rounded-md text-sm transition-all shadow-lg"
           >
-            {(isFarcaster ? farcasterApproving : isApproving) ? (
+            {(isBaseApp ? baseAppApproving : isApproving) ? (
               <span>Step 1/2: Approving USDC...</span>
-            ) : (isFarcaster ? farcasterCreating : isCreating) ? (
+            ) : (isBaseApp ? baseAppCreating : isCreating) ? (
               <span>Step 2/2: Creating Pot...</span>
-            ) : ((isFarcaster && farcasterApproved) || approveSuccess) ? (
+            ) : ((isBaseApp && baseAppApproved) || approveSuccess) ? (
               <span>Creating Pot...</span>
             ) : (
               <span>Create Pot</span>
@@ -832,13 +949,13 @@ export default function Create() {
           </button>
 
           {/* Progress Indicator */}
-          {((isFarcaster ? farcasterApproving : isApproving) || 
-            (isFarcaster ? farcasterCreating : isCreating)) && (
+          {((isBaseApp ? baseAppApproving : isApproving) || 
+            (isBaseApp ? baseAppCreating : isCreating)) && (
             <div className="bg-blue-50/50 border border-blue-200/50 px-3 py-2 rounded-md">
               <div className="flex items-center space-x-2">
                 <div className="animate-spin w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full"></div>
                 <p className="text-xs text-blue-700">
-                  {(isFarcaster ? farcasterApproving : isApproving) 
+                  {(isBaseApp ? baseAppApproving : isApproving) 
                     ? 'Please approve USDC in your wallet...' 
                     : 'Please confirm pot creation in your wallet...'}
                 </p>

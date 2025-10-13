@@ -1,16 +1,19 @@
 'use client'
 
 import { useParams } from 'next/navigation'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useWriteContract, useWaitForTransactionReceipt, useAccount, useConnect, useDisconnect } from 'wagmi'
 import { injected } from 'wagmi/connectors'
 import { jackpotAbi, jackpotAddress } from '@/lib/contracts'
 import { useMiniKitWallet } from '@/hooks/useMiniKitWallet'
+import { useSmartWallet } from '@/hooks/useSmartWallet'
+import { getPaymasterCapability } from '@/lib/paymaster'
+import { detectBaseAppEnvironment } from '@/lib/environment'
 import { sdk } from '@farcaster/miniapp-sdk'
-import { pad, createWalletClient, custom, PublicClient, createPublicClient, http } from 'viem'
+import { pad, createWalletClient, custom, PublicClient, createPublicClient, http, encodeFunctionData } from 'viem'
 import { base } from 'viem/chains'
 import { miniKitWallet } from '@/lib/minikit-wallet'
-import { Coins, Target, AlertTriangle, CheckCircle, Wifi, X, XCircle, Wallet, ExternalLink } from 'lucide-react'
+import { Coins, Target, AlertTriangle, CheckCircle, Wifi, X, XCircle, Wallet, ExternalLink, Zap } from 'lucide-react'
 import Link from 'next/link'
 import { ErrorModal } from '@/app/components/ErrorModal'
 
@@ -19,7 +22,7 @@ export default function Claim() {
   const [busy, setBusy] = useState(false)
   const [castId, setCastId] = useState('')
   const [fid, setFid] = useState<string>('')
-  const [isFarcaster, setIsFarcaster] = useState(false)
+  const [isBaseApp, setIsBaseApp] = useState(false)
   const [mounted, setMounted] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string>('')
   const [jackpotInfo, setJackpotInfo] = useState<any>(null)
@@ -27,6 +30,8 @@ export default function Claim() {
   const [potDetails, setPotDetails] = useState<any>(null)
   const [loadingPot, setLoadingPot] = useState(true)
   const [showErrorModal, setShowErrorModal] = useState(false)
+  const [debugInfo, setDebugInfo] = useState<string[]>([])
+  const [showDebug, setShowDebug] = useState(true)
   
   // Wagmi hooks for fallback
   const { address: wagmiAddress, isConnected: wagmiConnected } = useAccount()
@@ -45,15 +50,16 @@ export default function Claim() {
     isOnBase,
     switchToBase 
   } = useMiniKitWallet()
+  
+  // Smart wallet with Base Account capabilities
+  const smartWallet = useSmartWallet(isBaseApp)
 
   useEffect(() => {
     setMounted(true)
-    // Check if we're in Farcaster environment
-    const userAgent = navigator.userAgent || ''
-    const isFarcasterApp = userAgent.includes('Farcaster') || 
-                          window.parent !== window || // iframe detection
-                          window.location !== window.parent.location
-    setIsFarcaster(isFarcasterApp)
+    
+    // Detect Base app environment
+    const env = detectBaseAppEnvironment()
+    setIsBaseApp(env.isBaseApp)
 
     // Auto-detect castId from URL parameters
     const urlParams = new URLSearchParams(window.location.search)
@@ -62,29 +68,30 @@ export default function Claim() {
       setCastId(castIdFromUrl)
     }
 
-    // Try to get cast context from Farcaster SDK if in Farcaster environment
-    if (isFarcasterApp && (!castIdFromUrl || castIdFromUrl === 'auto-detect')) {
+    // Try to get cast context from SDK if in Base app
+    // Base app supports Farcaster protocol via Coinbase Smart Wallet
+    if (env.isBaseApp && (!castIdFromUrl || castIdFromUrl === 'auto-detect')) {
       const getCastContext = async () => {
         try {
           const context = await sdk.context
-          console.log('Farcaster context:', context)
+          console.log('📱 Base app context:', context)
           
           // Check if launched from a cast context
           if (context?.location?.type === 'cast_embed' || context?.location?.type === 'cast_share') {
             const castHash = context.location.cast?.hash
             if (castHash) {
               setCastId(castHash)
-              console.log('Auto-detected castId from Farcaster context:', castHash)
+              console.log('✅ Auto-detected castId from Base app:', castHash)
             }
           }
           
           // Get user FID from context
           if (context?.user?.fid) {
             setFid(context.user.fid.toString())
-            console.log('Auto-detected FID from Farcaster context:', context.user.fid)
+            console.log('✅ Auto-detected FID from Base app:', context.user.fid)
           }
         } catch (error) {
-          console.log('Could not get cast context from Farcaster SDK:', error)
+          console.log('ℹ️ Could not get cast context from SDK:', error)
         }
       }
       getCastContext()
@@ -125,12 +132,20 @@ export default function Claim() {
     fetchPotDetails()
   }, [id])
 
-  // Use MiniKit in Farcaster, fallback to wagmi elsewhere
-  const address = isFarcaster ? miniKitAddress : wagmiAddress
-  const isConnected = isFarcaster ? miniKitConnected : wagmiConnected
-  const connect = isFarcaster ? miniKitConnect : () => wagmiConnect({ connector: injected() })
-  const disconnect = isFarcaster ? miniKitDisconnect : wagmiDisconnect
-  const displayAddress = isFarcaster ? truncatedAddress : (wagmiAddress?.slice(0, 6) + '...' + wagmiAddress?.slice(-4))
+  // Use MiniKit in Base app, fallback to wagmi in browser
+  const address = isBaseApp ? miniKitAddress : wagmiAddress
+  const isConnected = isBaseApp ? miniKitConnected : wagmiConnected
+  const connect = isBaseApp ? miniKitConnect : () => wagmiConnect({ connector: injected() })
+  const disconnect = isBaseApp ? miniKitDisconnect : wagmiDisconnect
+  const displayAddress = isBaseApp ? truncatedAddress : (wagmiAddress?.slice(0, 6) + '...' + wagmiAddress?.slice(-4))
+  
+  // Get paymaster capabilities for sponsored gas
+  const paymasterCapability = useMemo(() => {
+    if (smartWallet.canSponsorGas && smartWallet.chainId) {
+      return getPaymasterCapability(smartWallet.chainId)
+    }
+    return undefined
+  }, [smartWallet.canSponsorGas, smartWallet.chainId])
 
   const { writeContract, data: txHash, error: writeError } = useWriteContract()
   const { isLoading: isClaiming, isSuccess: txSuccess, error: txError } = useWaitForTransactionReceipt({ hash: txHash })
@@ -142,9 +157,9 @@ export default function Claim() {
   })
   
   // Unified transaction status
-  const isTransactionPending = isFarcaster ? isMiniKitTxPending : isClaiming
-  const transactionSuccess = isFarcaster ? miniKitTxSuccess : txSuccess
-  const transactionError = isFarcaster ? miniKitTxError : txError
+  const isTransactionPending = isBaseApp ? isMiniKitTxPending : isClaiming
+  const transactionSuccess = isBaseApp ? miniKitTxSuccess : txSuccess
+  const transactionError = isBaseApp ? miniKitTxError : txError
   
   // Handle transaction completion
   useEffect(() => {
@@ -157,7 +172,7 @@ export default function Claim() {
         setShowJackpotModal(true)
       }
       
-      console.log('Transaction successful!', isFarcaster ? miniKitTxHash : txHash)
+      console.log('✅ Transaction successful!', isBaseApp ? miniKitTxHash : txHash)
       console.log('Jackpot info:', jackpotInfo)
     }
     if (transactionError || writeError) {
@@ -167,7 +182,7 @@ export default function Claim() {
       setBusy(false)
       console.error('Transaction error:', transactionError || writeError)
     }
-  }, [transactionSuccess, transactionError, writeError, txHash, miniKitTxHash, jackpotInfo, isFarcaster])
+  }, [transactionSuccess, transactionError, writeError, txHash, miniKitTxHash, jackpotInfo, isBaseApp])
 
   async function claim() {
     setBusy(true)
@@ -216,31 +231,80 @@ export default function Claim() {
         jackpotAddress
       })
       
-      if (isFarcaster) {
-        // Use MiniKit provider directly for Farcaster transactions
+      if (isBaseApp) {
+        // Use MiniKit provider for Base app transactions
         try {
           const provider = miniKitWallet.getProvider()
           if (!provider) {
             throw new Error('MiniKit provider not available')
           }
           
-          // Create wallet client with MiniKit provider
-          const walletClient = createWalletClient({
-            account: address as `0x${string}`,
-            chain: base,
-            transport: custom(provider)
-          })
-          
-          // Send transaction using viem
-          const hash = await walletClient.writeContract({
-            abi: jackpotAbi,
-            address: jackpotAddress,
-            functionName: 'claim',
-            args: [potIdBytes32, BigInt(deadline), castIdBytes32, signature as `0x${string}`]
-          })
-          
-          console.log('MiniKit transaction submitted:', hash)
-          setMiniKitTxHash(hash)
+          // Check if we can use sponsored gas with Base Account
+          if (smartWallet.canSponsorGas && paymasterCapability) {
+            console.log('🚀 Using sponsored gas transaction')
+            
+            // Try to use wallet_sendCalls for sponsored transaction
+            try {
+              const callData = encodeFunctionData({
+                abi: jackpotAbi,
+                functionName: 'claim',
+                args: [potIdBytes32, BigInt(deadline), castIdBytes32, signature as `0x${string}`]
+              })
+              
+              const batchTxId = await provider.request({
+                method: 'wallet_sendCalls',
+                params: [{
+                  version: '1.0',
+                  chainId: '0x2105', // Base mainnet
+                  from: address,
+                  calls: [{
+                    to: jackpotAddress,
+                    data: callData
+                  }],
+                  capabilities: paymasterCapability
+                }]
+              })
+              
+              console.log('✅ Sponsored transaction submitted:', batchTxId)
+              setMiniKitTxHash(batchTxId as `0x${string}`)
+            } catch (sponsorError: any) {
+              console.log('Sponsored transaction failed, falling back to regular transaction:', sponsorError.message)
+              
+              // Fallback to regular transaction
+              const walletClient = createWalletClient({
+                account: address as `0x${string}`,
+                chain: base,
+                transport: custom(provider)
+              })
+              
+              const hash = await walletClient.writeContract({
+                abi: jackpotAbi,
+                address: jackpotAddress,
+                functionName: 'claim',
+                args: [potIdBytes32, BigInt(deadline), castIdBytes32, signature as `0x${string}`]
+              })
+              
+              console.log('MiniKit transaction submitted:', hash)
+              setMiniKitTxHash(hash)
+            }
+          } else {
+            // Regular transaction without gas sponsorship
+            const walletClient = createWalletClient({
+              account: address as `0x${string}`,
+              chain: base,
+              transport: custom(provider)
+            })
+            
+            const hash = await walletClient.writeContract({
+              abi: jackpotAbi,
+              address: jackpotAddress,
+              functionName: 'claim',
+              args: [potIdBytes32, BigInt(deadline), castIdBytes32, signature as `0x${string}`]
+            })
+            
+            console.log('MiniKit transaction submitted:', hash)
+            setMiniKitTxHash(hash)
+          }
         } catch (error: any) {
           console.error('MiniKit transaction error:', error)
           const errorMsg = error.message || 'Transaction failed'
@@ -249,7 +313,7 @@ export default function Claim() {
           setBusy(false)
         }
       } else {
-        // Use wagmi for non-Farcaster transactions
+        // Use wagmi for standalone browser transactions
         writeContract({
           abi: jackpotAbi, 
           address: jackpotAddress, 
@@ -331,14 +395,24 @@ export default function Claim() {
               <p className="text-sm text-gray-600 mb-4">Connect to claim your share</p>
               <button
                 onClick={connect}
-                disabled={isConnecting && isFarcaster}
+                disabled={isConnecting && isBaseApp}
                 className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 disabled:from-blue-400 disabled:to-blue-500 text-white font-medium py-2.5 px-4 rounded-md text-sm transition-all shadow-lg"
               >
-                {isConnecting && isFarcaster ? 'Connecting...' : 'Connect Wallet'}
+                {isConnecting && isBaseApp ? 'Connecting...' : 'Connect Wallet'}
               </button>
             </div>
           ) : (
             <>
+              {/* Gas Sponsorship Status */}
+              {smartWallet.canSponsorGas && (
+                <div className="bg-blue-50/50 backdrop-blur-xl border border-blue-200/50 text-blue-700 px-4 py-3 rounded-md shadow-lg">
+                  <div className="flex items-center space-x-2">
+                    <Zap className="w-4 h-4" />
+                    <p className="text-sm font-medium">Gas-free claim available</p>
+                  </div>
+                </div>
+              )}
+              
               {/* Wallet Status */}
               <div className="bg-white/70 backdrop-blur-xl rounded-md p-3 border border-white/20">
                 <div className="flex items-center justify-between">
@@ -349,7 +423,7 @@ export default function Claim() {
                   <span className="text-xs text-gray-500 font-mono">{displayAddress}</span>
                 </div>
                 
-                {isFarcaster && !isOnBase && (
+                {isBaseApp && !isOnBase && (
                   <button
                     onClick={switchToBase}
                     className="w-full mt-2 bg-yellow-600 hover:bg-yellow-700 text-white font-medium py-2 px-3 rounded-md text-xs transition-all flex items-center justify-center space-x-1.5"
@@ -376,6 +450,17 @@ export default function Claim() {
                     <p className="text-xs text-gray-600">Jackpot</p>
                   </div>
                 </div>
+              )}
+
+              {/* Debug Toggle Button */}
+              {!showDebug && (
+                <button
+                  onClick={() => setShowDebug(true)}
+                  className="w-full bg-gray-800 text-white text-xs py-2 px-3 rounded-md mb-2 flex items-center justify-center space-x-1"
+                >
+                  <span>🐛</span>
+                  <span>Show Debug Info</span>
+                </button>
               )}
 
               {/* Instructions */}
@@ -432,17 +517,112 @@ export default function Claim() {
                   </div>
                 )}
                 
-                {/* View Cast Button */}
+                {/* Cast Engagement Button - Uses Farcaster SDK */}
                 {castId && (
-                  <a
-                    href={`https://farcaster.xyz/~/conversations/${castId}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-full mb-3 flex items-center justify-center space-x-2 bg-white hover:bg-gray-50 border border-gray-300 text-gray-700 font-medium py-2.5 px-4 rounded-md text-sm transition-all shadow-sm"
+                  <button
+                    onClick={async () => {
+                      const logs: string[] = []
+                      try {
+                        logs.push(`🔍 Opening cast: ${castId.slice(0, 12)}...`)
+                        logs.push(`SDK available: ${typeof sdk !== 'undefined'}`)
+                        logs.push(`SDK.actions available: ${typeof sdk?.actions !== 'undefined'}`)
+                        logs.push(`viewCast available: ${typeof sdk?.actions?.viewCast === 'function'}`)
+                        
+                        console.log('🔍 Opening cast with hash:', castId)
+                        console.log('🔍 SDK available:', typeof sdk !== 'undefined')
+                        console.log('🔍 SDK.actions available:', typeof sdk?.actions !== 'undefined')
+                        console.log('🔍 viewCast available:', typeof sdk?.actions?.viewCast === 'function')
+                        
+                        // Validate cast hash format (should be 0x followed by hex)
+                        if (!castId.startsWith('0x')) {
+                          logs.push(`⚠️ Warning: Cast hash should start with 0x`)
+                          console.warn('⚠️ Cast hash should start with 0x:', castId)
+                        }
+                        
+                        logs.push(`Calling viewCast...`)
+                        setDebugInfo([...logs])
+                        
+                        // Call viewCast
+                        await sdk.actions.viewCast({ hash: castId })
+                        
+                        logs.push(`✅ ViewCast called successfully!`)
+                        setDebugInfo([...logs])
+                        console.log('✅ ViewCast called successfully')
+                      } catch (error: any) {
+                        logs.push(`❌ Error: ${error?.message || 'Unknown error'}`)
+                        logs.push(`Error name: ${error?.name || 'N/A'}`)
+                        setDebugInfo([...logs])
+                        
+                        console.error('❌ Error opening cast:', error)
+                        console.error('❌ Error details:', {
+                          message: error?.message,
+                          name: error?.name,
+                          stack: error?.stack
+                        })
+                        
+                        // Show user-friendly error
+                        setErrorMessage(`Could not open cast: ${error?.message || 'Unknown error'}`)
+                      }
+                    }}
+                    className="w-full mb-3 flex items-center justify-center space-x-2 bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 font-medium py-2.5 px-4 rounded-md text-sm transition-all shadow-sm active:scale-95"
                   >
                     <ExternalLink className="w-4 h-4" />
                     <span>View Cast to Engage</span>
-                  </a>
+                  </button>
+                )}
+                
+                {/* Debug Panel */}
+                {showDebug && (
+                  <div className="bg-gray-900 text-white rounded-md p-3 text-xs font-mono mb-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="font-bold text-blue-400">🐛 Debug Info</span>
+                      <button
+                        onClick={() => setShowDebug(false)}
+                        className="text-gray-400 hover:text-white"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                    
+                    <div className="space-y-1 text-xs">
+                      <div className="border-b border-gray-700 pb-1 mb-2">
+                        <p className="text-gray-400">Cast ID:</p>
+                        <p className="text-green-400 break-all">{castId || 'Not set'}</p>
+                      </div>
+                      
+                      <div className="border-b border-gray-700 pb-1 mb-2">
+                        <p className="text-gray-400">SDK Status:</p>
+                        <p className={typeof sdk !== 'undefined' ? 'text-green-400' : 'text-red-400'}>
+                          {typeof sdk !== 'undefined' ? '✓ Available' : '✗ Not available'}
+                        </p>
+                        <p className={typeof sdk?.actions !== 'undefined' ? 'text-green-400' : 'text-red-400'}>
+                          {typeof sdk?.actions !== 'undefined' ? '✓ Actions available' : '✗ Actions not available'}
+                        </p>
+                        <p className={typeof sdk?.actions?.viewCast === 'function' ? 'text-green-400' : 'text-red-400'}>
+                          {typeof sdk?.actions?.viewCast === 'function' ? '✓ viewCast available' : '✗ viewCast not available'}
+                        </p>
+                      </div>
+                      
+                      {debugInfo.length > 0 && (
+                        <div className="border-t border-gray-700 pt-2 mt-2">
+                          <p className="text-gray-400 mb-1">Last Action:</p>
+                          {debugInfo.map((log, i) => (
+                            <p key={i} className="text-yellow-400">{log}</p>
+                          ))}
+                        </div>
+                      )}
+                      
+                      <button
+                        onClick={() => {
+                          setDebugInfo([])
+                          console.clear()
+                        }}
+                        className="mt-2 text-xs text-gray-400 hover:text-white underline"
+                      >
+                        Clear logs
+                      </button>
+                    </div>
+                  </div>
                 )}
                 
                 {/* Error Message */}
