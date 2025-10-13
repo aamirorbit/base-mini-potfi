@@ -4,6 +4,7 @@ import { usePathname } from 'next/navigation'
 import { useAccount } from 'wagmi'
 import { useMiniKitWallet } from '@/hooks/useMiniKitWallet'
 import { useEffect, useState } from 'react'
+import { detectBaseAppEnvironment } from '@/lib/environment'
 import MobileLayout from './components/MobileLayout'
 
 interface TemplateProps {
@@ -12,7 +13,7 @@ interface TemplateProps {
 
 export default function Template({ children }: TemplateProps) {
   const pathname = usePathname()
-  const [isFarcaster, setIsFarcaster] = useState(false)
+  const [isBaseApp, setIsBaseApp] = useState(false)
   const [mounted, setMounted] = useState(false)
 
   // Wallet connections
@@ -21,28 +22,12 @@ export default function Template({ children }: TemplateProps) {
 
   useEffect(() => {
     setMounted(true)
-    // Detect if running in any mini app context (Farcaster or Base app)
-    if (typeof window !== 'undefined') {
-      const userAgent = navigator.userAgent || ''
-      const isInIframe = window.parent !== window
-      const isFarcasterUA = userAgent.includes('Farcaster')
-      const isBaseApp = userAgent.includes('Base') || userAgent.includes('Coinbase')
-      
-      // Use MiniKit wallet for any mini app context
-      const inMiniApp = isInIframe || isFarcasterUA || isBaseApp
-      setIsFarcaster(inMiniApp)
-      
-      console.log('Mini App Detection:', {
-        isInIframe,
-        isFarcasterUA,
-        isBaseApp,
-        inMiniApp,
-        userAgent: userAgent.substring(0, 100)
-      })
-    }
+    // Detect if running in Base mini app
+    const env = detectBaseAppEnvironment()
+    setIsBaseApp(env.isBaseApp)
   }, [])
 
-  const isConnected = isFarcaster ? miniKitConnected : wagmiConnected
+  const isConnected = isBaseApp ? miniKitConnected : wagmiConnected
 
   // Pages that should not show bottom navigation
   const noNavPages = ['/frame', '/api']
