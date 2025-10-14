@@ -15,7 +15,7 @@ module.exports = {
         },
         gold: {
           DEFAULT: '#FFD700',
-          light: '#FFE55C',
+          light: '#FFED4E',
           dark: '#D4AF37',
         },
         card: '#F5F7FA',

@@ -4,49 +4,24 @@ import Link from 'next/link'
 import { useAccount } from 'wagmi'
 import { useMiniKitWallet } from '@/hooks/useMiniKitWallet'
 import { useEffect, useState } from 'react'
-import { formatTimeRemaining } from '@/lib/blockchain'
-
 import { 
   Coins, 
   Plus, 
-  Clock, 
-  CheckCircle, 
-  XCircle,
-  Users,
-  DollarSign,
-  RefreshCw,
+  Eye,
   Trophy,
-  Timer,
+  Zap,
+  Users,
+  Shield,
+  DollarSign,
   TrendingUp,
-  Zap
+  Sparkles
 } from 'lucide-react'
-
-interface PotData {
-  id: string
-  amount: number
-  claimedAmount: number
-  remainingAmount: number
-  claimCount: number
-  maxClaims: number
-  timeout: number
-  createdAt: number
-  status: 'active' | 'completed' | 'expired'
-  postId?: string
-  jackpotHit?: boolean
-  jackpotWinner?: string
-  timeRemaining?: number
-  jackpotProbability?: number
-  standardClaim?: number
-  castId?: string
-}
 
 export default function Home() {
   const [mounted, setMounted] = useState(false)
-  const [pots, setPots] = useState<PotData[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
-  const [filter, setFilter] = useState<'all' | 'active' | 'completed' | 'expired'>('active')
   const [isFarcaster, setIsFarcaster] = useState(false)
+  const [activePots, setActivePots] = useState<number>(0)
+  const [loading, setLoading] = useState(true)
   
   // Wallet connections
   const { address: wagmiAddress, isConnected: wagmiConnected } = useAccount()
@@ -60,288 +35,250 @@ export default function Home() {
       const isFarcasterUA = userAgent.includes('Farcaster')
       const isBaseApp = userAgent.includes('Base') || userAgent.includes('Coinbase')
       
-      // Detect any mini app context (Farcaster or Base app)
       setIsFarcaster(isInIframe || isFarcasterUA || isBaseApp)
     }
   }, [])
 
-  const isConnected = isFarcaster ? miniKitConnected : wagmiConnected
-  const userAddress = isFarcaster ? miniKitAddress : wagmiAddress
-
+  // Fetch active pots count
   useEffect(() => {
+    async function fetchActivePots() {
+      try {
+        const response = await fetch('/api/pots')
+        const data = await response.json()
+        if (response.ok && data.success) {
+          const active = data.pots?.filter((p: any) => p.status === 'active').length || 0
+          setActivePots(active)
+        }
+      } catch (error) {
+        console.error('Failed to fetch active pots:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
     if (mounted) {
-      loadAllPots()
+      fetchActivePots()
     }
   }, [mounted])
 
-  async function loadAllPots() {
-    try {
-      setLoading(true)
-      setError('')
-      
-      // Fetch all pots without creator filter
-      const response = await fetch('/api/pots')
-      const data = await response.json()
-      
-      if (response.ok && data.success) {
-        setPots(data.pots || [])
-      } else {
-        setError(data.error || 'Failed to load pots')
-        setPots([])
-      }
-    } catch (error) {
-      setError('Network error. Please try again.')
-      setPots([])
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const filteredPots = pots.filter(pot => {
-    if (filter === 'all') return true
-    return pot.status === filter
-  })
-
-  const stats = {
-    total: pots.length,
-    active: pots.filter(p => p.status === 'active').length,
-    completed: pots.filter(p => p.status === 'completed').length,
-    expired: pots.filter(p => p.status === 'expired').length,
-    totalValue: pots.reduce((sum, p) => sum + p.amount, 0),
-    activeValue: pots.filter(p => p.status === 'active').reduce((sum, p) => sum + p.remainingAmount, 0)
-  }
+  const isConnected = isFarcaster ? miniKitConnected : wagmiConnected
 
   if (!mounted) {
     return (
       <div className="text-center py-8">
-        <div className="animate-spin w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full mx-auto mb-3"></div>
-        <p className="text-sm text-gray-600">Loading...</p>
+        <div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full mx-auto mb-3"></div>
+        <p className="text-sm font-medium text-gray-600">Loading...</p>
       </div>
     )
   }
 
-  // Show actual app if in Farcaster
   return (
-    <div className="space-y-4">
-      {/* Compact Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-bold text-gray-900">Available Pots</h1>
-          <p className="text-xs font-medium text-gray-600">Participate and win USDC</p>
+    <div className="space-y-6">
+      {/* Active Pots Counter */}
+      <div className="bg-gold/10 backdrop-blur-xl rounded-md p-3 border border-gold/30 shadow-card animate-pulse">
+        <div className="flex items-center justify-center space-x-2">
+          <Zap className="w-5 h-5 text-gold-dark" />
+          <p className="text-sm font-bold text-gray-900">
+            <span className="font-mono tabular-nums text-gold-dark">{loading ? '...' : activePots}</span> {activePots === 1 ? 'Pot' : 'Pots'} Active Right Now
+          </p>
         </div>
-        <button
-          onClick={loadAllPots}
-          disabled={loading}
-          className="p-2 text-primary hover:text-primary-dark disabled:opacity-50 transition-colors"
-        >
-          <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-        </button>
       </div>
 
-      {loading ? (
-        <div className="text-center py-8">
-          <div className="animate-spin w-6 h-6 border-2 border-primary border-t-transparent rounded-full mx-auto mb-2"></div>
-          <p className="text-xs font-medium text-gray-600">Loading pots...</p>
+      {/* Hero Section */}
+      <div className="text-center space-y-4">
+        <div className="w-20 h-20 gradient-hero rounded-md flex items-center justify-center mb-4 mx-auto shadow-lg">
+          <Coins className="w-10 h-10 text-white" />
         </div>
-      ) : error ? (
-        <div className="bg-gold/10 border border-gold/30 text-gray-900 px-4 py-3 rounded-md text-sm shadow-card">
-          <p className="font-semibold mb-1">Unable to load pots</p>
-          <p className="text-xs font-medium mb-2">{error}</p>
-          <button
-            onClick={loadAllPots}
-            className="text-xs bg-gold hover:bg-gold-dark text-gray-900 font-semibold px-3 py-1.5 rounded-md btn-uppercase"
-          >
-            Retry
-          </button>
-        </div>
-      ) : pots.length === 0 ? (
-        <div className="text-center py-12">
-          <Coins className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-          <h2 className="text-lg font-bold text-gray-900 mb-1">No Pots Available</h2>
-          <p className="text-sm font-medium text-gray-600 mb-4">Be the first to create a pot!</p>
-          <Link
-            href="/create"
-            className="inline-flex items-center space-x-2 gradient-hero hover:opacity-90 text-white font-bold py-2.5 px-4 rounded-md text-sm transition-all shadow-lg btn-uppercase"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Create Pot</span>
-          </Link>
-        </div>
-      ) : (
-        <>
-          {/* Compact Filter Tabs */}
-          <div className="flex space-x-1 bg-card backdrop-blur-xl rounded-md p-1 border border-gray-200 shadow-card">
-            {[
-              { key: 'active', label: 'Active', count: stats.active },
-              { key: 'all', label: 'All', count: stats.total },
-              { key: 'completed', label: 'Done', count: stats.completed },
-              { key: 'expired', label: 'Expired', count: stats.expired }
-            ].map(({ key, label, count }) => (
-              <button
-                key={key}
-                onClick={() => setFilter(key as any)}
-                className={`flex-1 py-1.5 px-2 rounded-md text-xs font-semibold transition-all ${
-                  filter === key
-                    ? 'gradient-hero text-white shadow-md'
-                    : 'text-gray-600 hover:text-primary'
-                }`}
-              >
-                {label} (<span className="font-mono">{count}</span>)
-              </button>
-            ))}
-          </div>
+        <h1 className="text-3xl sm:text-4xl font-bold text-gray-900">
+          Welcome to PotFi
+        </h1>
+        <p className="text-base font-semibold text-gray-700 max-w-md mx-auto">
+          Boost your post with a Pot and turn engagement into USDC rewards.
+        </p>
+      </div>
 
-          {/* Pots List */}
-          <div className="space-y-3">
-            {filteredPots.length > 0 ? (
-              filteredPots.map((pot) => (
-                <PotCard key={pot.id} pot={pot} />
-              ))
-            ) : (
-              <div className="text-center py-8">
-                <p className="text-sm text-gray-600">No {filter} pots found</p>
-              </div>
-            )}
-          </div>
-
-          {/* Create Pot CTA */}
-          <div className="bg-primary/5 backdrop-blur-xl rounded-md p-4 border border-primary/20 shadow-card">
-            <div className="flex items-start space-x-3 mb-3">
-              <Zap className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-              <div>
-                <h3 className="text-sm font-bold text-gray-900 mb-1">Create Your Own Pot</h3>
-                <p className="text-xs font-medium text-gray-600">Boost engagement and reward your community with USDC</p>
-              </div>
+      {/* Feature Cards */}
+      <div className="grid grid-cols-1 gap-3">
+        {/* Create Pots */}
+        <div className="bg-card backdrop-blur-xl rounded-md p-4 border border-gray-200 shadow-card">
+          <div className="flex items-start space-x-3">
+            <div className="w-10 h-10 gradient-hero rounded-md flex items-center justify-center shadow-md flex-shrink-0">
+              <Plus className="w-5 h-5 text-white" />
             </div>
-            <Link
-              href="/create"
-              className="flex items-center justify-center space-x-2 w-full gradient-hero hover:opacity-90 text-white font-bold py-2.5 px-4 rounded-md text-sm transition-all shadow-lg btn-uppercase"
-            >
-              <Plus className="w-4 h-4" />
-              <span>Create Pot</span>
-            </Link>
-          </div>
-        </>
-      )}
-    </div>
-  )
-}
-
-function PotCard({ pot }: { pot: PotData }) {
-  const statusConfig = {
-    active: {
-      icon: Clock,
-      color: 'text-primary',
-      bg: 'bg-primary/10',
-      border: 'border-primary/30',
-      label: 'Active'
-    },
-    completed: {
-      icon: pot.jackpotHit ? Trophy : CheckCircle,
-      color: pot.jackpotHit ? 'text-gold' : 'text-primary',
-      bg: pot.jackpotHit ? 'bg-gold/10' : 'bg-primary/10',
-      border: pot.jackpotHit ? 'border-gold/30' : 'border-primary/30',
-      label: pot.jackpotHit ? 'Jackpot!' : 'Done'
-    },
-    expired: {
-      icon: XCircle,
-      color: 'text-gray-600',
-      bg: 'bg-gray-50',
-      border: 'border-gray-300',
-      label: 'Expired'
-    }
-  }
-
-  const config = statusConfig[pot.status]
-  const StatusIcon = config.icon
-  const progress = (pot.claimedAmount / pot.amount) * 100
-  const timeAgo = new Date(pot.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-  const standardClaim = pot.standardClaim || 0.01
-  // Ensure jackpot probability is at least 1% for active pots (default base chance)
-  const jackpotProb = pot.jackpotProbability || (pot.status === 'active' ? 1 : 0)
-
-  return (
-    <Link href={`/claim/${pot.id}`}>
-      <div className="bg-card backdrop-blur-xl rounded-md border border-gray-200 p-3 hover:shadow-lg transition-all cursor-pointer shadow-card">
-        {/* Header */}
-        <div className="flex items-start justify-between mb-2">
-          <div className="flex-1">
-            <div className="flex items-center space-x-2 mb-1">
-              <p className="text-lg font-bold text-gray-900 font-mono tabular-nums">{pot.amount} USDC</p>
-              <div className={`flex items-center space-x-1 px-2 py-0.5 rounded-full ${config.bg} ${config.border} border`}>
-                <StatusIcon className={`w-3 h-3 ${config.color}`} />
-                <span className={`text-xs font-semibold ${config.color}`}>{config.label}</span>
-              </div>
-            </div>
-            <div className="flex items-center space-x-3 text-xs font-medium text-gray-600">
-              <span className="flex items-center space-x-1">
-                <Users className="w-3 h-3" />
-                <span className="font-mono tabular-nums">{pot.claimCount}/{pot.maxClaims}</span>
-              </span>
-              <span className="flex items-center space-x-1">
-                <DollarSign className="w-3 h-3" />
-                <span className="font-mono tabular-nums">{pot.remainingAmount.toFixed(1)} left</span>
-              </span>
-              <span>{timeAgo}</span>
-            </div>
-          </div>
-          {pot.status === 'active' && pot.timeRemaining && (
-            <div className="text-right">
-              <p className="text-xs text-primary font-semibold flex items-center">
-                <Timer className="w-3 h-3 mr-1" />
-                {formatTimeRemaining(pot.timeRemaining)}
+            <div>
+              <h3 className="text-sm font-bold text-gray-900 mb-1">Create Prize Pots</h3>
+              <p className="text-xs font-medium text-gray-600">
+                Fund a pot with USDC and set engagement requirements. Your community participates by liking, commenting, and recasting.
               </p>
             </div>
-          )}
-        </div>
-
-        {/* Stats Row */}
-        {pot.status === 'active' && (
-          <div className="grid grid-cols-2 gap-2 mb-2">
-            <div className="bg-primary/5 rounded-md p-2 border border-primary/10">
-              <p className="text-xs font-medium text-gray-600">Standard Claim</p>
-              <p className="text-sm font-bold text-primary font-mono tabular-nums">{standardClaim} USDC</p>
-            </div>
-            <div className="bg-gold/10 rounded-md p-2 border border-gold/20">
-              <p className="text-xs font-medium text-gray-600">Jackpot Chance</p>
-              <p className="text-sm font-bold text-gold-dark font-mono tabular-nums">{jackpotProb.toFixed(1)}%</p>
-            </div>
-          </div>
-        )}
-
-        {/* Progress Bar */}
-        <div className="mb-2">
-          <div className="flex justify-between text-xs font-medium text-gray-600 mb-1">
-            <span>Claimed</span>
-            <span className="font-mono tabular-nums">{progress.toFixed(0)}%</span>
-          </div>
-          <div className="w-full bg-gray-200 rounded-full h-1.5">
-            <div 
-              className="gradient-hero h-1.5 rounded-full transition-all"
-              style={{ width: `${Math.min(progress, 100)}%` }}
-            ></div>
           </div>
         </div>
 
-        {/* Action Button */}
-        <div className={`flex items-center justify-center space-x-2 text-xs font-bold py-2 px-3 rounded-md transition-all btn-uppercase ${
-          pot.status === 'active' 
-            ? 'bg-gold hover:bg-gold-dark text-gray-900' 
-            : 'gradient-hero hover:opacity-90 text-white'
-        }`}>
-          {pot.status === 'active' ? (
-            <>
-              <TrendingUp className="w-3 h-3" />
-              <span>Claim Now</span>
-            </>
-          ) : (
-            <>
-              <CheckCircle className="w-3 h-3" />
-              <span>View Details</span>
-            </>
-          )}
+        {/* Instant Claims */}
+        <div className="bg-card backdrop-blur-xl rounded-md p-4 border border-gray-200 shadow-card">
+          <div className="flex items-start space-x-3">
+            <div className="w-10 h-10 bg-primary rounded-md flex items-center justify-center shadow-md flex-shrink-0">
+              <Zap className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-gray-900 mb-1">Instant Claims</h3>
+              <p className="text-xs font-medium text-gray-600">
+                Users claim their share instantly after completing engagement requirements. No waiting, no delays.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Jackpot Chance */}
+        <div className="bg-gold/10 backdrop-blur-xl rounded-md p-4 border border-gold/20 shadow-card">
+          <div className="flex items-start space-x-3">
+            <div className="w-10 h-10 bg-gold rounded-md flex items-center justify-center shadow-md flex-shrink-0">
+              <Trophy className="w-5 h-5 text-gray-900" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-gray-900 mb-1">Jackpot Rewards</h3>
+              <p className="text-xs font-medium text-gray-600">
+                Every claim has a chance to win the entire pot! The more engagement, the higher the excitement.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* On-Chain Security */}
+        <div className="bg-card backdrop-blur-xl rounded-md p-4 border border-gray-200 shadow-card">
+          <div className="flex items-start space-x-3">
+            <div className="w-10 h-10 bg-primary rounded-md flex items-center justify-center shadow-md flex-shrink-0">
+              <Shield className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-gray-900 mb-1">Secure & Decentralized</h3>
+              <p className="text-xs font-medium text-gray-600">
+                Built on Base blockchain. All transactions are transparent and secure. Your funds are always safe.
+              </p>
+            </div>
+          </div>
         </div>
       </div>
-    </Link>
+
+      {/* Three-Step Explainer */}
+      <div className="bg-gradient-to-br from-primary/5 via-gold/5 to-primary/5 backdrop-blur-xl rounded-md p-4 border border-primary/20 shadow-card">
+        <h2 className="text-lg font-bold text-gray-900 mb-4 text-center flex items-center justify-center">
+          <Sparkles className="w-5 h-5 text-gold-dark mr-2" />
+          How It Works
+        </h2>
+        <div className="grid grid-cols-3 gap-3">
+          {/* Step 1: Fund your post */}
+          <div className="text-center">
+            <div className="w-14 h-14 gradient-hero rounded-md flex items-center justify-center mx-auto mb-2 shadow-lg">
+              <DollarSign className="w-7 h-7 text-white" />
+            </div>
+            <p className="text-sm font-bold text-gray-900 mb-1">Fund your post</p>
+            <p className="text-xs font-medium text-gray-600">Add USDC to your pot</p>
+          </div>
+          
+          {/* Step 2: Fans engage */}
+          <div className="text-center">
+            <div className="w-14 h-14 bg-primary rounded-md flex items-center justify-center mx-auto mb-2 shadow-lg">
+              <Users className="w-7 h-7 text-white" />
+            </div>
+            <p className="text-sm font-bold text-gray-900 mb-1">Fans engage</p>
+            <p className="text-xs font-medium text-gray-600">They like & claim</p>
+          </div>
+          
+          {/* Step 3: Jackpot hits */}
+          <div className="text-center">
+            <div className="w-14 h-14 bg-gold rounded-md flex items-center justify-center mx-auto mb-2 shadow-lg">
+              <Trophy className="w-7 h-7 text-gray-900" />
+            </div>
+            <p className="text-sm font-bold text-gray-900 mb-1">Jackpot hits</p>
+            <p className="text-xs font-medium text-gray-600">Winner takes all!</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Stats Section */}
+      <div className="grid grid-cols-3 gap-2">
+        <div className="bg-card backdrop-blur-xl rounded-md p-3 border border-gray-200 text-center shadow-card">
+          <DollarSign className="w-5 h-5 text-primary mx-auto mb-1" />
+          <p className="text-xs font-medium text-gray-600">USDC</p>
+          <p className="text-sm font-bold text-gray-900">Rewards</p>
+        </div>
+        <div className="bg-card backdrop-blur-xl rounded-md p-3 border border-gray-200 text-center shadow-card">
+          <Users className="w-5 h-5 text-primary mx-auto mb-1" />
+          <p className="text-xs font-medium text-gray-600">Community</p>
+          <p className="text-sm font-bold text-gray-900">Driven</p>
+        </div>
+        <div className="bg-card backdrop-blur-xl rounded-md p-3 border border-gray-200 text-center shadow-card">
+          <TrendingUp className="w-5 h-5 text-primary mx-auto mb-1" />
+          <p className="text-xs font-medium text-gray-600">Instant</p>
+          <p className="text-sm font-bold text-gray-900">Claims</p>
+        </div>
+      </div>
+
+      {/* CTA Buttons */}
+      <div className="space-y-3">
+        {isConnected && (
+          <Link
+            href="/create"
+            className="block w-full relative py-4 px-6 rounded-md text-center transition-all duration-300 transform hover:scale-105 btn-uppercase group overflow-hidden"
+            style={{
+              background: 'linear-gradient(135deg, #FFD700 0%, #FFC700 25%, #FFD700 50%, #FFED4E 75%, #FFD700 100%)',
+              boxShadow: '0 4px 15px rgba(255, 215, 0, 0.4), 0 1px 3px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.5), inset 0 -1px 0 rgba(0, 0, 0, 0.2)'
+            }}
+          >
+            {/* Shine effect overlay */}
+            <div 
+              className="absolute inset-0 opacity-30 group-hover:opacity-50 transition-opacity duration-300"
+              style={{
+                background: 'linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.8) 50%, transparent 100%)',
+                transform: 'translateX(-100%)',
+                animation: 'shine 3s infinite'
+              }}
+            ></div>
+            
+            {/* Inner glow on hover */}
+            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-md"
+                 style={{
+                   background: 'radial-gradient(circle at center, rgba(255, 237, 78, 0.4) 0%, transparent 70%)'
+                 }}
+            ></div>
+            
+            <div className="relative flex items-center justify-center space-x-2 text-gray-900 font-bold">
+              <Plus className="w-5 h-5 drop-shadow-sm" />
+              <span className="text-base drop-shadow-sm">Create a Pot</span>
+            </div>
+          </Link>
+        )}
+        
+        <Link
+          href="/view"
+          className="block w-full gradient-hero hover:opacity-90 text-white font-bold py-3 px-4 rounded-md text-center transition-all shadow-lg btn-uppercase"
+        >
+          <div className="flex items-center justify-center space-x-2">
+            <Eye className="w-5 h-5" />
+            <span>Browse Pots</span>
+          </div>
+        </Link>
+      </div>
+
+      {/* Info Banner */}
+      <div className="bg-primary/5 backdrop-blur-xl rounded-md p-3 border border-primary/20 shadow-card">
+        <div className="flex items-center justify-center space-x-4 text-xs font-semibold text-gray-700">
+          <div className="flex items-center space-x-1.5">
+            <Shield className="w-3.5 h-3.5 text-primary" />
+            <span>Built on Base</span>
+          </div>
+          <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
+          <div className="flex items-center space-x-1.5">
+            <DollarSign className="w-3.5 h-3.5 text-gold-dark" />
+            <span>USDC Rewards</span>
+          </div>
+          <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
+          <div className="flex items-center space-x-1.5">
+            <Zap className="w-3.5 h-3.5 text-primary" />
+            <span>Instant Claims</span>
+          </div>
+        </div>
+      </div>
+    </div>
   )
 }

@@ -40,7 +40,7 @@ interface PotData {
   castId?: string
 }
 
-export default function ViewPots() {
+export default function Home() {
   const [mounted, setMounted] = useState(false)
   const [pots, setPots] = useState<PotData[]>([])
   const [loading, setLoading] = useState(true)
@@ -126,8 +126,8 @@ export default function ViewPots() {
       {/* Compact Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-bold text-gray-900">All Pots</h1>
-          <p className="text-xs font-medium text-gray-600">Browse and claim available pots</p>
+          <h1 className="text-xl font-bold text-gray-900">Available Pots</h1>
+          <p className="text-xs font-medium text-gray-600">Participate and win USDC</p>
         </div>
         <button
           onClick={loadAllPots}

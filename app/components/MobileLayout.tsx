@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useAccount } from 'wagmi'
-import { Home as HomeIcon, Plus, Eye, MessageCircle } from 'lucide-react'
+import { Home as HomeIcon, Plus, Eye, MessageCircle, Wallet } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 import { useMiniKitWallet } from '@/hooks/useMiniKitWallet'
 import { useState, useEffect } from 'react'
@@ -74,45 +74,56 @@ export default function MobileLayout({ children, showBottomNav = true }: MobileL
       {/* Bottom Navigation Menu */}
       {showBottomNav && isConnected && (
         <div className="fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-xl border-t border-gray-200 shadow-2xl">
-          <div className="max-w-md mx-auto px-4 py-2 safe-area-inset-bottom">
+          <div className="max-w-md mx-auto px-2 py-2 safe-area-inset-bottom">
             <div className="flex items-center justify-around">
               {/* Home */}
               <Link
                 href="/"
-                className={`flex flex-col items-center py-3 px-4 rounded-md transition-all duration-200 transform active:scale-95 ${
+                className={`flex flex-col items-center py-2 px-3 rounded-md transition-all duration-200 transform active:scale-95 ${
                   pathname === '/' ? 'text-primary' : 'text-gray-600 hover:text-primary'
                 }`}
               >
-                <HomeIcon className="w-6 h-6 mb-1" />
+                <HomeIcon className="w-5 h-5 mb-1" />
                 <span className="text-xs font-semibold">Home</span>
               </Link>
 
-              {/* Create Pot */}
+              {/* Create */}
               <Link
                 href="/create"
-                className={`flex flex-col items-center py-3 px-4 rounded-md transition-all duration-200 transform active:scale-95 ${
+                className={`flex flex-col items-center py-2 px-3 rounded-md transition-all duration-200 transform active:scale-95 ${
                   pathname === '/create' ? 'text-primary' : 'text-gray-600 hover:text-primary'
                 }`}
               >
-                <div className={`p-3 rounded-md shadow-lg mb-1 ${
+                <div className={`p-2 rounded-md shadow-lg mb-1 ${
                   pathname === '/create' 
                     ? 'bg-primary-dark' 
                     : 'gradient-hero'
                 }`}>
-                  <Plus className="w-6 h-6 text-white" />
+                  <Plus className="w-5 h-5 text-white" />
                 </div>
-                <span className="text-xs font-semibold">Create Pot</span>
+                <span className="text-xs font-semibold">Create</span>
               </Link>
 
-              {/* View Pots */}
+              {/* View */}
               <Link
                 href="/view"
-                className={`flex flex-col items-center py-3 px-4 rounded-md transition-all duration-200 transform active:scale-95 ${
+                className={`flex flex-col items-center py-2 px-3 rounded-md transition-all duration-200 transform active:scale-95 ${
                   pathname === '/view' ? 'text-primary' : 'text-gray-600 hover:text-primary'
                 }`}
               >
-                <Eye className="w-6 h-6 mb-1" />
-                <span className="text-xs font-semibold">View Pots</span>
+                <Eye className="w-5 h-5 mb-1" />
+                <span className="text-xs font-semibold">View</span>
+              </Link>
+
+              {/* Profile */}
+              <Link
+                href="/profile"
+                className={`flex flex-col items-center py-2 px-3 rounded-md transition-all duration-200 transform active:scale-95 ${
+                  pathname === '/profile' ? 'text-primary' : 'text-gray-600 hover:text-primary'
+                }`}
+              >
+                <Wallet className="w-5 h-5 mb-1" />
+                <span className="text-xs font-semibold">Profile</span>
               </Link>
             </div>
           </div>
