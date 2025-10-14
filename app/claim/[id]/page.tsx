@@ -431,16 +431,16 @@ export default function Claim() {
                     onClick={switchToBase}
                     className="w-full mt-2 relative py-2 px-3 rounded-lg text-xs font-bold btn-uppercase transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] overflow-hidden group"
                     style={{
-                      background: 'linear-gradient(180deg, #D4AF37 0%, #F4D03F 10%, #FFF8DC 50%, #F4D03F 90%, #C9A535 100%)',
-                      boxShadow: '0 4px 8px rgba(0, 0, 0, 0.3), inset 0 1px 2px rgba(255, 255, 255, 0.4), inset 0 -1px 2px rgba(0, 0, 0, 0.3)',
-                      border: '1px solid #B8941F',
-                      borderTop: '1px solid #E8D18F',
-                      borderBottom: '1px solid #A67C00',
-                      color: '#4A3700',
-                      textShadow: '0 1px 1px rgba(255, 255, 255, 0.4)'
+                      background: 'linear-gradient(180deg, #B8941F 0%, #D4AF37 20%, #D4AF37 80%, #A67C00 100%)',
+                      boxShadow: '0 4px 8px rgba(0, 0, 0, 0.3), inset 0 1px 2px rgba(255, 255, 255, 0.3), inset 0 -1px 2px rgba(0, 0, 0, 0.4)',
+                      border: '1px solid #8B7310',
+                      borderTop: '1px solid #D4AF37',
+                      borderBottom: '1px solid #705D0C',
+                      color: '#2A1F00',
+                      textShadow: '0 1px 1px rgba(255, 215, 0, 0.3)'
                     }}
                   >
-                    <div className="absolute inset-0 opacity-60" style={{ background: 'linear-gradient(180deg, transparent 0%, rgba(255, 255, 255, 0.3) 48%, rgba(255, 255, 255, 0.3) 52%, transparent 100%)' }}></div>
+                    <div className="absolute inset-0 opacity-30" style={{ background: 'linear-gradient(180deg, transparent 0%, rgba(212, 175, 55, 0.3) 48%, rgba(212, 175, 55, 0.3) 52%, transparent 100%)' }}></div>
                     <div className="relative flex items-center justify-center space-x-1.5">
                       <Wifi className="w-3 h-3" />
                       <span>Switch to Base</span>
@@ -676,23 +676,23 @@ export default function Claim() {
                 onClick={claim}
                 className="w-full relative py-3 px-4 rounded-lg text-sm font-bold btn-uppercase transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden group"
                 style={{
-                  background: busy || isTransactionPending ? '#9CA3AF' : 'linear-gradient(180deg, #D4AF37 0%, #F4D03F 10%, #FFF8DC 50%, #F4D03F 90%, #C9A535 100%)',
-                  boxShadow: '0 8px 16px rgba(0, 0, 0, 0.3), inset 0 2px 4px rgba(255, 255, 255, 0.4), inset 0 -2px 4px rgba(0, 0, 0, 0.3), 0 2px 4px rgba(212, 175, 55, 0.5)',
-                  border: '1px solid #B8941F',
-                  borderTop: '2px solid #E8D18F',
-                  borderBottom: '2px solid #A67C00',
-                  color: '#4A3700',
-                  textShadow: '0 1px 2px rgba(255, 255, 255, 0.4), 0 -1px 1px rgba(0, 0, 0, 0.3)'
+                  background: busy || isTransactionPending ? '#9CA3AF' : 'linear-gradient(180deg, #B8941F 0%, #D4AF37 15%, #D4AF37 50%, #D4AF37 85%, #A67C00 100%)',
+                  boxShadow: '0 8px 16px rgba(0, 0, 0, 0.3), inset 0 2px 4px rgba(255, 255, 255, 0.3), inset 0 -2px 4px rgba(0, 0, 0, 0.4), 0 2px 4px rgba(212, 175, 55, 0.5)',
+                  border: '1px solid #8B7310',
+                  borderTop: '2px solid #D4AF37',
+                  borderBottom: '2px solid #705D0C',
+                  color: '#2A1F00',
+                  textShadow: '0 1px 2px rgba(255, 215, 0, 0.3), 0 -1px 1px rgba(0, 0, 0, 0.5)'
                 }}
               >
                 {!busy && !isTransactionPending && (
                   <>
                     <div className="absolute top-0 left-0 right-0 h-1 rounded-t-lg" 
-                         style={{ background: 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.5), transparent)' }}></div>
-                    <div className="absolute inset-0 opacity-20 group-hover:opacity-40 transition-opacity duration-300"
-                         style={{ background: 'linear-gradient(110deg, transparent 30%, rgba(255, 255, 255, 0.8) 50%, transparent 70%)', transform: 'translateX(-100%)', animation: 'shine 4s ease-in-out infinite' }}></div>
-                    <div className="absolute inset-0 opacity-60"
-                         style={{ background: 'linear-gradient(180deg, transparent 0%, rgba(255, 255, 255, 0.3) 48%, rgba(255, 255, 255, 0.3) 52%, transparent 100%)' }}></div>
+                         style={{ background: 'linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.4), transparent)' }}></div>
+                    <div className="absolute inset-0 opacity-15 group-hover:opacity-30 transition-opacity duration-300"
+                         style={{ background: 'linear-gradient(110deg, transparent 30%, rgba(255, 215, 0, 0.6) 50%, transparent 70%)', transform: 'translateX(-100%)', animation: 'shine 4s ease-in-out infinite' }}></div>
+                    <div className="absolute inset-0 opacity-30"
+                         style={{ background: 'linear-gradient(180deg, transparent 0%, rgba(212, 175, 55, 0.3) 48%, rgba(212, 175, 55, 0.3) 52%, transparent 100%)' }}></div>
                   </>
                 )}
                 <span className="relative">

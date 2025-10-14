@@ -221,41 +221,41 @@ export default function Home() {
             href="/create"
             className="block w-full relative py-4 px-6 rounded-lg text-center transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] btn-uppercase group overflow-hidden"
             style={{
-              background: 'linear-gradient(180deg, #D4AF37 0%, #F4D03F 10%, #FFF8DC 50%, #F4D03F 90%, #C9A535 100%)',
-              boxShadow: '0 8px 16px rgba(0, 0, 0, 0.3), inset 0 2px 4px rgba(255, 255, 255, 0.4), inset 0 -2px 4px rgba(0, 0, 0, 0.3), 0 2px 4px rgba(212, 175, 55, 0.5)',
-              border: '1px solid #B8941F',
-              borderTop: '2px solid #E8D18F',
-              borderBottom: '2px solid #A67C00'
+              background: 'linear-gradient(180deg, #B8941F 0%, #D4AF37 15%, #D4AF37 50%, #D4AF37 85%, #A67C00 100%)',
+              boxShadow: '0 8px 16px rgba(0, 0, 0, 0.3), inset 0 2px 4px rgba(255, 255, 255, 0.3), inset 0 -2px 4px rgba(0, 0, 0, 0.4), 0 2px 4px rgba(212, 175, 55, 0.5)',
+              border: '1px solid #8B7310',
+              borderTop: '2px solid #D4AF37',
+              borderBottom: '2px solid #705D0C'
             }}
           >
             {/* Top highlight for beveled effect */}
             <div className="absolute top-0 left-0 right-0 h-1 rounded-t-lg" 
                  style={{
-                   background: 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.5), transparent)'
+                   background: 'linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.4), transparent)'
                  }}
             ></div>
             
             {/* Shine effect overlay */}
             <div 
-              className="absolute inset-0 opacity-20 group-hover:opacity-40 transition-opacity duration-300"
+              className="absolute inset-0 opacity-15 group-hover:opacity-30 transition-opacity duration-300"
               style={{
-                background: 'linear-gradient(110deg, transparent 30%, rgba(255, 255, 255, 0.8) 50%, transparent 70%)',
+                background: 'linear-gradient(110deg, transparent 30%, rgba(255, 215, 0, 0.6) 50%, transparent 70%)',
                 transform: 'translateX(-100%)',
                 animation: 'shine 4s ease-in-out infinite'
               }}
             ></div>
             
-            {/* Center highlight */}
-            <div className="absolute inset-0 opacity-60"
+            {/* Subtle center highlight */}
+            <div className="absolute inset-0 opacity-30"
                  style={{
-                   background: 'linear-gradient(180deg, transparent 0%, rgba(255, 255, 255, 0.3) 48%, rgba(255, 255, 255, 0.3) 52%, transparent 100%)'
+                   background: 'linear-gradient(180deg, transparent 0%, rgba(212, 175, 55, 0.3) 48%, rgba(212, 175, 55, 0.3) 52%, transparent 100%)'
                  }}
             ></div>
             
             <div className="relative flex items-center justify-center space-x-2 font-bold"
                  style={{
-                   color: '#4A3700',
-                   textShadow: '0 1px 2px rgba(255, 255, 255, 0.4), 0 -1px 1px rgba(0, 0, 0, 0.3)'
+                   color: '#2A1F00',
+                   textShadow: '0 1px 2px rgba(255, 215, 0, 0.3), 0 -1px 1px rgba(0, 0, 0, 0.5)'
                  }}>
               <Plus className="w-5 h-5" />
               <span className="text-base">Create a Pot</span>
