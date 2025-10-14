@@ -302,9 +302,17 @@ export default function Profile() {
           <p className="text-xs font-medium mb-2">{error}</p>
           <button
             onClick={loadUserPots}
-            className="text-xs bg-gold hover:bg-gold-dark text-gray-900 font-semibold px-3 py-1.5 rounded-md btn-uppercase"
+            className="text-xs relative px-3 py-1.5 rounded-lg font-bold btn-uppercase transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] overflow-hidden"
+            style={{
+              background: 'linear-gradient(180deg, #D4AF37 0%, #F4D03F 10%, #FFF8DC 50%, #F4D03F 90%, #C9A535 100%)',
+              boxShadow: '0 2px 4px rgba(0, 0, 0, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.4), inset 0 -1px 1px rgba(0, 0, 0, 0.3)',
+              border: '1px solid #B8941F',
+              color: '#4A3700',
+              textShadow: '0 1px 1px rgba(255, 255, 255, 0.4)'
+            }}
           >
-            Retry
+            <div className="absolute inset-0 opacity-60" style={{ background: 'linear-gradient(180deg, transparent 0%, rgba(255, 255, 255, 0.3) 48%, rgba(255, 255, 255, 0.3) 52%, transparent 100%)' }}></div>
+            <span className="relative">Retry</span>
           </button>
         </div>
       ) : pots.length === 0 ? (
@@ -522,19 +530,33 @@ function PotCard({ pot, onReclaim, isReclaiming }: { pot: PotData, onReclaim: (p
             <button
               onClick={() => onReclaim(pot.id)}
               disabled={isReclaiming}
-              className="flex-1 bg-gold hover:bg-gold-dark disabled:bg-gray-300 disabled:cursor-not-allowed text-gray-900 text-xs font-bold py-2 px-3 rounded-md transition-all flex items-center justify-center space-x-1 btn-uppercase"
+              className="flex-1 relative py-2 px-3 rounded-lg text-xs font-bold btn-uppercase transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden"
+              style={{
+                background: isReclaiming ? '#9CA3AF' : 'linear-gradient(180deg, #D4AF37 0%, #F4D03F 10%, #FFF8DC 50%, #F4D03F 90%, #C9A535 100%)',
+                boxShadow: '0 4px 8px rgba(0, 0, 0, 0.3), inset 0 1px 2px rgba(255, 255, 255, 0.4), inset 0 -1px 2px rgba(0, 0, 0, 0.3)',
+                border: '1px solid #B8941F',
+                borderTop: '1px solid #E8D18F',
+                borderBottom: '1px solid #A67C00',
+                color: '#4A3700',
+                textShadow: '0 1px 1px rgba(255, 255, 255, 0.4)'
+              }}
             >
-              {isReclaiming ? (
-                <>
-                  <RefreshCw className="w-3 h-3 animate-spin" />
-                  <span>Reclaiming...</span>
-                </>
-              ) : (
-                <>
-                  <Wallet className="w-3 h-3" />
-                  <span>Reclaim</span>
-                </>
+              {!isReclaiming && (
+                <div className="absolute inset-0 opacity-60" style={{ background: 'linear-gradient(180deg, transparent 0%, rgba(255, 255, 255, 0.3) 48%, rgba(255, 255, 255, 0.3) 52%, transparent 100%)' }}></div>
               )}
+              <div className="relative flex items-center justify-center space-x-1">
+                {isReclaiming ? (
+                  <>
+                    <RefreshCw className="w-3 h-3 animate-spin" />
+                    <span>Reclaiming...</span>
+                  </>
+                ) : (
+                  <>
+                    <Wallet className="w-3 h-3" />
+                    <span>Reclaim</span>
+                  </>
+                )}
+              </div>
             </button>
           ) : (
             <button

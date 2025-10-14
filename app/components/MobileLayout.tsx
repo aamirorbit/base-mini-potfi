@@ -54,10 +54,20 @@ export default function MobileLayout({ children, showBottomNav = true }: MobileL
                 href="https://t.me/+_fXXrjRRqu41Yzdk"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center space-x-1 px-3 py-1.5 text-xs font-bold text-gray-900 bg-gold hover:bg-gold-dark rounded-md transition-all duration-200 shadow-md btn-uppercase"
+                className="relative px-3 py-1.5 text-xs font-bold rounded-lg transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] btn-uppercase overflow-hidden inline-block"
+                style={{
+                  background: 'linear-gradient(180deg, #D4AF37 0%, #F4D03F 10%, #FFF8DC 50%, #F4D03F 90%, #C9A535 100%)',
+                  boxShadow: '0 2px 4px rgba(0, 0, 0, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.4), inset 0 -1px 1px rgba(0, 0, 0, 0.3)',
+                  border: '1px solid #B8941F',
+                  color: '#4A3700',
+                  textShadow: '0 1px 1px rgba(255, 255, 255, 0.4)'
+                }}
               >
-                <MessageCircle className="w-3 h-3" />
-                <span>Support</span>
+                <div className="absolute inset-0 opacity-60" style={{ background: 'linear-gradient(180deg, transparent 0%, rgba(255, 255, 255, 0.3) 48%, rgba(255, 255, 255, 0.3) 52%, transparent 100%)' }}></div>
+                <div className="relative flex items-center space-x-1">
+                  <MessageCircle className="w-3 h-3" />
+                  <span>Support</span>
+                </div>
               </a>
             </div>
           </div>

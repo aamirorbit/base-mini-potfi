@@ -219,32 +219,46 @@ export default function Home() {
         {isConnected && (
           <Link
             href="/create"
-            className="block w-full relative py-4 px-6 rounded-md text-center transition-all duration-300 transform hover:scale-105 btn-uppercase group overflow-hidden"
+            className="block w-full relative py-4 px-6 rounded-lg text-center transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] btn-uppercase group overflow-hidden"
             style={{
-              background: 'linear-gradient(135deg, #FFD700 0%, #FFC700 25%, #FFD700 50%, #FFED4E 75%, #FFD700 100%)',
-              boxShadow: '0 4px 15px rgba(255, 215, 0, 0.4), 0 1px 3px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.5), inset 0 -1px 0 rgba(0, 0, 0, 0.2)'
+              background: 'linear-gradient(180deg, #D4AF37 0%, #F4D03F 10%, #FFF8DC 50%, #F4D03F 90%, #C9A535 100%)',
+              boxShadow: '0 8px 16px rgba(0, 0, 0, 0.3), inset 0 2px 4px rgba(255, 255, 255, 0.4), inset 0 -2px 4px rgba(0, 0, 0, 0.3), 0 2px 4px rgba(212, 175, 55, 0.5)',
+              border: '1px solid #B8941F',
+              borderTop: '2px solid #E8D18F',
+              borderBottom: '2px solid #A67C00'
             }}
           >
-            {/* Shine effect overlay */}
-            <div 
-              className="absolute inset-0 opacity-30 group-hover:opacity-50 transition-opacity duration-300"
-              style={{
-                background: 'linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.8) 50%, transparent 100%)',
-                transform: 'translateX(-100%)',
-                animation: 'shine 3s infinite'
-              }}
-            ></div>
-            
-            {/* Inner glow on hover */}
-            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-md"
+            {/* Top highlight for beveled effect */}
+            <div className="absolute top-0 left-0 right-0 h-1 rounded-t-lg" 
                  style={{
-                   background: 'radial-gradient(circle at center, rgba(255, 237, 78, 0.4) 0%, transparent 70%)'
+                   background: 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.5), transparent)'
                  }}
             ></div>
             
-            <div className="relative flex items-center justify-center space-x-2 text-gray-900 font-bold">
-              <Plus className="w-5 h-5 drop-shadow-sm" />
-              <span className="text-base drop-shadow-sm">Create a Pot</span>
+            {/* Shine effect overlay */}
+            <div 
+              className="absolute inset-0 opacity-20 group-hover:opacity-40 transition-opacity duration-300"
+              style={{
+                background: 'linear-gradient(110deg, transparent 30%, rgba(255, 255, 255, 0.8) 50%, transparent 70%)',
+                transform: 'translateX(-100%)',
+                animation: 'shine 4s ease-in-out infinite'
+              }}
+            ></div>
+            
+            {/* Center highlight */}
+            <div className="absolute inset-0 opacity-60"
+                 style={{
+                   background: 'linear-gradient(180deg, transparent 0%, rgba(255, 255, 255, 0.3) 48%, rgba(255, 255, 255, 0.3) 52%, transparent 100%)'
+                 }}
+            ></div>
+            
+            <div className="relative flex items-center justify-center space-x-2 font-bold"
+                 style={{
+                   color: '#4A3700',
+                   textShadow: '0 1px 2px rgba(255, 255, 255, 0.4), 0 -1px 1px rgba(0, 0, 0, 0.3)'
+                 }}>
+              <Plus className="w-5 h-5" />
+              <span className="text-base">Create a Pot</span>
             </div>
           </Link>
         )}

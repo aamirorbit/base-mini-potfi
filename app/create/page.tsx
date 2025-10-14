@@ -952,9 +952,19 @@ export default function Create() {
               </div>
               <button
                 onClick={switchToBase}
-                className="w-full bg-gold hover:bg-gold-dark text-gray-900 font-bold py-2 px-3 rounded-md text-xs transition-all btn-uppercase"
+                className="w-full relative py-2 px-3 rounded-lg text-xs font-bold btn-uppercase transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] overflow-hidden"
+                style={{
+                  background: 'linear-gradient(180deg, #D4AF37 0%, #F4D03F 10%, #FFF8DC 50%, #F4D03F 90%, #C9A535 100%)',
+                  boxShadow: '0 4px 8px rgba(0, 0, 0, 0.3), inset 0 1px 2px rgba(255, 255, 255, 0.4), inset 0 -1px 2px rgba(0, 0, 0, 0.3)',
+                  border: '1px solid #B8941F',
+                  borderTop: '1px solid #E8D18F',
+                  borderBottom: '1px solid #A67C00',
+                  color: '#4A3700',
+                  textShadow: '0 1px 1px rgba(255, 255, 255, 0.4)'
+                }}
               >
-                Switch Network
+                <div className="absolute inset-0 opacity-60" style={{ background: 'linear-gradient(180deg, transparent 0%, rgba(255, 255, 255, 0.3) 48%, rgba(255, 255, 255, 0.3) 52%, transparent 100%)' }}></div>
+                <span className="relative">Switch Network</span>
               </button>
             </div>
           )}
