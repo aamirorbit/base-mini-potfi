@@ -127,12 +127,12 @@ export default function Home() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl font-bold text-gray-900">Available Pots</h1>
-          <p className="text-xs text-gray-600">Participate and win USDC</p>
+          <p className="text-xs font-medium text-gray-600">Participate and win USDC</p>
         </div>
         <button
           onClick={loadAllPots}
           disabled={loading}
-          className="p-2 text-blue-600 hover:text-blue-700 disabled:opacity-50 transition-colors"
+          className="p-2 text-primary hover:text-primary-dark disabled:opacity-50 transition-colors"
         >
           <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
         </button>
@@ -140,16 +140,16 @@ export default function Home() {
 
       {loading ? (
         <div className="text-center py-8">
-          <div className="animate-spin w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full mx-auto mb-2"></div>
-          <p className="text-xs text-gray-600">Loading pots...</p>
+          <div className="animate-spin w-6 h-6 border-2 border-primary border-t-transparent rounded-full mx-auto mb-2"></div>
+          <p className="text-xs font-medium text-gray-600">Loading pots...</p>
         </div>
       ) : error ? (
-        <div className="bg-yellow-500/10 border border-yellow-200/50 text-yellow-700 px-4 py-3 rounded-md text-sm">
-          <p className="font-medium mb-1">Unable to load pots</p>
-          <p className="text-xs mb-2">{error}</p>
+        <div className="bg-gold/10 border border-gold/30 text-gray-900 px-4 py-3 rounded-md text-sm shadow-card">
+          <p className="font-semibold mb-1">Unable to load pots</p>
+          <p className="text-xs font-medium mb-2">{error}</p>
           <button
             onClick={loadAllPots}
-            className="text-xs bg-yellow-600 hover:bg-yellow-700 text-white px-3 py-1.5 rounded-md"
+            className="text-xs bg-gold hover:bg-gold-dark text-gray-900 font-semibold px-3 py-1.5 rounded-md btn-uppercase"
           >
             Retry
           </button>
@@ -158,10 +158,10 @@ export default function Home() {
         <div className="text-center py-12">
           <Coins className="w-12 h-12 text-gray-400 mx-auto mb-3" />
           <h2 className="text-lg font-bold text-gray-900 mb-1">No Pots Available</h2>
-          <p className="text-sm text-gray-600 mb-4">Be the first to create a pot!</p>
+          <p className="text-sm font-medium text-gray-600 mb-4">Be the first to create a pot!</p>
           <Link
             href="/create"
-            className="inline-flex items-center space-x-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-medium py-2.5 px-4 rounded-md text-sm transition-all shadow-lg"
+            className="inline-flex items-center space-x-2 gradient-hero hover:opacity-90 text-white font-bold py-2.5 px-4 rounded-md text-sm transition-all shadow-lg btn-uppercase"
           >
             <Plus className="w-4 h-4" />
             <span>Create Pot</span>
@@ -170,7 +170,7 @@ export default function Home() {
       ) : (
         <>
           {/* Compact Filter Tabs */}
-          <div className="flex space-x-1 bg-white/60 backdrop-blur-xl rounded-md p-1 border border-white/20">
+          <div className="flex space-x-1 bg-card backdrop-blur-xl rounded-md p-1 border border-gray-200 shadow-card">
             {[
               { key: 'active', label: 'Active', count: stats.active },
               { key: 'all', label: 'All', count: stats.total },
@@ -180,13 +180,13 @@ export default function Home() {
               <button
                 key={key}
                 onClick={() => setFilter(key as any)}
-                className={`flex-1 py-1.5 px-2 rounded-md text-xs font-medium transition-all ${
+                className={`flex-1 py-1.5 px-2 rounded-md text-xs font-semibold transition-all ${
                   filter === key
-                    ? 'bg-blue-600 text-white shadow-md'
-                    : 'text-gray-600 hover:text-blue-600'
+                    ? 'gradient-hero text-white shadow-md'
+                    : 'text-gray-600 hover:text-primary'
                 }`}
               >
-                {label} ({count})
+                {label} (<span className="font-mono">{count}</span>)
               </button>
             ))}
           </div>
@@ -205,17 +205,17 @@ export default function Home() {
           </div>
 
           {/* Create Pot CTA */}
-          <div className="bg-blue-50/50 backdrop-blur-xl rounded-md p-4 border border-blue-200/50">
+          <div className="bg-primary/5 backdrop-blur-xl rounded-md p-4 border border-primary/20 shadow-card">
             <div className="flex items-start space-x-3 mb-3">
-              <Zap className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+              <Zap className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
               <div>
-                <h3 className="text-sm font-bold text-blue-900 mb-1">Create Your Own Pot</h3>
-                <p className="text-xs text-blue-700">Boost engagement and reward your community with USDC</p>
+                <h3 className="text-sm font-bold text-gray-900 mb-1">Create Your Own Pot</h3>
+                <p className="text-xs font-medium text-gray-600">Boost engagement and reward your community with USDC</p>
               </div>
             </div>
             <Link
               href="/create"
-              className="flex items-center justify-center space-x-2 w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-medium py-2.5 px-4 rounded-md text-sm transition-all shadow-lg"
+              className="flex items-center justify-center space-x-2 w-full gradient-hero hover:opacity-90 text-white font-bold py-2.5 px-4 rounded-md text-sm transition-all shadow-lg btn-uppercase"
             >
               <Plus className="w-4 h-4" />
               <span>Create Pot</span>
@@ -231,23 +231,23 @@ function PotCard({ pot }: { pot: PotData }) {
   const statusConfig = {
     active: {
       icon: Clock,
-      color: 'text-blue-600',
-      bg: 'bg-blue-50/50',
-      border: 'border-blue-200/50',
+      color: 'text-primary',
+      bg: 'bg-primary/10',
+      border: 'border-primary/30',
       label: 'Active'
     },
     completed: {
       icon: pot.jackpotHit ? Trophy : CheckCircle,
-      color: pot.jackpotHit ? 'text-yellow-600' : 'text-blue-600',
-      bg: pot.jackpotHit ? 'bg-yellow-50/50' : 'bg-blue-50/50',
-      border: pot.jackpotHit ? 'border-yellow-200/50' : 'border-blue-200/50',
+      color: pot.jackpotHit ? 'text-gold' : 'text-primary',
+      bg: pot.jackpotHit ? 'bg-gold/10' : 'bg-primary/10',
+      border: pot.jackpotHit ? 'border-gold/30' : 'border-primary/30',
       label: pot.jackpotHit ? 'Jackpot!' : 'Done'
     },
     expired: {
       icon: XCircle,
       color: 'text-gray-600',
-      bg: 'bg-gray-50/50',
-      border: 'border-gray-200/50',
+      bg: 'bg-gray-50',
+      border: 'border-gray-300',
       label: 'Expired'
     }
   }
@@ -262,32 +262,32 @@ function PotCard({ pot }: { pot: PotData }) {
 
   return (
     <Link href={`/claim/${pot.id}`}>
-      <div className="bg-white/70 backdrop-blur-xl rounded-md border border-white/20 p-3 hover:bg-white/90 transition-all cursor-pointer">
+      <div className="bg-card backdrop-blur-xl rounded-md border border-gray-200 p-3 hover:shadow-lg transition-all cursor-pointer shadow-card">
         {/* Header */}
         <div className="flex items-start justify-between mb-2">
           <div className="flex-1">
             <div className="flex items-center space-x-2 mb-1">
-              <p className="text-lg font-bold text-gray-900">{pot.amount} USDC</p>
+              <p className="text-lg font-bold text-gray-900 font-mono tabular-nums">{pot.amount} USDC</p>
               <div className={`flex items-center space-x-1 px-2 py-0.5 rounded-full ${config.bg} ${config.border} border`}>
                 <StatusIcon className={`w-3 h-3 ${config.color}`} />
-                <span className={`text-xs font-medium ${config.color}`}>{config.label}</span>
+                <span className={`text-xs font-semibold ${config.color}`}>{config.label}</span>
               </div>
             </div>
-            <div className="flex items-center space-x-3 text-xs text-gray-600">
+            <div className="flex items-center space-x-3 text-xs font-medium text-gray-600">
               <span className="flex items-center space-x-1">
                 <Users className="w-3 h-3" />
-                <span>{pot.claimCount}/{pot.maxClaims}</span>
+                <span className="font-mono tabular-nums">{pot.claimCount}/{pot.maxClaims}</span>
               </span>
               <span className="flex items-center space-x-1">
                 <DollarSign className="w-3 h-3" />
-                <span>{pot.remainingAmount.toFixed(1)} left</span>
+                <span className="font-mono tabular-nums">{pot.remainingAmount.toFixed(1)} left</span>
               </span>
               <span>{timeAgo}</span>
             </div>
           </div>
           {pot.status === 'active' && pot.timeRemaining && (
             <div className="text-right">
-              <p className="text-xs text-blue-600 font-medium flex items-center">
+              <p className="text-xs text-primary font-semibold flex items-center">
                 <Timer className="w-3 h-3 mr-1" />
                 {formatTimeRemaining(pot.timeRemaining)}
               </p>
@@ -298,33 +298,37 @@ function PotCard({ pot }: { pot: PotData }) {
         {/* Stats Row */}
         {pot.status === 'active' && (
           <div className="grid grid-cols-2 gap-2 mb-2">
-            <div className="bg-blue-50/50 rounded-md p-2">
-              <p className="text-xs text-gray-600">Standard Claim</p>
-              <p className="text-sm font-bold text-blue-600">{standardClaim} USDC</p>
+            <div className="bg-primary/5 rounded-md p-2 border border-primary/10">
+              <p className="text-xs font-medium text-gray-600">Standard Claim</p>
+              <p className="text-sm font-bold text-primary font-mono tabular-nums">{standardClaim} USDC</p>
             </div>
-            <div className="bg-yellow-50/50 rounded-md p-2">
-              <p className="text-xs text-gray-600">Jackpot Chance</p>
-              <p className="text-sm font-bold text-yellow-600">{jackpotProb.toFixed(1)}%</p>
+            <div className="bg-gold/10 rounded-md p-2 border border-gold/20">
+              <p className="text-xs font-medium text-gray-600">Jackpot Chance</p>
+              <p className="text-sm font-bold text-gold-dark font-mono tabular-nums">{jackpotProb.toFixed(1)}%</p>
             </div>
           </div>
         )}
 
         {/* Progress Bar */}
         <div className="mb-2">
-          <div className="flex justify-between text-xs text-gray-600 mb-1">
+          <div className="flex justify-between text-xs font-medium text-gray-600 mb-1">
             <span>Claimed</span>
-            <span>{progress.toFixed(0)}%</span>
+            <span className="font-mono tabular-nums">{progress.toFixed(0)}%</span>
           </div>
           <div className="w-full bg-gray-200 rounded-full h-1.5">
             <div 
-              className="bg-gradient-to-r from-blue-500 to-blue-600 h-1.5 rounded-full transition-all"
+              className="gradient-hero h-1.5 rounded-full transition-all"
               style={{ width: `${Math.min(progress, 100)}%` }}
             ></div>
           </div>
         </div>
 
         {/* Action Button */}
-        <div className="flex items-center justify-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium py-2 px-3 rounded-md transition-all">
+        <div className={`flex items-center justify-center space-x-2 text-xs font-bold py-2 px-3 rounded-md transition-all btn-uppercase ${
+          pot.status === 'active' 
+            ? 'bg-gold hover:bg-gold-dark text-gray-900' 
+            : 'gradient-hero hover:opacity-90 text-white'
+        }`}>
           {pot.status === 'active' ? (
             <>
               <TrendingUp className="w-3 h-3" />

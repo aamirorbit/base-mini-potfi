@@ -257,9 +257,9 @@ export default function ViewPots() {
   if (!isConnected) {
     return (
       <div className="text-center py-12">
-        <Eye className="w-12 h-12 text-blue-600 mx-auto mb-3" />
+        <Eye className="w-12 h-12 text-primary mx-auto mb-3" />
         <h2 className="text-xl font-bold text-gray-900 mb-2">View Your Pots</h2>
-        <p className="text-sm text-gray-600">Connect wallet to see your pots</p>
+        <p className="text-sm font-medium text-gray-600">Connect wallet to see your pots</p>
       </div>
     )
   }
@@ -272,7 +272,7 @@ export default function ViewPots() {
         <button
           onClick={loadUserPots}
           disabled={loading}
-          className="p-2 text-blue-600 hover:text-blue-700 disabled:opacity-50 transition-colors"
+          className="p-2 text-primary hover:text-primary-dark disabled:opacity-50 transition-colors"
         >
           <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
         </button>
@@ -280,16 +280,16 @@ export default function ViewPots() {
 
       {loading ? (
         <div className="text-center py-8">
-          <div className="animate-spin w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full mx-auto mb-2"></div>
-          <p className="text-xs text-gray-600">Loading pots...</p>
+          <div className="animate-spin w-6 h-6 border-2 border-primary border-t-transparent rounded-full mx-auto mb-2"></div>
+          <p className="text-xs font-medium text-gray-600">Loading pots...</p>
         </div>
       ) : error ? (
-        <div className="bg-yellow-500/10 border border-yellow-200/50 text-yellow-700 px-4 py-3 rounded-md text-sm">
-          <p className="font-medium mb-1">Unable to load pots</p>
-          <p className="text-xs mb-2">{error}</p>
+        <div className="bg-gold/10 border border-gold/30 text-gray-900 px-4 py-3 rounded-md text-sm shadow-card">
+          <p className="font-semibold mb-1">Unable to load pots</p>
+          <p className="text-xs font-medium mb-2">{error}</p>
           <button
             onClick={loadUserPots}
-            className="text-xs bg-yellow-600 hover:bg-yellow-700 text-white px-3 py-1.5 rounded-md"
+            className="text-xs bg-gold hover:bg-gold-dark text-gray-900 font-semibold px-3 py-1.5 rounded-md btn-uppercase"
           >
             Retry
           </button>
@@ -298,10 +298,10 @@ export default function ViewPots() {
         <div className="text-center py-12">
           <Eye className="w-12 h-12 text-gray-400 mx-auto mb-3" />
           <h2 className="text-lg font-bold text-gray-900 mb-1">No Pots Yet</h2>
-          <p className="text-sm text-gray-600 mb-4">Create your first pot to get started</p>
+          <p className="text-sm font-medium text-gray-600 mb-4">Create your first pot to get started</p>
           <Link
             href="/create"
-            className="inline-flex items-center space-x-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-medium py-2.5 px-4 rounded-md text-sm transition-all shadow-lg"
+            className="inline-flex items-center space-x-2 gradient-hero hover:opacity-90 text-white font-bold py-2.5 px-4 rounded-md text-sm transition-all shadow-lg btn-uppercase"
           >
             <Plus className="w-4 h-4" />
             <span>Create Pot</span>
@@ -311,26 +311,26 @@ export default function ViewPots() {
         <>
           {/* Compact Stats */}
           <div className="grid grid-cols-4 gap-2">
-            <div className="bg-white/70 backdrop-blur-xl rounded-md p-3 border border-white/20 text-center">
-              <p className="text-lg font-bold text-blue-600">{stats.total}</p>
-              <p className="text-xs text-gray-600">Total</p>
+            <div className="bg-card backdrop-blur-xl rounded-md p-3 border border-gray-200 text-center shadow-card">
+              <p className="text-lg font-bold text-primary font-mono tabular-nums">{stats.total}</p>
+              <p className="text-xs font-medium text-gray-600">Total</p>
             </div>
-            <div className="bg-white/70 backdrop-blur-xl rounded-md p-3 border border-white/20 text-center">
-              <p className="text-lg font-bold text-blue-600">{stats.active}</p>
-              <p className="text-xs text-gray-600">Active</p>
+            <div className="bg-card backdrop-blur-xl rounded-md p-3 border border-gray-200 text-center shadow-card">
+              <p className="text-lg font-bold text-primary font-mono tabular-nums">{stats.active}</p>
+              <p className="text-xs font-medium text-gray-600">Active</p>
             </div>
-            <div className="bg-white/70 backdrop-blur-xl rounded-md p-3 border border-white/20 text-center">
-              <p className="text-lg font-bold text-blue-600">{stats.totalValue.toFixed(0)}</p>
-              <p className="text-xs text-gray-600">Created</p>
+            <div className="bg-card backdrop-blur-xl rounded-md p-3 border border-gray-200 text-center shadow-card">
+              <p className="text-lg font-bold text-primary font-mono tabular-nums">{stats.totalValue.toFixed(0)}</p>
+              <p className="text-xs font-medium text-gray-600">Created</p>
             </div>
-            <div className="bg-white/70 backdrop-blur-xl rounded-md p-3 border border-white/20 text-center">
-              <p className="text-lg font-bold text-blue-600">{stats.totalClaimed.toFixed(0)}</p>
-              <p className="text-xs text-gray-600">Claimed</p>
+            <div className="bg-card backdrop-blur-xl rounded-md p-3 border border-gray-200 text-center shadow-card">
+              <p className="text-lg font-bold text-primary font-mono tabular-nums">{stats.totalClaimed.toFixed(0)}</p>
+              <p className="text-xs font-medium text-gray-600">Claimed</p>
             </div>
           </div>
 
           {/* Compact Filter Tabs */}
-          <div className="flex space-x-1 bg-white/60 backdrop-blur-xl rounded-md p-1 border border-white/20">
+          <div className="flex space-x-1 bg-card backdrop-blur-xl rounded-md p-1 border border-gray-200 shadow-card">
             {[
               { key: 'all', label: 'All', count: stats.total },
               { key: 'active', label: 'Active', count: stats.active },
@@ -340,13 +340,13 @@ export default function ViewPots() {
               <button
                 key={key}
                 onClick={() => setFilter(key as any)}
-                className={`flex-1 py-1.5 px-2 rounded-md text-xs font-medium transition-all ${
+                className={`flex-1 py-1.5 px-2 rounded-md text-xs font-semibold transition-all ${
                   filter === key
-                    ? 'bg-blue-600 text-white shadow-md'
-                    : 'text-gray-600 hover:text-blue-600'
+                    ? 'gradient-hero text-white shadow-md'
+                    : 'text-gray-600 hover:text-primary'
                 }`}
               >
-                {label} ({count})
+                {label} (<span className="font-mono">{count}</span>)
               </button>
             ))}
           </div>
@@ -376,10 +376,10 @@ export default function ViewPots() {
 
       {/* Success Message */}
       {successMessage && (
-        <div className="fixed bottom-4 right-4 bg-white/90 backdrop-blur-xl rounded-md p-3 border border-white/20 max-w-xs shadow-xl animate-in slide-in-from-bottom-5 z-50">
+        <div className="fixed bottom-4 right-4 bg-card backdrop-blur-xl rounded-md p-3 border border-gray-200 max-w-xs shadow-xl animate-in slide-in-from-bottom-5 z-50">
           <div className="flex items-center space-x-2">
-            <CheckCircle className="w-5 h-5 text-blue-600" />
-            <p className="text-sm font-semibold text-gray-900">{successMessage}</p>
+            <CheckCircle className="w-5 h-5 text-primary" />
+            <p className="text-sm font-bold text-gray-900">{successMessage}</p>
           </div>
         </div>
       )}
@@ -426,23 +426,23 @@ function PotCard({ pot, onReclaim, isReclaiming }: { pot: PotData, onReclaim: (p
   const statusConfig = {
     active: {
       icon: Clock,
-      color: 'text-blue-600',
-      bg: 'bg-blue-50/50',
-      border: 'border-blue-200/50',
+      color: 'text-primary',
+      bg: 'bg-primary/10',
+      border: 'border-primary/30',
       label: 'Active'
     },
     completed: {
       icon: pot.jackpotHit ? Trophy : CheckCircle,
-      color: pot.jackpotHit ? 'text-yellow-600' : 'text-blue-600',
-      bg: pot.jackpotHit ? 'bg-yellow-50/50' : 'bg-blue-50/50',
-      border: pot.jackpotHit ? 'border-yellow-200/50' : 'border-blue-200/50',
+      color: pot.jackpotHit ? 'text-gold' : 'text-primary',
+      bg: pot.jackpotHit ? 'bg-gold/10' : 'bg-primary/10',
+      border: pot.jackpotHit ? 'border-gold/30' : 'border-primary/30',
       label: pot.jackpotHit ? 'Jackpot!' : 'Done'
     },
     expired: {
       icon: XCircle,
       color: 'text-gray-600',
-      bg: 'bg-gray-50/50',
-      border: 'border-gray-200/50',
+      bg: 'bg-gray-50',
+      border: 'border-gray-300',
       label: 'Expired'
     }
   }
@@ -453,33 +453,33 @@ function PotCard({ pot, onReclaim, isReclaiming }: { pot: PotData, onReclaim: (p
   const timeAgo = new Date(pot.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 
   return (
-    <div className="bg-white/70 backdrop-blur-xl rounded-md border border-white/20 overflow-hidden">
+    <div className="bg-card backdrop-blur-xl rounded-md border border-gray-200 overflow-hidden shadow-card">
       {/* Compact Header */}
       <div className="p-3">
         <div className="flex items-start justify-between mb-2">
           <div className="flex-1">
             <div className="flex items-center space-x-2 mb-1">
-              <p className="text-lg font-bold text-gray-900">{pot.amount} USDC</p>
+              <p className="text-lg font-bold text-gray-900 font-mono tabular-nums">{pot.amount} USDC</p>
               <div className={`flex items-center space-x-1 px-2 py-0.5 rounded-full ${config.bg} ${config.border} border`}>
                 <StatusIcon className={`w-3 h-3 ${config.color}`} />
-                <span className={`text-xs font-medium ${config.color}`}>{config.label}</span>
+                <span className={`text-xs font-semibold ${config.color}`}>{config.label}</span>
               </div>
             </div>
-            <div className="flex items-center space-x-3 text-xs text-gray-600">
+            <div className="flex items-center space-x-3 text-xs font-medium text-gray-600">
               <span className="flex items-center space-x-1">
                 <Users className="w-3 h-3" />
-                <span>{pot.claimCount}/{pot.maxClaims}</span>
+                <span className="font-mono tabular-nums">{pot.claimCount}/{pot.maxClaims}</span>
               </span>
               <span className="flex items-center space-x-1">
                 <DollarSign className="w-3 h-3" />
-                <span>{pot.remainingAmount.toFixed(1)} left</span>
+                <span className="font-mono tabular-nums">{pot.remainingAmount.toFixed(1)} left</span>
               </span>
               <span>{timeAgo}</span>
             </div>
           </div>
           {pot.status === 'active' && pot.timeRemaining && (
             <div className="text-right">
-              <p className="text-xs text-blue-600 font-medium flex items-center">
+              <p className="text-xs text-primary font-semibold flex items-center">
                 <Timer className="w-3 h-3 mr-1" />
                 {formatTimeRemaining(pot.timeRemaining)}
               </p>
@@ -491,7 +491,7 @@ function PotCard({ pot, onReclaim, isReclaiming }: { pot: PotData, onReclaim: (p
         <div className="mb-2">
           <div className="w-full bg-gray-200 rounded-full h-1.5">
             <div 
-              className="bg-gradient-to-r from-blue-500 to-blue-600 h-1.5 rounded-full transition-all"
+              className="gradient-hero h-1.5 rounded-full transition-all"
               style={{ width: `${Math.min(progress, 100)}%` }}
             ></div>
           </div>
@@ -501,7 +501,7 @@ function PotCard({ pot, onReclaim, isReclaiming }: { pot: PotData, onReclaim: (p
         <div className="flex space-x-2">
           <Link
             href={`/claim/${pot.id}`}
-            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium py-2 px-3 rounded-md transition-all text-center"
+            className="flex-1 gradient-hero hover:opacity-90 text-white text-xs font-bold py-2 px-3 rounded-md transition-all text-center btn-uppercase"
           >
             View
           </Link>
@@ -509,7 +509,7 @@ function PotCard({ pot, onReclaim, isReclaiming }: { pot: PotData, onReclaim: (p
             <button
               onClick={() => onReclaim(pot.id)}
               disabled={isReclaiming}
-              className="flex-1 bg-yellow-600 hover:bg-yellow-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white text-xs font-medium py-2 px-3 rounded-md transition-all flex items-center justify-center space-x-1"
+              className="flex-1 bg-gold hover:bg-gold-dark disabled:bg-gray-300 disabled:cursor-not-allowed text-gray-900 text-xs font-bold py-2 px-3 rounded-md transition-all flex items-center justify-center space-x-1 btn-uppercase"
             >
               {isReclaiming ? (
                 <>
@@ -526,7 +526,7 @@ function PotCard({ pot, onReclaim, isReclaiming }: { pot: PotData, onReclaim: (p
           ) : (
             <button
               onClick={() => setShowDetails(!showDetails)}
-              className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 text-xs font-medium py-2 px-3 rounded-md transition-all"
+              className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 text-xs font-semibold py-2 px-3 rounded-md transition-all btn-uppercase"
             >
               {showDetails ? 'Hide' : 'Info'}
             </button>
@@ -536,27 +536,27 @@ function PotCard({ pot, onReclaim, isReclaiming }: { pot: PotData, onReclaim: (p
 
       {/* Expandable Details */}
       {showDetails && (
-        <div className="border-t border-gray-200/50 p-3 bg-gray-50/30 space-y-2">
+        <div className="border-t border-gray-200 p-3 bg-gray-50 space-y-2">
           <div className="flex justify-between text-xs">
-            <span className="text-gray-600">Pot ID</span>
+            <span className="font-medium text-gray-600">Pot ID</span>
             <span className="font-mono text-gray-800">{pot.id.slice(0, 16)}...</span>
           </div>
           <div className="flex justify-between text-xs">
-            <span className="text-gray-600">Standard Claim</span>
-            <span className="font-medium text-gray-900">0.01 USDC</span>
+            <span className="font-medium text-gray-600">Standard Claim</span>
+            <span className="font-bold text-gray-900 font-mono tabular-nums">0.01 USDC</span>
           </div>
           <div className="flex justify-between text-xs">
-            <span className="text-gray-600">Claimed</span>
-            <span className="font-medium text-gray-900">{pot.claimedAmount.toFixed(2)} USDC</span>
+            <span className="font-medium text-gray-600">Claimed</span>
+            <span className="font-bold text-gray-900 font-mono tabular-nums">{pot.claimedAmount.toFixed(2)} USDC</span>
           </div>
           
           {pot.status === 'completed' && pot.jackpotHit && (
-            <div className="bg-yellow-50/50 border border-yellow-200/50 rounded-md p-2 mt-2">
+            <div className="bg-gold/10 border border-gold/30 rounded-md p-2 mt-2">
               <div className="flex items-center space-x-2 mb-1">
-                <Trophy className="w-3 h-3 text-yellow-600" />
-                <span className="text-xs font-semibold text-yellow-800">Jackpot Winner</span>
+                <Trophy className="w-3 h-3 text-gold-dark" />
+                <span className="text-xs font-bold text-gray-900">Jackpot Winner</span>
               </div>
-              <p className="text-xs text-yellow-700">
+              <p className="text-xs font-semibold text-gray-700 font-mono">
                 {pot.jackpotWinner ? truncateAddress(pot.jackpotWinner) : 'Unknown'}
               </p>
             </div>
@@ -569,9 +569,9 @@ function PotCard({ pot, onReclaim, isReclaiming }: { pot: PotData, onReclaim: (p
                 setCopied(true)
                 setTimeout(() => setCopied(false), 2000)
               }}
-              className={`w-full text-xs font-medium py-2 px-3 rounded-md transition-all flex items-center justify-center space-x-1.5 ${
+              className={`w-full text-xs font-bold py-2 px-3 rounded-md transition-all flex items-center justify-center space-x-1.5 btn-uppercase ${
                 copied
-                  ? 'bg-blue-600 text-white'
+                  ? 'gradient-hero text-white'
                   : 'bg-gray-800 hover:bg-gray-900 text-white'
               }`}
             >

@@ -37,16 +37,16 @@ export default function MobileLayout({ children, showBottomNav = true }: MobileL
   const truncatedAddress = userAddress ? `${userAddress.slice(0, 6)}...${userAddress.slice(-4)}` : ''
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex flex-col">
+    <main className="min-h-screen bg-card flex flex-col">
       {/* Top Header with Wallet Info */}
       {mounted && isConnected && (
-        <div className="bg-white/80 backdrop-blur-xl border-b border-white/20 shadow-sm">
+        <div className="gradient-hero shadow-lg">
           <div className="max-w-md mx-auto px-4 py-3">
             <div className="flex items-center justify-between">
               {/* Wallet Address */}
               <div className="flex items-center space-x-2">
-                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                <span className="text-sm font-medium text-gray-700">{truncatedAddress}</span>
+                <div className="w-2 h-2 bg-gold rounded-full animate-pulse"></div>
+                <span className="text-sm font-semibold text-white font-mono">{truncatedAddress}</span>
               </div>
               
               {/* Support Button */}
@@ -54,7 +54,7 @@ export default function MobileLayout({ children, showBottomNav = true }: MobileL
                 href="https://t.me/+_fXXrjRRqu41Yzdk"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center space-x-1 px-3 py-1.5 text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-all duration-200 shadow-sm"
+                className="flex items-center space-x-1 px-3 py-1.5 text-xs font-bold text-gray-900 bg-gold hover:bg-gold-dark rounded-md transition-all duration-200 shadow-md btn-uppercase"
               >
                 <MessageCircle className="w-3 h-3" />
                 <span>Support</span>
@@ -73,46 +73,46 @@ export default function MobileLayout({ children, showBottomNav = true }: MobileL
 
       {/* Bottom Navigation Menu */}
       {showBottomNav && isConnected && (
-        <div className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-xl border-t border-white/20 shadow-2xl">
+        <div className="fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-xl border-t border-gray-200 shadow-2xl">
           <div className="max-w-md mx-auto px-4 py-2 safe-area-inset-bottom">
             <div className="flex items-center justify-around">
               {/* Home */}
               <Link
                 href="/"
                 className={`flex flex-col items-center py-3 px-4 rounded-md transition-all duration-200 transform active:scale-95 ${
-                  pathname === '/' ? 'text-blue-600' : 'text-gray-600 hover:text-blue-600'
+                  pathname === '/' ? 'text-primary' : 'text-gray-600 hover:text-primary'
                 }`}
               >
                 <HomeIcon className="w-6 h-6 mb-1" />
-                <span className="text-xs font-medium">Home</span>
+                <span className="text-xs font-semibold">Home</span>
               </Link>
 
               {/* Create Pot */}
               <Link
                 href="/create"
                 className={`flex flex-col items-center py-3 px-4 rounded-md transition-all duration-200 transform active:scale-95 ${
-                  pathname === '/create' ? 'text-blue-600' : 'text-gray-600 hover:text-blue-600'
+                  pathname === '/create' ? 'text-primary' : 'text-gray-600 hover:text-primary'
                 }`}
               >
                 <div className={`p-3 rounded-md shadow-lg mb-1 ${
                   pathname === '/create' 
-                    ? 'bg-gradient-to-r from-blue-700 to-blue-800' 
-                    : 'bg-gradient-to-r from-blue-600 to-blue-700'
+                    ? 'bg-primary-dark' 
+                    : 'gradient-hero'
                 }`}>
                   <Plus className="w-6 h-6 text-white" />
                 </div>
-                <span className="text-xs font-medium">Create Pot</span>
+                <span className="text-xs font-semibold">Create Pot</span>
               </Link>
 
               {/* View Pots */}
               <Link
                 href="/view"
                 className={`flex flex-col items-center py-3 px-4 rounded-md transition-all duration-200 transform active:scale-95 ${
-                  pathname === '/view' ? 'text-blue-600' : 'text-gray-600 hover:text-blue-600'
+                  pathname === '/view' ? 'text-primary' : 'text-gray-600 hover:text-primary'
                 }`}
               >
                 <Eye className="w-6 h-6 mb-1" />
-                <span className="text-xs font-medium">View Pots</span>
+                <span className="text-xs font-semibold">View Pots</span>
               </Link>
             </div>
           </div>

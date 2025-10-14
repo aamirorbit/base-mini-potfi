@@ -582,8 +582,8 @@ export default function Create() {
   if (!mounted) {
     return (
       <div className="text-center py-8">
-        <div className="animate-spin w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full mx-auto mb-3"></div>
-        <p className="text-sm text-gray-600">Loading...</p>
+        <div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full mx-auto mb-3"></div>
+        <p className="text-sm font-medium text-gray-600">Loading...</p>
       </div>
     )
   }
@@ -592,16 +592,16 @@ export default function Create() {
   if (errorMessage) {
     return (
       <div className="space-y-4">
-        <div className="bg-yellow-500/10 border border-yellow-200/50 rounded-md p-4">
+        <div className="bg-gold/10 border border-gold/30 rounded-md p-4 shadow-card">
           <div className="text-center">
-            <AlertTriangle className="w-12 h-12 text-yellow-700 mx-auto mb-3" />
+            <AlertTriangle className="w-12 h-12 text-gold-dark mx-auto mb-3" />
             <h2 className="text-lg font-bold text-gray-900 mb-1">Error</h2>
-            <p className="text-sm text-yellow-700 mb-4">{errorMessage}</p>
+            <p className="text-sm font-medium text-gray-700 mb-4">{errorMessage}</p>
             
             <div className="space-y-2">
               <button
                 onClick={retry}
-                className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-medium py-2.5 px-4 rounded-md text-sm transition-all shadow-lg flex items-center justify-center space-x-2"
+                className="w-full gradient-hero hover:opacity-90 text-white font-bold py-2.5 px-4 rounded-md text-sm transition-all shadow-lg flex items-center justify-center space-x-2 btn-uppercase"
               >
                 <RefreshCw className="w-4 h-4" />
                 <span>Try Again</span>
@@ -612,7 +612,7 @@ export default function Create() {
                   setPotId(null)
                   setShowSuccess(false)
                 }}
-                className="w-full bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-2.5 px-4 rounded-md text-sm transition-all flex items-center justify-center space-x-2"
+                className="w-full bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold py-2.5 px-4 rounded-md text-sm transition-all flex items-center justify-center space-x-2 btn-uppercase"
               >
                 <ArrowLeft className="w-4 h-4" />
                 <span>Back</span>
@@ -629,22 +629,22 @@ export default function Create() {
       <div className="space-y-4">
         {/* Success Header */}
         <div className="text-center">
-          <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-md flex items-center justify-center mb-3 mx-auto">
+          <div className="w-16 h-16 gradient-hero rounded-md flex items-center justify-center mb-3 mx-auto shadow-lg">
             <CheckCircle className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-xl font-bold text-gray-900 mb-1">Pot Created! 🎉</h1>
-          <p className="text-sm text-blue-700">{amount} USDC pot is live</p>
+          <p className="text-sm font-semibold text-primary font-mono tabular-nums">{amount} USDC pot is live</p>
         </div>
 
         {/* Share Actions */}
-        <div className="bg-white/70 backdrop-blur-xl rounded-md p-4 border border-white/20">
+        <div className="bg-card backdrop-blur-xl rounded-md p-4 border border-gray-200 shadow-card">
           <h2 className="text-sm font-bold text-gray-900 mb-3">Share Your Pot</h2>
           
           <a
             href={shareUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-medium py-2.5 px-4 rounded-md text-sm transition-all shadow-lg inline-block text-center mb-2"
+            className="w-full gradient-hero hover:opacity-90 text-white font-bold py-2.5 px-4 rounded-md text-sm transition-all shadow-lg inline-block text-center mb-2 btn-uppercase"
           >
             <div className="flex items-center justify-center space-x-2">
               <Share2 className="w-4 h-4" />
@@ -658,10 +658,10 @@ export default function Create() {
               setCopied(true)
               setTimeout(() => setCopied(false), 2000)
             }}
-            className={`w-full font-medium py-2.5 px-4 rounded-md text-sm transition-all ${
+            className={`w-full font-bold py-2.5 px-4 rounded-md text-sm transition-all btn-uppercase ${
               copied 
-                ? 'bg-blue-600 text-white' 
-                : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+                ? 'gradient-hero text-white' 
+                : 'bg-gray-800 hover:bg-gray-900 text-white'
             }`}
           >
             <div className="flex items-center justify-center space-x-2">
@@ -681,40 +681,40 @@ export default function Create() {
         </div>
 
         {/* Pot Details */}
-        <div className="bg-white/70 backdrop-blur-xl rounded-md p-3 border border-white/20 space-y-2 text-xs">
+        <div className="bg-card backdrop-blur-xl rounded-md p-3 border border-gray-200 space-y-2 text-xs shadow-card">
           <div className="flex justify-between">
-            <span className="text-gray-600">Amount</span>
-            <span className="font-semibold text-gray-900">{amount} USDC</span>
+            <span className="font-medium text-gray-600">Amount</span>
+            <span className="font-bold text-gray-900 font-mono tabular-nums">{amount} USDC</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-gray-600">Standard Claim</span>
-            <span className="font-semibold text-gray-900">0.01 USDC</span>
+            <span className="font-medium text-gray-600">Standard Claim</span>
+            <span className="font-bold text-gray-900 font-mono tabular-nums">0.01 USDC</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-gray-600">Max Claims</span>
-            <span className="font-semibold text-gray-900">~{Math.floor(amount / 0.01)}</span>
+            <span className="font-medium text-gray-600">Max Claims</span>
+            <span className="font-bold text-gray-900 font-mono tabular-nums">~{Math.floor(amount / 0.01)}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-gray-600">Timeout</span>
-            <span className="font-semibold text-gray-900">{Math.floor(timeout / 3600)}h</span>
+            <span className="font-medium text-gray-600">Timeout</span>
+            <span className="font-bold text-gray-900 font-mono tabular-nums">{Math.floor(timeout / 3600)}h</span>
           </div>
           
           {isPotIdPending ? (
             <div className="pt-2 border-t border-gray-200">
               <div className="flex items-center space-x-2">
-                <RefreshCw className="w-3 h-3 text-blue-600 animate-spin" />
-                <p className="text-xs text-gray-600">Confirming...</p>
+                <RefreshCw className="w-3 h-3 text-primary animate-spin" />
+                <p className="text-xs font-medium text-gray-600">Confirming...</p>
               </div>
             </div>
           ) : (
             <div className="pt-2 border-t border-gray-200">
-              <p className="text-gray-600 mb-1">Pot ID</p>
-              <p className="text-gray-700 break-all font-mono bg-gray-50 p-2 rounded">{potId}</p>
+              <p className="font-medium text-gray-600 mb-1">Pot ID</p>
+              <p className="text-gray-700 break-all font-mono bg-gray-50 p-2 rounded text-xs">{potId}</p>
               <a 
                 href={`https://basescan.org/tx/${potId.startsWith('0x') && potId.length === 66 ? potId : ''}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-600 hover:text-blue-800 text-xs mt-1 inline-block"
+                className="text-primary hover:text-primary-dark font-semibold text-xs mt-1 inline-block"
               >
                 View on BaseScan →
               </a>
@@ -723,9 +723,9 @@ export default function Create() {
         </div>
 
         {/* Info */}
-        <div className="bg-blue-50/50 border border-blue-200/50 rounded-md p-3">
-          <h3 className="text-xs font-semibold text-blue-900 mb-2">How it Works</h3>
-          <div className="space-y-1 text-xs text-blue-700">
+        <div className="bg-primary/5 border border-primary/20 rounded-md p-3 shadow-card">
+          <h3 className="text-xs font-bold text-gray-900 mb-2">How it Works</h3>
+          <div className="space-y-1 text-xs font-medium text-gray-700">
             <p>• Users engage (like, comment, recast)</p>
             <p>• Each claim: 0.01 USDC + jackpot chance</p>
             <p>• One lucky winner gets the jackpot</p>
@@ -736,7 +736,7 @@ export default function Create() {
         <div className="space-y-2">
           <Link
             href="/view"
-            className="block w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-medium py-2.5 px-4 rounded-md text-sm transition-all shadow-lg text-center"
+            className="block w-full gradient-hero hover:opacity-90 text-white font-bold py-2.5 px-4 rounded-md text-sm transition-all shadow-lg text-center btn-uppercase"
           >
             View My Pots
           </Link>
@@ -786,7 +786,7 @@ export default function Create() {
           <button
             onClick={miniKitConnect}
             disabled={isConnecting}
-            className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-medium py-2.5 px-4 rounded-md text-sm transition-all shadow-lg"
+            className="w-full gradient-hero hover:opacity-90 text-white font-bold py-2.5 px-4 rounded-md text-sm transition-all shadow-lg btn-uppercase"
           >
             {isConnecting ? 'Connecting...' : 'Connect Wallet'}
           </button>
@@ -795,9 +795,9 @@ export default function Create() {
         <>
           {/* Gas Sponsorship Status */}
           {smartWallet.canSponsorGas && (
-            <div className="bg-blue-50/50 backdrop-blur-xl border border-blue-200/50 text-blue-700 px-4 py-3 rounded-md shadow-lg">
+            <div className="bg-primary/5 backdrop-blur-xl border border-primary/20 text-gray-900 px-4 py-3 rounded-md shadow-card">
               <div className="flex items-center space-x-2">
-                <Zap className="w-4 h-4" />
+                <Zap className="w-4 h-4 text-primary" />
                 <p className="text-sm font-medium">Gas-free transactions enabled</p>
               </div>
             </div>
@@ -805,9 +805,9 @@ export default function Create() {
           
           {/* Batch Transaction Status */}
           {smartWallet.capabilities.atomicBatch && (
-            <div className="bg-blue-50/50 backdrop-blur-xl border border-blue-200/50 text-blue-700 px-4 py-3 rounded-md shadow-lg">
+            <div className="bg-primary/5 backdrop-blur-xl border border-primary/20 text-gray-900 px-4 py-3 rounded-md shadow-card">
               <div className="flex items-center space-x-2">
-                <CheckCircle className="w-4 h-4" />
+                <CheckCircle className="w-4 h-4 text-primary" />
                 <p className="text-sm font-medium">One-click pot creation available</p>
               </div>
             </div>
@@ -927,17 +927,17 @@ export default function Create() {
 
           {/* Validation warnings */}
           {amount < 0.02 && (
-            <div className="bg-yellow-500/10 border border-yellow-200/50 text-yellow-700 px-3 py-2 rounded-md">
+            <div className="bg-gold/10 border border-gold/30 text-gray-900 px-3 py-2 rounded-md shadow-card">
               <div className="flex items-center space-x-2">
-                <AlertTriangle className="w-4 h-4" />
+                <AlertTriangle className="w-4 h-4 text-gold-dark" />
                 <p className="text-xs">Minimum amount: 0.02 USDC</p>
               </div>
             </div>
           )}
           {!postId && (
-            <div className="bg-yellow-500/10 border border-yellow-200/50 text-yellow-700 px-3 py-2 rounded-md">
+            <div className="bg-gold/10 border border-gold/30 text-gray-900 px-3 py-2 rounded-md shadow-card">
               <div className="flex items-center space-x-2">
-                <AlertTriangle className="w-4 h-4" />
+                <AlertTriangle className="w-4 h-4 text-gold-dark" />
                 <p className="text-xs">Post ID required</p>
               </div>
             </div>
@@ -945,14 +945,14 @@ export default function Create() {
 
           {/* Network Warning for Base app */}
           {isBaseApp && !isOnBase && (
-            <div className="bg-yellow-500/10 border border-yellow-200/50 text-yellow-700 px-3 py-2 rounded-md">
+            <div className="bg-gold/10 border border-gold/30 text-gray-900 px-3 py-2 rounded-md shadow-card">
               <div className="flex items-center space-x-2 mb-2">
-                <AlertTriangle className="w-4 h-4" />
-                <p className="text-xs">Switch to Base Network</p>
+                <AlertTriangle className="w-4 h-4 text-gold-dark" />
+                <p className="text-xs font-semibold">Switch to Base Network</p>
               </div>
               <button
                 onClick={switchToBase}
-                className="w-full bg-yellow-600 hover:bg-yellow-700 text-white font-medium py-2 px-3 rounded-md text-xs transition-all"
+                className="w-full bg-gold hover:bg-gold-dark text-gray-900 font-bold py-2 px-3 rounded-md text-xs transition-all btn-uppercase"
               >
                 Switch Network
               </button>
@@ -968,7 +968,7 @@ export default function Create() {
               !postId ||
               (isBaseApp && !isOnBase)
             }
-            className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 disabled:from-gray-300 disabled:to-gray-400 text-white font-medium py-3 px-4 rounded-md text-sm transition-all shadow-lg"
+            className="w-full gradient-hero hover:opacity-90 disabled:bg-gray-400 disabled:opacity-50 text-white font-bold py-3 px-4 rounded-md text-sm transition-all shadow-lg btn-uppercase"
           >
             {(isBaseApp ? baseAppApproving : isApproving) ? (
               <span>Step 1/2: Approving USDC...</span>
@@ -984,10 +984,10 @@ export default function Create() {
           {/* Progress Indicator */}
           {((isBaseApp ? baseAppApproving : isApproving) || 
             (isBaseApp ? baseAppCreating : isCreating)) && (
-            <div className="bg-blue-50/50 border border-blue-200/50 px-3 py-2 rounded-md">
+            <div className="bg-primary/5 border border-primary/20 px-3 py-2 rounded-md shadow-card">
               <div className="flex items-center space-x-2">
-                <div className="animate-spin w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full"></div>
-                <p className="text-xs text-blue-700">
+                <div className="animate-spin w-4 h-4 border-2 border-primary border-t-transparent rounded-full"></div>
+                <p className="text-xs font-semibold text-gray-700">
                   {(isBaseApp ? baseAppApproving : isApproving) 
                     ? 'Please approve USDC in your wallet...' 
                     : 'Please confirm pot creation in your wallet...'}

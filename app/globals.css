@@ -1,33 +1,47 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
+  --primary-blue: #2775CA;
+  --primary-blue-dark: #14509E;
+  --accent-gold: #FFD700;
+  --card-bg: #F5F7FA;
   --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 214, 219, 220;
-  --background-end-rgb: 255, 255, 255;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --foreground-rgb: 255, 255, 255;
-    --background-start-rgb: 0, 0, 0;
-    --background-end-rgb: 0, 0, 0;
-  }
 }
 
 body {
+  font-family: 'Montserrat', system-ui, sans-serif;
   color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
+  background: #F5F7FA;
+  font-weight: 400;
+}
+
+/* Tabular numerals for amounts and percentages */
+.tabular-nums,
+.font-mono {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
+}
+
+/* Uppercase buttons */
+.btn-uppercase {
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
 }
 
 @layer utilities {
   .text-balance {
     text-wrap: balance;
+  }
+  
+  .gradient-hero {
+    background: linear-gradient(180deg, #2775CA 0%, #14509E 100%);
+  }
+  
+  .shadow-card {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   }
 }
