@@ -6,7 +6,7 @@ PotFi is the first engagement-to-earn platform that pays people instantly for in
 
 ## 🎯 What is PotFi?
 
-Creators fund prize pots with USDC. Their audience engages (like, comment, recast) and claims instant rewards. Someone might hit the jackpot and win it all. Everyone wins, everything's transparent, all on-chain.
+Creators fund prize pots with USDC, ZORA, all other creator coins. Their audience engages (like, comment, recast) and claims instant rewards. Someone might hit the jackpot and win it all. Everyone wins, everything's transparent, all on-chain.
 
 ### **✅ Key Features:**
 - 💰 **Instant USDC Rewards** - Claim and receive in seconds

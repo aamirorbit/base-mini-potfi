@@ -7,8 +7,7 @@ import { base } from 'viem/chains'
 
 // Coinbase Paymaster Service URL for Base Mainnet
 // Replace with your actual Coinbase Developer Platform API key
-const PAYMASTER_SERVICE_URL = process.env.NEXT_PUBLIC_COINBASE_PAYMASTER_URL || 
-  'https://api.developer.coinbase.com/rpc/v1/base/v7HqDLjJY4e28qgIDAAN4JNYXnz88mJZ'
+const PAYMASTER_SERVICE_URL = process.env.NEXT_PUBLIC_COINBASE_PAYMASTER_URL!
 
 export interface PaymasterCapability {
   paymasterService: {
