@@ -87,9 +87,6 @@ export default function Home() {
 
       {/* Hero Section */}
       <div className="text-center space-y-4">
-        <div className="w-20 h-20 gradient-hero rounded-md flex items-center justify-center mb-4 mx-auto shadow-lg">
-          <Coins className="w-10 h-10 text-white" />
-        </div>
         <h1 className="text-3xl sm:text-4xl font-bold text-gray-900">
           Welcome to PotFi
         </h1>

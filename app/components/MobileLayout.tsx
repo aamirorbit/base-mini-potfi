@@ -91,9 +91,9 @@ export default function MobileLayout({ children, showBottomNav = true }: MobileL
                 href="/"
                 className="flex flex-col items-center py-2 px-4 rounded-md transition-all duration-200 transform active:scale-95"
               >
-                <div className={`p-3 rounded-md shadow-lg mb-1 transition-all duration-200 ${
+                <div className={`p-3 rounded-md mb-1 transition-all duration-200 ${
                   pathname === '/' 
-                    ? 'gradient-hero scale-105' 
+                    ? 'gradient-hero scale-105 shadow-lg' 
                     : 'bg-transparent'
                 }`}>
                   <HomeIcon className={`w-6 h-6 transition-colors duration-200 ${
@@ -110,9 +110,9 @@ export default function MobileLayout({ children, showBottomNav = true }: MobileL
                 href="/create"
                 className="flex flex-col items-center py-2 px-4 rounded-md transition-all duration-200 transform active:scale-95"
               >
-                <div className={`p-3 rounded-md shadow-lg mb-1 transition-all duration-200 ${
+                <div className={`p-3 rounded-md mb-1 transition-all duration-200 ${
                   pathname === '/create' 
-                    ? 'gradient-hero scale-105' 
+                    ? 'gradient-hero scale-105 shadow-lg' 
                     : 'bg-transparent'
                 }`}>
                   <Plus className={`w-6 h-6 transition-colors duration-200 ${
@@ -129,9 +129,9 @@ export default function MobileLayout({ children, showBottomNav = true }: MobileL
                 href="/view"
                 className="flex flex-col items-center py-2 px-4 rounded-md transition-all duration-200 transform active:scale-95"
               >
-                <div className={`p-3 rounded-md shadow-lg mb-1 transition-all duration-200 ${
+                <div className={`p-3 rounded-md mb-1 transition-all duration-200 ${
                   pathname === '/view' 
-                    ? 'gradient-hero scale-105' 
+                    ? 'gradient-hero scale-105 shadow-lg' 
                     : 'bg-transparent'
                 }`}>
                   <Eye className={`w-6 h-6 transition-colors duration-200 ${
@@ -148,9 +148,9 @@ export default function MobileLayout({ children, showBottomNav = true }: MobileL
                 href="/profile"
                 className="flex flex-col items-center py-2 px-4 rounded-md transition-all duration-200 transform active:scale-95"
               >
-                <div className={`p-3 rounded-md shadow-lg mb-1 transition-all duration-200 ${
+                <div className={`p-3 rounded-md mb-1 transition-all duration-200 ${
                   pathname === '/profile' 
-                    ? 'gradient-hero scale-105' 
+                    ? 'gradient-hero scale-105 shadow-lg' 
                     : 'bg-transparent'
                 }`}>
                   <Wallet className={`w-6 h-6 transition-colors duration-200 ${
