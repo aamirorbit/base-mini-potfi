@@ -43,10 +43,18 @@ export default function MobileLayout({ children, showBottomNav = true }: MobileL
         <div className="gradient-hero shadow-lg">
           <div className="max-w-md mx-auto px-4 py-3">
             <div className="flex items-center justify-between">
-              {/* Wallet Address */}
-              <div className="flex items-center space-x-2">
-                <div className="w-2 h-2 bg-gold rounded-full animate-pulse"></div>
-                <span className="text-sm font-semibold text-white font-mono">{truncatedAddress}</span>
+              {/* Beta Badge + Wallet Address */}
+              <div className="flex items-center space-x-3">
+                {/* Beta Badge */}
+                <div className="bg-yellow-500/20 border border-yellow-400/50 px-2 py-0.5 rounded-md">
+                  <span className="text-xs font-bold text-yellow-300">BETA</span>
+                </div>
+                
+                {/* Wallet Address */}
+                <div className="flex items-center space-x-2">
+                  <div className="w-2 h-2 bg-gold rounded-full animate-pulse"></div>
+                  <span className="text-sm font-semibold text-white font-mono">{truncatedAddress}</span>
+                </div>
               </div>
               
               {/* Support Button */}
