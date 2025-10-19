@@ -149,9 +149,17 @@ export default function ViewPots() {
           <p className="text-xs font-medium mb-2">{error}</p>
           <button
             onClick={loadAllPots}
-            className="text-xs bg-gold hover:bg-gold-dark text-gray-900 font-semibold px-3 py-1.5 rounded-md btn-uppercase"
+            className="text-xs relative px-3 py-2 rounded-md font-bold btn-uppercase transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] overflow-hidden"
+            style={{
+              background: 'linear-gradient(180deg, #B8941F 0%, #D4AF37 20%, #D4AF37 80%, #A67C00 100%)',
+              boxShadow: '0 2px 4px rgba(0, 0, 0, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.3), inset 0 -1px 1px rgba(0, 0, 0, 0.4)',
+              border: '1px solid #8B7310',
+              color: '#2A1F00',
+              textShadow: '0 1px 1px rgba(255, 215, 0, 0.3)'
+            }}
           >
-            Retry
+            <div className="absolute inset-0 opacity-30" style={{ background: 'linear-gradient(180deg, transparent 0%, rgba(212, 175, 55, 0.3) 48%, rgba(212, 175, 55, 0.3) 52%, transparent 100%)' }}></div>
+            <span className="relative">Retry</span>
           </button>
         </div>
       ) : pots.length === 0 ? (
@@ -161,7 +169,7 @@ export default function ViewPots() {
           <p className="text-sm font-medium text-gray-600 mb-4">Be the first to create a pot!</p>
           <Link
             href="/create"
-            className="inline-flex items-center space-x-2 gradient-hero hover:opacity-90 text-white font-bold py-2.5 px-4 rounded-md text-sm transition-all shadow-lg btn-uppercase"
+            className="inline-flex items-center space-x-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold py-4 px-6 rounded-md text-sm transition-all duration-200 shadow-xl transform active:scale-95 backdrop-blur-sm btn-uppercase"
           >
             <Plus className="w-4 h-4" />
             <span>Create Pot</span>
@@ -215,7 +223,7 @@ export default function ViewPots() {
             </div>
             <Link
               href="/create"
-              className="flex items-center justify-center space-x-2 w-full gradient-hero hover:opacity-90 text-white font-bold py-2.5 px-4 rounded-md text-sm transition-all shadow-lg btn-uppercase"
+              className="flex items-center justify-center space-x-2 w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold py-4 px-6 rounded-md text-sm transition-all duration-200 shadow-xl transform active:scale-95 backdrop-blur-sm btn-uppercase"
             >
               <Plus className="w-4 h-4" />
               <span>Create Pot</span>
@@ -324,15 +332,25 @@ function PotCard({ pot }: { pot: PotData }) {
         </div>
 
         {/* Action Button */}
-        <div className={`flex items-center justify-center space-x-2 text-xs font-bold py-2 px-3 rounded-md transition-all btn-uppercase ${
+        <div className={`flex items-center justify-center space-x-2 text-xs font-bold py-3 px-4 rounded-md transition-all duration-200 shadow-lg transform active:scale-95 backdrop-blur-sm btn-uppercase ${
           pot.status === 'active' 
-            ? 'bg-gold hover:bg-gold-dark text-gray-900' 
-            : 'gradient-hero hover:opacity-90 text-white'
-        }`}>
+            ? 'relative overflow-hidden'
+            : 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white'
+        }`}
+        style={pot.status === 'active' ? {
+          background: 'linear-gradient(180deg, #B8941F 0%, #D4AF37 20%, #D4AF37 80%, #A67C00 100%)',
+          boxShadow: '0 2px 4px rgba(0, 0, 0, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.3), inset 0 -1px 1px rgba(0, 0, 0, 0.4)',
+          border: '1px solid #8B7310',
+          color: '#2A1F00',
+          textShadow: '0 1px 1px rgba(255, 215, 0, 0.3)'
+        } : {}}>
+          {pot.status === 'active' && (
+            <div className="absolute inset-0 opacity-30" style={{ background: 'linear-gradient(180deg, transparent 0%, rgba(212, 175, 55, 0.3) 48%, rgba(212, 175, 55, 0.3) 52%, transparent 100%)' }}></div>
+          )}
           {pot.status === 'active' ? (
             <>
-              <TrendingUp className="w-3 h-3" />
-              <span>Claim Now</span>
+              <TrendingUp className="w-3 h-3 relative z-10" />
+              <span className="relative z-10">Claim Now</span>
             </>
           ) : (
             <>

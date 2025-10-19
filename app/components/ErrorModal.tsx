@@ -104,7 +104,7 @@ export function ErrorModal({
                 onClose()
                 onRetry()
               }}
-              className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-medium py-2.5 px-4 rounded-md text-sm transition-all shadow-lg flex items-center justify-center space-x-2"
+              className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold py-4 px-6 rounded-md text-sm transition-all duration-200 shadow-xl transform active:scale-95 backdrop-blur-sm flex items-center justify-center space-x-2"
             >
               <RefreshCw className="w-4 h-4" />
               <span>Try Again</span>
@@ -117,7 +117,7 @@ export function ErrorModal({
                 onClose()
                 router.push('/')
               }}
-              className="w-full bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-2.5 px-4 rounded-md text-sm transition-all flex items-center justify-center space-x-2"
+              className="w-full bg-gray-800/90 hover:bg-gray-900 text-white font-medium py-4 px-6 rounded-md text-sm transition-all duration-200 shadow-xl transform active:scale-95 backdrop-blur-sm flex items-center justify-center space-x-2"
             >
               <Home className="w-4 h-4" />
               <span>Go Home</span>
@@ -126,10 +126,10 @@ export function ErrorModal({
           
           <button
             onClick={onClose}
-            className={`w-full font-medium py-2.5 px-4 rounded-md text-sm transition-all ${
+            className={`w-full font-medium py-4 px-6 rounded-md text-sm transition-all duration-200 shadow-xl transform active:scale-95 backdrop-blur-sm ${
               onRetry || showHomeButton 
-                ? 'bg-gray-100 hover:bg-gray-200 text-gray-700' 
-                : 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg'
+                ? 'bg-gray-800/90 hover:bg-gray-900 text-white' 
+                : 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white'
             }`}
           >
             {isUserRejection ? 'Got it' : 'Close'}

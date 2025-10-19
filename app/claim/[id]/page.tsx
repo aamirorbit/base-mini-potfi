@@ -385,7 +385,7 @@ export default function Claim() {
                 </div>
                 <Link 
                   href="/"
-                  className="w-full gradient-hero hover:opacity-90 text-white font-bold py-2.5 px-4 rounded-md text-sm transition-all shadow-lg inline-block text-center btn-uppercase"
+                  className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold py-4 px-6 rounded-md text-sm transition-all duration-200 shadow-xl transform active:scale-95 backdrop-blur-sm inline-block text-center btn-uppercase"
                 >
                   Return Home
                 </Link>
@@ -399,7 +399,7 @@ export default function Claim() {
               <button
                 onClick={connect}
                 disabled={isConnecting && isBaseApp}
-                className="w-full gradient-hero hover:opacity-90 disabled:bg-gray-400 disabled:opacity-50 text-white font-bold py-2.5 px-4 rounded-md text-sm transition-all shadow-lg btn-uppercase"
+                className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 disabled:bg-gray-400 disabled:opacity-50 text-white font-bold py-4 px-6 rounded-md text-sm transition-all duration-200 shadow-xl transform active:scale-95 backdrop-blur-sm btn-uppercase"
               >
                 {isConnecting && isBaseApp ? 'Connecting...' : 'Connect Wallet'}
               </button>
@@ -736,9 +736,19 @@ export default function Claim() {
               
               <button
                 onClick={() => setShowJackpotModal(false)}
-                className="w-full bg-gradient-to-r from-yellow-600 to-yellow-700 hover:from-yellow-700 hover:to-yellow-800 text-white font-medium py-2.5 px-4 rounded-md text-sm transition-all shadow-lg"
+                className="w-full relative py-4 px-6 rounded-md text-sm font-bold btn-uppercase transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] overflow-hidden"
+                style={{
+                  background: 'linear-gradient(180deg, #B8941F 0%, #D4AF37 20%, #D4AF37 80%, #A67C00 100%)',
+                  boxShadow: '0 4px 8px rgba(0, 0, 0, 0.3), inset 0 1px 2px rgba(255, 255, 255, 0.3), inset 0 -1px 2px rgba(0, 0, 0, 0.4)',
+                  border: '1px solid #8B7310',
+                  borderTop: '1px solid #D4AF37',
+                  borderBottom: '1px solid #705D0C',
+                  color: '#2A1F00',
+                  textShadow: '0 1px 1px rgba(255, 215, 0, 0.3)'
+                }}
               >
-                Awesome!
+                <div className="absolute inset-0 opacity-30" style={{ background: 'linear-gradient(180deg, transparent 0%, rgba(212, 175, 55, 0.3) 48%, rgba(212, 175, 55, 0.3) 52%, transparent 100%)' }}></div>
+                <span className="relative">Awesome!</span>
               </button>
             </div>
           </div>

@@ -219,7 +219,7 @@ export default function Home() {
         {isConnected && (
           <Link
             href="/create"
-            className="block w-full relative py-4 px-6 rounded-lg text-center transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] btn-uppercase group overflow-hidden"
+            className="block w-full relative py-4 px-6 rounded-md text-center transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] btn-uppercase group overflow-hidden"
             style={{
               background: 'linear-gradient(180deg, #B8941F 0%, #D4AF37 15%, #D4AF37 50%, #D4AF37 85%, #A67C00 100%)',
               boxShadow: '0 8px 16px rgba(0, 0, 0, 0.3), inset 0 2px 4px rgba(255, 255, 255, 0.3), inset 0 -2px 4px rgba(0, 0, 0, 0.4), 0 2px 4px rgba(212, 175, 55, 0.5)',
@@ -229,7 +229,7 @@ export default function Home() {
             }}
           >
             {/* Top highlight for beveled effect */}
-            <div className="absolute top-0 left-0 right-0 h-1 rounded-t-lg" 
+            <div className="absolute top-0 left-0 right-0 h-1 rounded-t-md" 
                  style={{
                    background: 'linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.4), transparent)'
                  }}
@@ -265,7 +265,7 @@ export default function Home() {
         
         <Link
           href="/view"
-          className="block w-full gradient-hero hover:opacity-90 text-white font-bold py-3 px-4 rounded-md text-center transition-all shadow-lg btn-uppercase"
+          className="block w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold py-4 px-6 rounded-md text-center transition-all duration-200 shadow-xl transform active:scale-95 backdrop-blur-sm btn-uppercase"
         >
           <div className="flex items-center justify-center space-x-2">
             <Eye className="w-5 h-5" />

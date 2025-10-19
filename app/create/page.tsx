@@ -601,7 +601,7 @@ export default function Create() {
             <div className="space-y-2">
               <button
                 onClick={retry}
-                className="w-full gradient-hero hover:opacity-90 text-white font-bold py-2.5 px-4 rounded-md text-sm transition-all shadow-lg flex items-center justify-center space-x-2 btn-uppercase"
+                className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold py-4 px-6 rounded-md text-sm transition-all duration-200 shadow-xl transform active:scale-95 backdrop-blur-sm flex items-center justify-center space-x-2 btn-uppercase"
               >
                 <RefreshCw className="w-4 h-4" />
                 <span>Try Again</span>
@@ -612,7 +612,7 @@ export default function Create() {
                   setPotId(null)
                   setShowSuccess(false)
                 }}
-                className="w-full bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold py-2.5 px-4 rounded-md text-sm transition-all flex items-center justify-center space-x-2 btn-uppercase"
+                className="w-full bg-gray-800/90 hover:bg-gray-900 text-white font-semibold py-4 px-6 rounded-md text-sm transition-all duration-200 shadow-xl transform active:scale-95 backdrop-blur-sm flex items-center justify-center space-x-2 btn-uppercase"
               >
                 <ArrowLeft className="w-4 h-4" />
                 <span>Back</span>
@@ -644,7 +644,7 @@ export default function Create() {
             href={shareUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="w-full gradient-hero hover:opacity-90 text-white font-bold py-2.5 px-4 rounded-md text-sm transition-all shadow-lg inline-block text-center mb-2 btn-uppercase"
+            className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold py-4 px-6 rounded-md text-sm transition-all duration-200 shadow-xl transform active:scale-95 backdrop-blur-sm inline-block text-center mb-2 btn-uppercase"
           >
             <div className="flex items-center justify-center space-x-2">
               <Share2 className="w-4 h-4" />
@@ -658,10 +658,10 @@ export default function Create() {
               setCopied(true)
               setTimeout(() => setCopied(false), 2000)
             }}
-            className={`w-full font-bold py-2.5 px-4 rounded-md text-sm transition-all btn-uppercase ${
+            className={`w-full font-bold py-4 px-6 rounded-md text-sm transition-all duration-200 shadow-xl transform active:scale-95 backdrop-blur-sm btn-uppercase ${
               copied 
-                ? 'gradient-hero text-white' 
-                : 'bg-gray-800 hover:bg-gray-900 text-white'
+                ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white' 
+                : 'bg-gray-800/90 hover:bg-gray-900 text-white'
             }`}
           >
             <div className="flex items-center justify-center space-x-2">
@@ -736,7 +736,7 @@ export default function Create() {
         <div className="space-y-2">
           <Link
             href="/view"
-            className="block w-full gradient-hero hover:opacity-90 text-white font-bold py-2.5 px-4 rounded-md text-sm transition-all shadow-lg text-center btn-uppercase"
+            className="block w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold py-4 px-6 rounded-md text-sm transition-all duration-200 shadow-xl transform active:scale-95 backdrop-blur-sm text-center btn-uppercase"
           >
             View My Pots
           </Link>
@@ -748,7 +748,7 @@ export default function Create() {
               setAmount(1)
               setPostId('')
             }}
-            className="w-full bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-2.5 px-4 rounded-md text-sm transition-all"
+            className="w-full bg-gray-800/90 hover:bg-gray-900 text-white font-medium py-4 px-6 rounded-md text-sm transition-all duration-200 shadow-xl transform active:scale-95 backdrop-blur-sm btn-uppercase"
           >
             Create Another
           </button>
@@ -786,7 +786,7 @@ export default function Create() {
           <button
             onClick={miniKitConnect}
             disabled={isConnecting}
-            className="w-full gradient-hero hover:opacity-90 text-white font-bold py-2.5 px-4 rounded-md text-sm transition-all shadow-lg btn-uppercase"
+            className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 disabled:opacity-50 text-white font-bold py-4 px-6 rounded-md text-sm transition-all duration-200 shadow-xl transform active:scale-95 backdrop-blur-sm btn-uppercase"
           >
             {isConnecting ? 'Connecting...' : 'Connect Wallet'}
           </button>
@@ -978,7 +978,7 @@ export default function Create() {
               !postId ||
               (isBaseApp && !isOnBase)
             }
-            className="w-full gradient-hero hover:opacity-90 disabled:bg-gray-400 disabled:opacity-50 text-white font-bold py-3 px-4 rounded-md text-sm transition-all shadow-lg btn-uppercase"
+            className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 disabled:bg-gray-400 disabled:opacity-50 text-white font-bold py-4 px-6 rounded-md text-sm transition-all duration-200 shadow-xl transform active:scale-95 backdrop-blur-sm btn-uppercase"
           >
             {(isBaseApp ? baseAppApproving : isApproving) ? (
               <span>Step 1/2: Approving USDC...</span>

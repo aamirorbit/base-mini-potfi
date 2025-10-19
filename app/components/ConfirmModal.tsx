@@ -60,14 +60,14 @@ export function ConfirmModal({
         <div className="p-4 border-t border-gray-200 space-y-2">
           <button
             onClick={handleConfirm}
-            className={confirmButtonClass || "w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-medium py-2.5 px-4 rounded-md text-sm transition-all shadow-lg"}
+            className={confirmButtonClass || "w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold py-4 px-6 rounded-md text-sm transition-all duration-200 shadow-xl transform active:scale-95 backdrop-blur-sm"}
           >
             {confirmText}
           </button>
           
           <button
             onClick={onClose}
-            className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2.5 px-4 rounded-md text-sm transition-all"
+            className="w-full bg-gray-800/90 hover:bg-gray-900 text-white font-medium py-4 px-6 rounded-md text-sm transition-all duration-200 shadow-xl transform active:scale-95 backdrop-blur-sm"
           >
             {cancelText}
           </button>

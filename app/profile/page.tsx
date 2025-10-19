@@ -322,7 +322,7 @@ export default function Profile() {
           <p className="text-sm font-medium text-gray-600 mb-4">Create your first pot to get started</p>
           <Link
             href="/create"
-            className="inline-flex items-center space-x-2 gradient-hero hover:opacity-90 text-white font-bold py-2.5 px-4 rounded-md text-sm transition-all shadow-lg btn-uppercase"
+            className="inline-flex items-center space-x-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold py-4 px-6 rounded-md text-sm transition-all duration-200 shadow-xl transform active:scale-95 backdrop-blur-sm btn-uppercase"
           >
             <Plus className="w-4 h-4" />
             <span>Create Pot</span>
@@ -522,7 +522,7 @@ function PotCard({ pot, onReclaim, isReclaiming }: { pot: PotData, onReclaim: (p
         <div className="flex space-x-2">
           <Link
             href={`/claim/${pot.id}`}
-            className="flex-1 gradient-hero hover:opacity-90 text-white text-xs font-bold py-2 px-3 rounded-md transition-all text-center btn-uppercase"
+            className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white text-xs font-bold py-3 px-4 rounded-md transition-all duration-200 shadow-lg transform active:scale-95 backdrop-blur-sm text-center btn-uppercase"
           >
             View
           </Link>
@@ -530,7 +530,7 @@ function PotCard({ pot, onReclaim, isReclaiming }: { pot: PotData, onReclaim: (p
             <button
               onClick={() => onReclaim(pot.id)}
               disabled={isReclaiming}
-              className="flex-1 relative py-2 px-3 rounded-lg text-xs font-bold btn-uppercase transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden"
+              className="flex-1 relative py-3 px-4 rounded-md text-xs font-bold btn-uppercase transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden"
               style={{
                 background: isReclaiming ? '#9CA3AF' : 'linear-gradient(180deg, #B8941F 0%, #D4AF37 20%, #D4AF37 80%, #A67C00 100%)',
                 boxShadow: '0 4px 8px rgba(0, 0, 0, 0.3), inset 0 1px 2px rgba(255, 255, 255, 0.3), inset 0 -1px 2px rgba(0, 0, 0, 0.4)',
@@ -561,7 +561,7 @@ function PotCard({ pot, onReclaim, isReclaiming }: { pot: PotData, onReclaim: (p
           ) : (
             <button
               onClick={() => setShowDetails(!showDetails)}
-              className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 text-xs font-semibold py-2 px-3 rounded-md transition-all btn-uppercase"
+              className="flex-1 bg-gray-800/90 hover:bg-gray-900 text-white text-xs font-semibold py-3 px-4 rounded-md transition-all duration-200 shadow-lg transform active:scale-95 backdrop-blur-sm btn-uppercase"
             >
               {showDetails ? 'Hide' : 'Info'}
             </button>
@@ -604,10 +604,10 @@ function PotCard({ pot, onReclaim, isReclaiming }: { pot: PotData, onReclaim: (p
                 setCopied(true)
                 setTimeout(() => setCopied(false), 2000)
               }}
-              className={`w-full text-xs font-bold py-2 px-3 rounded-md transition-all flex items-center justify-center space-x-1.5 btn-uppercase ${
+              className={`w-full text-xs font-bold py-3 px-4 rounded-md transition-all duration-200 shadow-lg transform active:scale-95 backdrop-blur-sm flex items-center justify-center space-x-1.5 btn-uppercase ${
                 copied
-                  ? 'gradient-hero text-white'
-                  : 'bg-gray-800 hover:bg-gray-900 text-white'
+                  ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white'
+                  : 'bg-gray-800/90 hover:bg-gray-900 text-white'
               }`}
             >
               {copied ? (

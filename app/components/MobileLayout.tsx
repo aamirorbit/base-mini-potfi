@@ -83,14 +83,16 @@ export default function MobileLayout({ children, showBottomNav = true }: MobileL
 
       {/* Bottom Navigation Menu */}
       {showBottomNav && isConnected && (
-        <div className="fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-xl border-t border-gray-200 shadow-2xl">
+        <div className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-xl border-t border-white/20 shadow-2xl">
           <div className="max-w-md mx-auto px-2 py-2 safe-area-inset-bottom">
             <div className="flex items-center justify-around">
               {/* Home */}
               <Link
                 href="/"
                 className={`flex flex-col items-center py-2 px-3 rounded-md transition-all duration-200 transform active:scale-95 ${
-                  pathname === '/' ? 'text-primary' : 'text-gray-600 hover:text-primary'
+                  pathname === '/' 
+                    ? 'bg-blue-500/10 text-primary' 
+                    : 'text-gray-600 hover:text-primary hover:bg-blue-500/5'
                 }`}
               >
                 <HomeIcon className="w-5 h-5 mb-1" />
@@ -100,25 +102,25 @@ export default function MobileLayout({ children, showBottomNav = true }: MobileL
               {/* Create */}
               <Link
                 href="/create"
-                className={`flex flex-col items-center py-2 px-3 rounded-md transition-all duration-200 transform active:scale-95 ${
-                  pathname === '/create' ? 'text-primary' : 'text-gray-600 hover:text-primary'
-                }`}
+                className="flex flex-col items-center py-2 px-4 rounded-md transition-all duration-200 transform active:scale-95 text-gray-600 hover:text-primary"
               >
-                <div className={`p-2 rounded-md shadow-lg mb-1 ${
+                <div className={`p-3 rounded-md shadow-lg mb-1 transition-all duration-200 ${
                   pathname === '/create' 
-                    ? 'bg-primary-dark' 
-                    : 'gradient-hero'
+                    ? 'gradient-hero scale-105' 
+                    : 'bg-gradient-to-r from-blue-600 to-blue-700'
                 }`}>
-                  <Plus className="w-5 h-5 text-white" />
+                  <Plus className="w-6 h-6 text-white" />
                 </div>
-                <span className="text-xs font-semibold">Create</span>
+                <span className={`text-xs font-semibold ${pathname === '/create' ? 'text-primary' : ''}`}>Create</span>
               </Link>
 
               {/* View */}
               <Link
                 href="/view"
                 className={`flex flex-col items-center py-2 px-3 rounded-md transition-all duration-200 transform active:scale-95 ${
-                  pathname === '/view' ? 'text-primary' : 'text-gray-600 hover:text-primary'
+                  pathname === '/view' 
+                    ? 'bg-blue-500/10 text-primary' 
+                    : 'text-gray-600 hover:text-primary hover:bg-blue-500/5'
                 }`}
               >
                 <Eye className="w-5 h-5 mb-1" />
@@ -129,7 +131,9 @@ export default function MobileLayout({ children, showBottomNav = true }: MobileL
               <Link
                 href="/profile"
                 className={`flex flex-col items-center py-2 px-3 rounded-md transition-all duration-200 transform active:scale-95 ${
-                  pathname === '/profile' ? 'text-primary' : 'text-gray-600 hover:text-primary'
+                  pathname === '/profile' 
+                    ? 'bg-blue-500/10 text-primary' 
+                    : 'text-gray-600 hover:text-primary hover:bg-blue-500/5'
                 }`}
               >
                 <Wallet className="w-5 h-5 mb-1" />
