@@ -89,55 +89,77 @@ export default function MobileLayout({ children, showBottomNav = true }: MobileL
               {/* Home */}
               <Link
                 href="/"
-                className={`flex flex-col items-center py-2 px-3 rounded-md transition-all duration-200 transform active:scale-95 ${
-                  pathname === '/' 
-                    ? 'bg-blue-500/10 text-primary' 
-                    : 'text-gray-600 hover:text-primary hover:bg-blue-500/5'
-                }`}
+                className="flex flex-col items-center py-2 px-4 rounded-md transition-all duration-200 transform active:scale-95"
               >
-                <HomeIcon className="w-5 h-5 mb-1" />
-                <span className="text-xs font-semibold">Home</span>
+                <div className={`p-3 rounded-md shadow-lg mb-1 transition-all duration-200 ${
+                  pathname === '/' 
+                    ? 'gradient-hero scale-105' 
+                    : 'bg-transparent'
+                }`}>
+                  <HomeIcon className={`w-6 h-6 transition-colors duration-200 ${
+                    pathname === '/' ? 'text-white' : 'text-gray-600'
+                  }`} />
+                </div>
+                <span className={`text-xs font-semibold transition-colors duration-200 ${
+                  pathname === '/' ? 'text-primary' : 'text-gray-600'
+                }`}>Home</span>
               </Link>
 
               {/* Create */}
               <Link
                 href="/create"
-                className="flex flex-col items-center py-2 px-4 rounded-md transition-all duration-200 transform active:scale-95 text-gray-600 hover:text-primary"
+                className="flex flex-col items-center py-2 px-4 rounded-md transition-all duration-200 transform active:scale-95"
               >
                 <div className={`p-3 rounded-md shadow-lg mb-1 transition-all duration-200 ${
                   pathname === '/create' 
                     ? 'gradient-hero scale-105' 
-                    : 'bg-gradient-to-r from-blue-600 to-blue-700'
+                    : 'bg-transparent'
                 }`}>
-                  <Plus className="w-6 h-6 text-white" />
+                  <Plus className={`w-6 h-6 transition-colors duration-200 ${
+                    pathname === '/create' ? 'text-white' : 'text-gray-600'
+                  }`} />
                 </div>
-                <span className={`text-xs font-semibold ${pathname === '/create' ? 'text-primary' : ''}`}>Create</span>
+                <span className={`text-xs font-semibold transition-colors duration-200 ${
+                  pathname === '/create' ? 'text-primary' : 'text-gray-600'
+                }`}>Create</span>
               </Link>
 
               {/* View */}
               <Link
                 href="/view"
-                className={`flex flex-col items-center py-2 px-3 rounded-md transition-all duration-200 transform active:scale-95 ${
-                  pathname === '/view' 
-                    ? 'bg-blue-500/10 text-primary' 
-                    : 'text-gray-600 hover:text-primary hover:bg-blue-500/5'
-                }`}
+                className="flex flex-col items-center py-2 px-4 rounded-md transition-all duration-200 transform active:scale-95"
               >
-                <Eye className="w-5 h-5 mb-1" />
-                <span className="text-xs font-semibold">View</span>
+                <div className={`p-3 rounded-md shadow-lg mb-1 transition-all duration-200 ${
+                  pathname === '/view' 
+                    ? 'gradient-hero scale-105' 
+                    : 'bg-transparent'
+                }`}>
+                  <Eye className={`w-6 h-6 transition-colors duration-200 ${
+                    pathname === '/view' ? 'text-white' : 'text-gray-600'
+                  }`} />
+                </div>
+                <span className={`text-xs font-semibold transition-colors duration-200 ${
+                  pathname === '/view' ? 'text-primary' : 'text-gray-600'
+                }`}>View</span>
               </Link>
 
               {/* Profile */}
               <Link
                 href="/profile"
-                className={`flex flex-col items-center py-2 px-3 rounded-md transition-all duration-200 transform active:scale-95 ${
-                  pathname === '/profile' 
-                    ? 'bg-blue-500/10 text-primary' 
-                    : 'text-gray-600 hover:text-primary hover:bg-blue-500/5'
-                }`}
+                className="flex flex-col items-center py-2 px-4 rounded-md transition-all duration-200 transform active:scale-95"
               >
-                <Wallet className="w-5 h-5 mb-1" />
-                <span className="text-xs font-semibold">Profile</span>
+                <div className={`p-3 rounded-md shadow-lg mb-1 transition-all duration-200 ${
+                  pathname === '/profile' 
+                    ? 'gradient-hero scale-105' 
+                    : 'bg-transparent'
+                }`}>
+                  <Wallet className={`w-6 h-6 transition-colors duration-200 ${
+                    pathname === '/profile' ? 'text-white' : 'text-gray-600'
+                  }`} />
+                </div>
+                <span className={`text-xs font-semibold transition-colors duration-200 ${
+                  pathname === '/profile' ? 'text-primary' : 'text-gray-600'
+                }`}>Profile</span>
               </Link>
             </div>
           </div>

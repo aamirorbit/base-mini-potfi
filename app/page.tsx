@@ -73,15 +73,17 @@ export default function Home() {
 
   return (
     <div className="space-y-6">
-      {/* Active Pots Counter */}
-      <div className="bg-gold/10 backdrop-blur-xl rounded-md p-3 border border-gold/30 shadow-card animate-pulse">
-        <div className="flex items-center justify-center space-x-2">
-          <Zap className="w-5 h-5 text-gold-dark" />
-          <p className="text-sm font-bold text-gray-900">
-            <span className="font-mono tabular-nums text-gold-dark">{loading ? '...' : activePots}</span> {activePots === 1 ? 'Pot' : 'Pots'} Active Right Now
-          </p>
+      {/* Active Pots Counter - Only show when there are active pots */}
+      {!loading && activePots > 0 && (
+        <div className="bg-gold/10 backdrop-blur-xl rounded-md p-3 border border-gold/30 shadow-card animate-pulse">
+          <div className="flex items-center justify-center space-x-2">
+            <Zap className="w-5 h-5 text-gold-dark" />
+            <p className="text-sm font-bold text-gray-900">
+              <span className="font-mono tabular-nums text-gold-dark">{activePots}</span> {activePots === 1 ? 'Pot' : 'Pots'} Active Right Now
+            </p>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Hero Section */}
       <div className="text-center space-y-4">

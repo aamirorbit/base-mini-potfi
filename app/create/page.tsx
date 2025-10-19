@@ -18,11 +18,14 @@ import { ErrorModal } from '@/app/components/ErrorModal'
 
 export default function Create() {
   const [amount, setAmount] = useState(1)
-  const [timeout, setTimeoutSecs] = useState(43200) // 12h
+  const [timeoutHours, setTimeoutHours] = useState(12) // Store in hours for better UX
   const [postId, setPostId] = useState('')
   const [requireLike, setRequireLike] = useState(true) // Default: require like
   const [requireRecast, setRequireRecast] = useState(true) // Default: require recast
   const [requireComment, setRequireComment] = useState(true) // Default: require comment
+  
+  // Convert hours to seconds for contract
+  const timeout = timeoutHours * 3600
   const [potId, setPotId] = useState<string | null>(null)
   const [showSuccess, setShowSuccess] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string>('')
@@ -695,8 +698,8 @@ export default function Create() {
             <span className="font-bold text-gray-900 font-mono tabular-nums">~{Math.floor(amount / 0.01)}</span>
           </div>
           <div className="flex justify-between">
-            <span className="font-medium text-gray-600">Timeout</span>
-            <span className="font-bold text-gray-900 font-mono tabular-nums">{Math.floor(timeout / 3600)}h</span>
+            <span className="font-medium text-gray-600">Duration</span>
+            <span className="font-bold text-gray-900 font-mono tabular-nums">{timeoutHours}h</span>
           </div>
           
           {isPotIdPending ? (
@@ -814,33 +817,56 @@ export default function Create() {
           )}
 
           {/* Form */}
-          <div className="bg-white/70 backdrop-blur-xl rounded-md p-4 border border-white/20 space-y-3">
+          <div className="bg-white/70 backdrop-blur-xl rounded-md p-4 border border-white/20 space-y-4">
+            {/* Amount Input with Presets */}
             <div>
-              <label htmlFor="amount" className="block text-gray-900 font-medium mb-1.5 text-xs">
+              <label htmlFor="amount" className="block text-gray-900 font-bold mb-2 text-sm">
                 Jackpot Amount (USDC)
               </label>
+              
+              {/* Preset Amount Buttons */}
+              <div className="grid grid-cols-4 gap-2 mb-3">
+                {[1, 5, 10, 25].map((preset) => (
+                  <button
+                    key={preset}
+                    type="button"
+                    onClick={() => setAmount(preset)}
+                    className={`py-2.5 px-3 rounded-md text-sm font-bold transition-all duration-200 transform active:scale-95 ${
+                      amount === preset
+                        ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg'
+                        : 'bg-white/80 border-2 border-gray-300 text-gray-700 hover:border-blue-500'
+                    }`}
+                  >
+                    {preset}
+                  </button>
+                ))}
+              </div>
+              
+              {/* Custom Amount Input */}
               <input
                 id="amount"
                 name="amount"
                 type="number"
                 value={amount}
                 onChange={(e) => setAmount(Number(e.target.value))}
-                className="w-full p-2.5 rounded-md border border-gray-300 text-gray-900 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Enter amount"
+                className="w-full p-3 rounded-md border-2 border-gray-300 text-gray-900 text-base font-semibold focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                placeholder="Or enter custom amount"
+                min="1"
+                step="1"
               />
-              <p className="text-gray-500 text-xs mt-1">
-                Users claim 0.01 USDC each. Minimum: 1 USDC
+              <p className="text-gray-600 text-xs mt-2 font-medium">
+                💰 Each claim: 0.01 USDC · Minimum: 1 USDC
               </p>
             </div>
             
+            {/* Post ID Input */}
             <div>
-              <label htmlFor="postId" className="block text-gray-900 font-medium mb-1.5 text-xs">
-                Post ID (Cast Hash)
+              <label htmlFor="postId" className="block text-gray-900 font-bold mb-2 text-sm">
+                Post Link or Cast Hash
               </label>
-              <input
+              <textarea
                 id="postId"
                 name="postId"
-                type="text"
                 value={postId}
                 onChange={(e) => {
                   const input = e.target.value
@@ -857,70 +883,141 @@ export default function Create() {
                     setPostId(hash)
                   }
                 }}
-                className="w-full p-2.5 rounded-md border border-gray-300 text-gray-900 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Paste Base URL (base.app/post/...) or cast hash"
+                rows={3}
+                className="w-full p-3 rounded-md border-2 border-gray-300 text-gray-900 text-sm font-mono focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all resize-none"
+                placeholder="Paste your Base post URL here...&#10;&#10;Example: base.app/post/0x..."
               />
-              <p className="text-gray-500 text-xs mt-1">
-                {postId 
-                  ? `✓ Cast: ${postId.slice(0, 12)}...${postId.slice(-6)}` 
-                  : "Paste Base URL or cast hash to verify engagement"}
-              </p>
+              {postId ? (
+                <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded-md">
+                  <p className="text-xs font-semibold text-blue-700 mb-1">✓ Cast Detected</p>
+                  <p className="text-xs text-blue-600 font-mono break-all">
+                    {postId.slice(0, 20)}...{postId.slice(-12)}
+                  </p>
+                </div>
+              ) : (
+                <p className="text-gray-600 text-xs mt-2 font-medium">
+                  🔗 Paste your Base URL (base.app/post/...) or cast hash
+                </p>
+              )}
             </div>
             
+            {/* Timeout Input with Presets */}
             <div>
-              <label htmlFor="timeout" className="block text-gray-900 font-medium mb-1.5 text-xs">
-                Timeout (seconds)
+              <label htmlFor="timeout" className="block text-gray-900 font-bold mb-2 text-sm">
+                Duration (Hours)
               </label>
+              
+              {/* Preset Timeout Buttons */}
+              <div className="grid grid-cols-4 gap-2 mb-3">
+                {[
+                  { hours: 6, label: '6h' },
+                  { hours: 12, label: '12h' },
+                  { hours: 24, label: '24h' },
+                  { hours: 48, label: '48h' }
+                ].map((preset) => (
+                  <button
+                    key={preset.hours}
+                    type="button"
+                    onClick={() => setTimeoutHours(preset.hours)}
+                    className={`py-2.5 px-3 rounded-md text-sm font-bold transition-all duration-200 transform active:scale-95 ${
+                      timeoutHours === preset.hours
+                        ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg'
+                        : 'bg-white/80 border-2 border-gray-300 text-gray-700 hover:border-blue-500'
+                    }`}
+                  >
+                    {preset.label}
+                  </button>
+                ))}
+              </div>
+              
+              {/* Custom Hours Input */}
               <input
                 id="timeout"
                 name="timeout"
                 type="number"
-                value={timeout}
-                onChange={(e) => setTimeoutSecs(Number(e.target.value))}
-                className="w-full p-2.5 rounded-md border border-gray-300 text-gray-900 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="43200"
+                value={timeoutHours}
+                onChange={(e) => setTimeoutHours(Number(e.target.value))}
+                className="w-full p-3 rounded-md border-2 border-gray-300 text-gray-900 text-base font-semibold focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                placeholder="Or enter custom hours"
+                min="1"
+                step="1"
               />
-              <p className="text-gray-500 text-xs mt-1">
-                Default: 43,200 seconds (12 hours)
+              <p className="text-gray-600 text-xs mt-2 font-medium">
+                ⏱️ How long users can claim before pot expires
               </p>
             </div>
 
-            {/* Engagement Requirements */}
+            {/* Engagement Requirements with Toggle Switches */}
             <div>
-              <label className="block text-gray-900 font-medium mb-2 text-xs">
+              <label className="block text-gray-900 font-bold mb-3 text-sm">
                 Claim Requirements
               </label>
-              <div className="space-y-2">
-                <label className="flex items-center space-x-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={requireLike}
-                    onChange={(e) => setRequireLike(e.target.checked)}
-                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
-                  />
-                  <span className="text-sm text-gray-700">Require Like</span>
-                </label>
-                <label className="flex items-center space-x-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={requireRecast}
-                    onChange={(e) => setRequireRecast(e.target.checked)}
-                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
-                  />
-                  <span className="text-sm text-gray-700">Require Recast</span>
-                </label>
-                <label className="flex items-center space-x-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={requireComment}
-                    onChange={(e) => setRequireComment(e.target.checked)}
-                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
-                  />
-                  <span className="text-sm text-gray-700">Require Comment</span>
-                </label>
+              <div className="space-y-3">
+                {/* Like Toggle */}
+                <div className="flex items-center justify-between p-3 bg-white/80 border-2 border-gray-300 rounded-md">
+                  <div className="flex items-center space-x-3">
+                    <span className="text-xl">👍</span>
+                    <span className="text-sm font-semibold text-gray-900">Require Like</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setRequireLike(!requireLike)}
+                    className={`relative inline-flex h-7 w-12 items-center rounded-md transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                      requireLike ? 'bg-blue-600' : 'bg-gray-300'
+                    }`}
+                  >
+                    <span
+                      className={`inline-block h-5 w-5 transform rounded-md bg-white shadow-lg transition-transform duration-200 ${
+                        requireLike ? 'translate-x-6' : 'translate-x-1'
+                      }`}
+                    />
+                  </button>
+                </div>
+
+                {/* Recast Toggle */}
+                <div className="flex items-center justify-between p-3 bg-white/80 border-2 border-gray-300 rounded-md">
+                  <div className="flex items-center space-x-3">
+                    <span className="text-xl">🔄</span>
+                    <span className="text-sm font-semibold text-gray-900">Require Recast</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setRequireRecast(!requireRecast)}
+                    className={`relative inline-flex h-7 w-12 items-center rounded-md transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                      requireRecast ? 'bg-blue-600' : 'bg-gray-300'
+                    }`}
+                  >
+                    <span
+                      className={`inline-block h-5 w-5 transform rounded-md bg-white shadow-lg transition-transform duration-200 ${
+                        requireRecast ? 'translate-x-6' : 'translate-x-1'
+                      }`}
+                    />
+                  </button>
+                </div>
+
+                {/* Comment Toggle */}
+                <div className="flex items-center justify-between p-3 bg-white/80 border-2 border-gray-300 rounded-md">
+                  <div className="flex items-center space-x-3">
+                    <span className="text-xl">💬</span>
+                    <span className="text-sm font-semibold text-gray-900">Require Comment</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setRequireComment(!requireComment)}
+                    className={`relative inline-flex h-7 w-12 items-center rounded-md transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                      requireComment ? 'bg-blue-600' : 'bg-gray-300'
+                    }`}
+                  >
+                    <span
+                      className={`inline-block h-5 w-5 transform rounded-md bg-white shadow-lg transition-transform duration-200 ${
+                        requireComment ? 'translate-x-6' : 'translate-x-1'
+                      }`}
+                    />
+                  </button>
+                </div>
               </div>
-              <p className="text-gray-500 text-xs mt-2">
-                Users must complete selected actions to claim
+              <p className="text-gray-600 text-xs mt-3 font-medium">
+                📋 Users must complete selected actions to claim
               </p>
             </div>
           </div>
