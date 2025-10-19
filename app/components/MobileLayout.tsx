@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useAccount } from 'wagmi'
-import { Home as HomeIcon, Plus, Eye, MessageCircle, Wallet } from 'lucide-react'
+import { Home as HomeIcon, Plus, Eye, MessageCircle, Wallet, X, AlertCircle, ExternalLink } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 import { useMiniKitWallet } from '@/hooks/useMiniKitWallet'
 import { useState, useEffect } from 'react'
@@ -15,6 +15,7 @@ interface MobileLayoutProps {
 export default function MobileLayout({ children, showBottomNav = true }: MobileLayoutProps) {
   const [isFarcaster, setIsFarcaster] = useState(false)
   const [mounted, setMounted] = useState(false)
+  const [showBetaModal, setShowBetaModal] = useState(false)
 
   // Wallet connections
   const { address: wagmiAddress, isConnected: wagmiConnected } = useAccount()
@@ -45,10 +46,13 @@ export default function MobileLayout({ children, showBottomNav = true }: MobileL
             <div className="flex items-center justify-between">
               {/* Beta Badge + Wallet Address */}
               <div className="flex items-center space-x-3">
-                {/* Beta Badge */}
-                <div className="bg-yellow-500/20 border border-yellow-400/50 px-2 py-0.5 rounded-md">
+                {/* Beta Badge - Clickable */}
+                <button
+                  onClick={() => setShowBetaModal(true)}
+                  className="bg-yellow-500/20 border border-yellow-400/50 px-2 py-0.5 rounded-md transition-all duration-200 hover:bg-yellow-500/30 hover:scale-105 active:scale-95"
+                >
                   <span className="text-xs font-bold text-yellow-300">BETA</span>
-                </div>
+                </button>
                 
                 {/* Wallet Address */}
                 <div className="flex items-center space-x-2">
@@ -169,6 +173,92 @@ export default function MobileLayout({ children, showBottomNav = true }: MobileL
                   pathname === '/profile' ? 'text-primary' : 'text-gray-600'
                 }`}>Profile</span>
               </Link>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Beta Information Modal */}
+      {showBetaModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
+          <div className="bg-white/90 backdrop-blur-xl rounded-md max-w-sm w-full shadow-2xl animate-in zoom-in duration-200">
+            {/* Header */}
+            <div className="flex items-start justify-between p-4 border-b border-gray-200">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-yellow-500/20 rounded-md flex items-center justify-center border border-yellow-400/50">
+                  <AlertCircle className="w-5 h-5 text-yellow-600" />
+                </div>
+                <h3 className="text-base font-bold text-gray-900">Beta Version</h3>
+              </div>
+              <button
+                onClick={() => setShowBetaModal(false)}
+                className="p-1 hover:bg-gray-100 rounded-md transition-colors"
+              >
+                <X className="w-5 h-5 text-gray-500" />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="p-4 space-y-4">
+              <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3">
+                <p className="text-sm font-semibold text-yellow-800 mb-2">
+                  🚧 This is a Beta Release
+                </p>
+                <p className="text-sm text-yellow-700 leading-relaxed">
+                  PotFi is currently in beta testing. While we've worked hard to make it stable, you may encounter bugs or unexpected behavior.
+                </p>
+              </div>
+
+              <div className="space-y-2 text-sm text-gray-700">
+                <p className="font-semibold text-gray-900">What to expect:</p>
+                <ul className="space-y-1.5 ml-4">
+                  <li className="flex items-start space-x-2">
+                    <span className="text-blue-600 mt-0.5">•</span>
+                    <span>Some features may be experimental</span>
+                  </li>
+                  <li className="flex items-start space-x-2">
+                    <span className="text-blue-600 mt-0.5">•</span>
+                    <span>Occasional bugs or performance issues</span>
+                  </li>
+                  <li className="flex items-start space-x-2">
+                    <span className="text-blue-600 mt-0.5">•</span>
+                    <span>UI/UX improvements in progress</span>
+                  </li>
+                  <li className="flex items-start space-x-2">
+                    <span className="text-blue-600 mt-0.5">•</span>
+                    <span>Regular updates and fixes</span>
+                  </li>
+                </ul>
+              </div>
+
+              <div className="bg-blue-50 border border-blue-200 rounded-md p-3">
+                <p className="text-sm font-semibold text-blue-800 mb-2">
+                  🐛 Found a Bug?
+                </p>
+                <p className="text-sm text-blue-700 mb-3">
+                  Help us improve by reporting any issues you encounter. Your feedback is valuable!
+                </p>
+                <a
+                  href="https://t.me/+_fXXrjRRqu41Yzdk"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold py-3 px-4 rounded-md text-sm transition-all duration-200 shadow-lg transform active:scale-95 backdrop-blur-sm flex items-center justify-center space-x-2"
+                >
+                  <MessageCircle className="w-4 h-4" />
+                  <span>Join Telegram Support</span>
+                  <ExternalLink className="w-4 h-4" />
+                </a>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="p-4 border-t border-gray-200">
+              <button
+                onClick={() => setShowBetaModal(false)}
+                className="w-full bg-gray-800/90 hover:bg-gray-900 text-white font-medium py-3 px-4 rounded-md text-sm transition-all duration-200 shadow-lg transform active:scale-95 backdrop-blur-sm"
+              >
+                Got it, thanks!
+              </button>
             </div>
           </div>
         </div>
