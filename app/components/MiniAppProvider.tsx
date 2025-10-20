@@ -12,18 +12,35 @@ interface UserProfile {
 }
 
 interface FarcasterContextUser {
-  fid?: number
+  fid: number
   username?: string
   displayName?: string
-  display_name?: string
   pfpUrl?: string
-  pfp_url?: string
-  avatarUrl?: string
+  bio?: string
+  location?: {
+    placeId: string
+    description: string
+  }
 }
 
 interface FarcasterContext {
   user?: FarcasterContextUser
-  [key: string]: any
+  location?: any
+  client?: {
+    platformType?: 'web' | 'mobile'
+    clientFid: number
+    added: boolean
+    safeAreaInsets?: {
+      top: number
+      bottom: number
+      left: number
+      right: number
+    }
+  }
+  features?: {
+    haptics: boolean
+    cameraAndMicrophoneAccess?: boolean
+  }
 }
 
 interface MiniAppContextType {
@@ -62,6 +79,14 @@ export function MiniAppProvider({ children }: MiniAppProviderProps) {
         const isBaseApp = userAgent.includes('Base') || userAgent.includes('Coinbase')
         const isMiniAppEnv = isInIframe || isFarcasterUA || isBaseApp
         
+        console.log('🔍 Environment detection:', {
+          userAgent,
+          isInIframe,
+          isFarcasterUA,
+          isBaseApp,
+          isMiniAppEnv
+        })
+        
         setIsFarcaster(isMiniAppEnv)
         
         if (!isMiniAppEnv) {
@@ -70,11 +95,15 @@ export function MiniAppProvider({ children }: MiniAppProviderProps) {
           return
         }
 
+        console.log('🚀 Initializing Mini App SDK...')
+
         // Add timeout to prevent hanging
         const initWithTimeout = Promise.race([
           (async () => {
             // Get context from Farcaster
+            console.log('📡 Getting context from SDK...')
             const ctx = await sdk.context
+            console.log('✅ Context received:', JSON.stringify(ctx, null, 2))
             setContext(ctx as FarcasterContext)
             
             // Signal that the app is ready
@@ -88,21 +117,24 @@ export function MiniAppProvider({ children }: MiniAppProviderProps) {
 
         const ctx = await initWithTimeout as FarcasterContext
         setIsReady(true)
-        console.log('Mini App initialized successfully', ctx)
+        console.log('✅ Mini App initialized successfully')
         
         // Extract user profile from context
         if (ctx?.user) {
+          console.log('👤 User data found:', ctx.user)
           const profile: UserProfile = {
             fid: ctx.user.fid,
             username: ctx.user.username,
-            displayName: ctx.user.displayName || ctx.user.display_name,
-            avatarUrl: ctx.user.pfpUrl || ctx.user.pfp_url || ctx.user.avatarUrl
+            displayName: ctx.user.displayName,
+            avatarUrl: ctx.user.pfpUrl
           }
           setUserProfile(profile)
-          console.log('User profile extracted:', profile)
+          console.log('✅ User profile extracted:', profile)
+        } else {
+          console.warn('⚠️ No user data in context')
         }
       } catch (error) {
-        console.error('Failed to initialize Mini App:', error)
+        console.error('❌ Failed to initialize Mini App:', error)
         // Always set ready to true so the app doesn't hang
         setIsReady(true)
       }

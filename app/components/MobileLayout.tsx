@@ -52,10 +52,19 @@ export default function MobileLayout({ children, showBottomNav = true }: MobileL
   }, [mounted, isConnected, userAddress, isFarcaster])
 
   async function loadUserProfile() {
-    if (!userAddress) return
+    console.log('🔍 [MobileLayout] Loading user profile...', {
+      userAddress,
+      contextUserProfile
+    })
+    
+    if (!userAddress) {
+      console.warn('⚠️ [MobileLayout] No user address available')
+      return
+    }
     
     // If we have profile from context, use it
     if (contextUserProfile?.username) {
+      console.log('✅ [MobileLayout] Using profile from context:', contextUserProfile)
       setFetchedUserProfile({
         fid: contextUserProfile.fid || 0,
         username: contextUserProfile.username,
@@ -67,14 +76,20 @@ export default function MobileLayout({ children, showBottomNav = true }: MobileL
     
     // Otherwise, fetch from API
     try {
+      console.log('📡 [MobileLayout] Fetching profile from API for address:', userAddress)
       const response = await fetch(`/api/user/profile?address=${userAddress}`)
       const data = await response.json()
       
+      console.log('📥 [MobileLayout] API response:', data)
+      
       if (response.ok && data.user) {
+        console.log('✅ [MobileLayout] Profile loaded from API:', data.user)
         setFetchedUserProfile(data.user)
+      } else {
+        console.warn('⚠️ [MobileLayout] No profile found in API response')
       }
     } catch (error) {
-      console.error('Failed to load user profile:', error)
+      console.error('❌ [MobileLayout] Failed to load user profile:', error)
     }
   }
 

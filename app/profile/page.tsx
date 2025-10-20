@@ -97,10 +97,20 @@ export default function Profile() {
   }, [mounted, isConnected, userAddress])
 
   async function loadUserProfile() {
-    if (!userAddress || !isFarcaster) return
+    console.log('🔍 Loading user profile...', {
+      userAddress,
+      isFarcaster,
+      contextUserProfile
+    })
+    
+    if (!userAddress) {
+      console.warn('⚠️ No user address available')
+      return
+    }
     
     // If we have profile from context, use it
     if (contextUserProfile?.username) {
+      console.log('✅ Using profile from context:', contextUserProfile)
       setFetchedUserProfile({
         fid: contextUserProfile.fid || 0,
         username: contextUserProfile.username,
@@ -110,17 +120,23 @@ export default function Profile() {
       return
     }
     
-    // Otherwise, fetch from API
+    // Otherwise, fetch from API (even if not in Farcaster, try to get profile)
     try {
       setProfileLoading(true)
+      console.log('📡 Fetching profile from API for address:', userAddress)
       const response = await fetch(`/api/user/profile?address=${userAddress}`)
       const data = await response.json()
       
+      console.log('📥 API response:', data)
+      
       if (response.ok && data.user) {
+        console.log('✅ Profile loaded from API:', data.user)
         setFetchedUserProfile(data.user)
+      } else {
+        console.warn('⚠️ No profile found in API response')
       }
     } catch (error) {
-      console.error('Failed to load user profile:', error)
+      console.error('❌ Failed to load user profile:', error)
     } finally {
       setProfileLoading(false)
     }
