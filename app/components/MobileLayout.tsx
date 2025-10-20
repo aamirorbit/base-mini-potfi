@@ -117,35 +117,35 @@ export default function MobileLayout({ children, showBottomNav = true }: MobileL
       {mounted && isConnected && (
         <div className="gradient-hero shadow-lg">
           <div className="max-w-md mx-auto px-4 py-3">
-            <div className="flex items-center justify-between">
-              {/* Beta Badge + User Info */}
-              <div className="flex items-center space-x-3">
-                {/* Beta Badge - Clickable */}
-                <button
-                  onClick={() => setShowBetaModal(true)}
-                  className="bg-yellow-500/20 border border-yellow-400/50 px-2 py-0.5 rounded-md transition-all duration-200 hover:bg-yellow-500/30 hover:scale-105 active:scale-95"
-                >
-                  <span className="text-xs font-bold text-yellow-300">BETA</span>
-                </button>
+            <div className="flex items-center justify-between gap-3">
+              {/* User Profile + Beta Badge */}
+              <div className="flex items-center space-x-2 flex-1 min-w-0">
+                {/* Avatar */}
+                {fetchedUserProfile?.pfp_url ? (
+                  <img 
+                    src={fetchedUserProfile.pfp_url} 
+                    alt={fetchedUserProfile.username}
+                    className="w-8 h-8 rounded-md object-cover border border-white/20 flex-shrink-0"
+                  />
+                ) : (
+                  <div className="w-8 h-8 bg-white/20 rounded-md flex items-center justify-center border border-white/20 flex-shrink-0">
+                    <User className="w-4 h-4 text-white" />
+                  </div>
+                )}
                 
-                {/* User Profile */}
-                <div className="flex items-center space-x-2">
-                  {/* Avatar */}
-                  {fetchedUserProfile?.pfp_url ? (
-                    <img 
-                      src={fetchedUserProfile.pfp_url} 
-                      alt={fetchedUserProfile.username}
-                      className="w-7 h-7 rounded-md object-cover border border-white/20"
-                    />
-                  ) : (
-                    <div className="w-7 h-7 bg-white/20 rounded-md flex items-center justify-center border border-white/20">
-                      <User className="w-4 h-4 text-white" />
-                    </div>
-                  )}
-                  {/* Name/Address */}
-                  <span className="text-sm font-semibold text-white">
+                {/* Name/Address + Beta Badge */}
+                <div className="flex items-center space-x-2 min-w-0">
+                  <span className="text-sm font-semibold text-white truncate">
                     {displayName}
                   </span>
+                  
+                  {/* Beta Badge - Clickable */}
+                  <button
+                    onClick={() => setShowBetaModal(true)}
+                    className="bg-yellow-500/20 border border-yellow-400/50 px-1.5 py-0.5 rounded-md transition-all duration-200 hover:bg-yellow-500/30 hover:scale-105 active:scale-95 flex-shrink-0"
+                  >
+                    <span className="text-xs font-bold text-yellow-300">BETA</span>
+                  </button>
                 </div>
               </div>
               
@@ -154,7 +154,7 @@ export default function MobileLayout({ children, showBottomNav = true }: MobileL
                 href="https://t.me/+_fXXrjRRqu41Yzdk"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="relative px-3 py-1.5 text-xs font-bold rounded-lg transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] btn-uppercase overflow-hidden inline-block"
+                className="relative px-3 py-1.5 text-xs font-bold rounded-md transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] btn-uppercase overflow-hidden flex-shrink-0"
                 style={{
                   background: 'linear-gradient(180deg, #B8941F 0%, #D4AF37 20%, #D4AF37 80%, #A67C00 100%)',
                   boxShadow: '0 2px 4px rgba(0, 0, 0, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.3), inset 0 -1px 1px rgba(0, 0, 0, 0.4)',
