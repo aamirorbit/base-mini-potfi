@@ -37,6 +37,7 @@ export default function Create() {
   const [isPotIdPending, setIsPotIdPending] = useState(false)
   const [copied, setCopied] = useState(false)
   const [showErrorModal, setShowErrorModal] = useState(false)
+  const [creationAttempted, setCreationAttempted] = useState(false) // Track if creation has been attempted
   const usdcAmt = BigInt(Math.round(amount * 1_000_000)) // 6dp
 
   // Wagmi hooks for fallback
@@ -116,10 +117,12 @@ export default function Create() {
     const notYetCreating = !(isBaseApp ? baseAppCreating : isCreating)
     const notYetCreated = !showSuccess
     const noPotId = !potId
+    const hasNotAttemptedCreation = !creationAttempted
     
-    if (justApproved && notYetCreating && notYetCreated && noPotId) {
+    if (justApproved && notYetCreating && notYetCreated && noPotId && hasNotAttemptedCreation) {
       // Automatically start pot creation after approval
       console.log('✅ Approval successful, starting pot creation...')
+      setCreationAttempted(true) // Mark that we're attempting creation to prevent retries
       // Refetch allowance before proceeding
       refetchAllowance().then(() => {
         setTimeout(() => {
@@ -127,7 +130,7 @@ export default function Create() {
         }, 500) // Small delay to show approval success
       })
     }
-  }, [baseAppApproved, approveSuccess, isBaseApp, baseAppCreating, isCreating, showSuccess, potId])
+  }, [baseAppApproved, approveSuccess, isBaseApp, baseAppCreating, isCreating, showSuccess, potId, creationAttempted])
 
   // Reset error when starting new actions
   const clearError = () => setErrorMessage('')
@@ -436,10 +439,13 @@ export default function Create() {
     clearError()
     
     // Prevent multiple creation attempts
-    if (potId || showSuccess) {
-      console.log('⚠️ Pot already created, skipping duplicate creation')
+    if (potId || showSuccess || creationAttempted) {
+      console.log('⚠️ Pot already created or creation already attempted, skipping duplicate creation')
       return
     }
+    
+    // Mark creation as attempted immediately to prevent retries
+    setCreationAttempted(true)
     
     // Use MiniKit provider in Base app, wagmi elsewhere
     if (isBaseApp && mounted) {
@@ -547,12 +553,6 @@ export default function Create() {
         setBaseAppCreating(false)
       }
     } else {
-      // Prevent multiple creation attempts in wagmi path
-      if (potId || showSuccess) {
-        console.log('⚠️ Pot already created, skipping duplicate creation')
-        return
-      }
-      
       // Convert postId to bytes32 for contract
       const postIdBytes32 = castIdToBytes32(postId)
       
@@ -571,6 +571,10 @@ export default function Create() {
     setErrorMessage('')
     setPotId(null)
     setShowSuccess(false)
+    setCreationAttempted(false) // Reset creation attempted flag for retry
+    setBaseAppApproved(false) // Reset approval state for retry
+    setBaseAppApproving(false)
+    setBaseAppCreating(false)
   }
 
   // Generate shareable URLs
@@ -614,6 +618,10 @@ export default function Create() {
                   setErrorMessage('')
                   setPotId(null)
                   setShowSuccess(false)
+                  setCreationAttempted(false) // Reset creation attempted flag
+                  setBaseAppApproved(false) // Reset approval state
+                  setBaseAppApproving(false)
+                  setBaseAppCreating(false)
                 }}
                 className="w-full bg-gray-800/90 hover:bg-gray-900 text-white font-semibold py-4 px-6 rounded-md text-sm transition-all duration-200 shadow-xl transform active:scale-95 backdrop-blur-sm flex items-center justify-center space-x-2 btn-uppercase"
               >
@@ -750,6 +758,10 @@ export default function Create() {
               setPotId(null)
               setAmount(1)
               setPostId('')
+              setCreationAttempted(false) // Reset creation attempted flag
+              setBaseAppApproved(false) // Reset approval state
+              setBaseAppApproving(false)
+              setBaseAppCreating(false)
             }}
             className="w-full bg-gray-800/90 hover:bg-gray-900 text-white font-medium py-4 px-6 rounded-md text-sm transition-all duration-200 shadow-xl transform active:scale-95 backdrop-blur-sm btn-uppercase"
           >
