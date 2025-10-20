@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { NeynarClient } from '@/lib/neynar'
-
-const neynarClient = new NeynarClient()
+import { neynarClient } from '@/lib/neynar'
 
 export async function GET(request: NextRequest) {
   try {
