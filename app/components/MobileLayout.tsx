@@ -142,9 +142,15 @@ export default function MobileLayout({ children, showBottomNav = true }: MobileL
                   {/* Beta Badge - Clickable */}
                   <button
                     onClick={() => setShowBetaModal(true)}
-                    className="bg-yellow-500/20 border border-yellow-400/50 px-1.5 py-0.5 rounded-md transition-all duration-200 hover:bg-yellow-500/30 hover:scale-105 active:scale-95 flex-shrink-0"
+                    className="relative px-2 py-1 rounded-md transition-all duration-200 hover:scale-105 active:scale-95 flex-shrink-0 overflow-hidden group"
+                    style={{
+                      background: 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)',
+                      boxShadow: '0 2px 8px rgba(255, 215, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.4)',
+                      border: '1px solid rgba(255, 215, 0, 0.6)'
+                    }}
                   >
-                    <span className="text-xs font-bold text-yellow-300">BETA</span>
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" style={{ transform: 'skewX(-20deg)' }}></div>
+                    <span className="relative text-xs font-extrabold text-gray-900 tracking-wide" style={{ textShadow: '0 1px 2px rgba(255, 255, 255, 0.3)' }}>BETA</span>
                   </button>
                 </div>
               </div>
@@ -268,85 +274,114 @@ export default function MobileLayout({ children, showBottomNav = true }: MobileL
 
       {/* Beta Information Modal */}
       {showBetaModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
-          <div className="bg-white/90 backdrop-blur-xl rounded-md max-w-sm w-full shadow-2xl animate-in zoom-in duration-200">
-            {/* Header */}
-            <div className="flex items-start justify-between p-4 border-b border-gray-200">
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-yellow-500/20 rounded-md flex items-center justify-center border border-yellow-400/50">
-                  <AlertCircle className="w-5 h-5 text-yellow-600" />
-                </div>
-                <h3 className="text-base font-bold text-gray-900">Beta Version</h3>
-              </div>
-              <button
-                onClick={() => setShowBetaModal(false)}
-                className="p-1 hover:bg-gray-100 rounded-md transition-colors"
-              >
-                <X className="w-5 h-5 text-gray-500" />
-              </button>
-            </div>
-
-            {/* Content */}
-            <div className="p-4 space-y-4">
-              <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3">
-                <p className="text-sm font-semibold text-yellow-800 mb-2">
-                  🚧 This is a Beta Release
-                </p>
-                <p className="text-sm text-yellow-700 leading-relaxed">
-                  PotFi is currently in beta testing. While we've worked hard to make it stable, you may encounter bugs or unexpected behavior.
-                </p>
-              </div>
-
-              <div className="space-y-2 text-sm text-gray-700">
-                <p className="font-semibold text-gray-900">What to expect:</p>
-                <ul className="space-y-1.5 ml-4">
-                  <li className="flex items-start space-x-2">
-                    <span className="text-blue-600 mt-0.5">•</span>
-                    <span>Some features may be experimental</span>
-                  </li>
-                  <li className="flex items-start space-x-2">
-                    <span className="text-blue-600 mt-0.5">•</span>
-                    <span>Occasional bugs or performance issues</span>
-                  </li>
-                  <li className="flex items-start space-x-2">
-                    <span className="text-blue-600 mt-0.5">•</span>
-                    <span>UI/UX improvements in progress</span>
-                  </li>
-                  <li className="flex items-start space-x-2">
-                    <span className="text-blue-600 mt-0.5">•</span>
-                    <span>Regular updates and fixes</span>
-                  </li>
-                </ul>
-              </div>
-
-              <div className="bg-blue-50 border border-blue-200 rounded-md p-3">
-                <p className="text-sm font-semibold text-blue-800 mb-2">
-                  🐛 Found a Bug?
-                </p>
-                <p className="text-sm text-blue-700 mb-3">
-                  Help us improve by reporting any issues you encounter. Your feedback is valuable!
-                </p>
-                <a
-                  href="https://t.me/+_fXXrjRRqu41Yzdk"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold py-3 px-4 rounded-md text-sm transition-all duration-200 shadow-lg transform active:scale-95 backdrop-blur-sm flex items-center justify-center space-x-2"
+        <div 
+          className="fixed inset-0 flex items-center justify-center p-4 z-50 animate-in fade-in duration-300"
+          style={{
+            background: 'radial-gradient(circle at center, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0.85) 100%)',
+            backdropFilter: 'blur(8px)'
+          }}
+          onClick={() => setShowBetaModal(false)}
+        >
+          <div 
+            className="relative max-w-sm w-full animate-in zoom-in slide-in-from-bottom-4 duration-300"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Gradient Background Card */}
+            <div className="relative bg-white/95 backdrop-blur-2xl rounded-xl shadow-2xl overflow-hidden border border-white/20">
+              {/* Decorative gradient header */}
+              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700"></div>
+              
+              {/* Header with gradient background */}
+              <div className="relative bg-gradient-to-br from-blue-50 to-purple-50 p-5 border-b border-gray-200/50">
+                <button
+                  onClick={() => setShowBetaModal(false)}
+                  className="absolute top-4 right-4 p-1.5 hover:bg-white/80 rounded-lg transition-all duration-200 group"
                 >
-                  <MessageCircle className="w-4 h-4" />
-                  <span>Join Telegram Support</span>
-                  <ExternalLink className="w-4 h-4" />
-                </a>
+                  <X className="w-5 h-5 text-gray-600 group-hover:text-gray-900 group-hover:rotate-90 transition-all duration-200" />
+                </button>
+                
+                <div className="flex items-start space-x-3 pr-8">
+                  <div className="relative">
+                    <div className="w-12 h-12 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-xl flex items-center justify-center shadow-lg">
+                      <AlertCircle className="w-6 h-6 text-white" />
+                    </div>
+                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-gradient-to-br from-yellow-300 to-yellow-400 rounded-full animate-pulse"></div>
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-900 mb-1">Beta Version</h3>
+                    <p className="text-sm text-gray-600 font-medium">Early Access Release</p>
+                  </div>
+                </div>
               </div>
-            </div>
 
-            {/* Footer */}
-            <div className="p-4 border-t border-gray-200">
-              <button
-                onClick={() => setShowBetaModal(false)}
-                className="w-full bg-gray-800/90 hover:bg-gray-900 text-white font-medium py-3 px-4 rounded-md text-sm transition-all duration-200 shadow-lg transform active:scale-95 backdrop-blur-sm"
-              >
-                Got it, thanks!
-              </button>
+              {/* Content */}
+              <div className="p-5 space-y-4">
+                {/* Beta Notice */}
+                <div className="relative overflow-hidden bg-gradient-to-br from-yellow-50 to-orange-50 border border-yellow-200/50 rounded-xl p-4 shadow-sm">
+                  <div className="absolute top-0 right-0 w-20 h-20 bg-yellow-400/10 rounded-full -mr-10 -mt-10"></div>
+                  <div className="relative">
+                    <div className="flex items-center space-x-2 mb-2">
+                      <span className="text-2xl">🚧</span>
+                      <p className="text-sm font-bold text-yellow-900">Work in Progress</p>
+                    </div>
+                    <p className="text-sm text-yellow-800 leading-relaxed">
+                      PotFi is in active development. While we strive for stability, expect some rough edges.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Features List */}
+                <div className="space-y-2.5">
+                  <p className="text-sm font-bold text-gray-900">What to expect:</p>
+                  <div className="space-y-2">
+                    {[
+                      { icon: '⚡', text: 'Experimental features' },
+                      { icon: '🐛', text: 'Occasional bugs' },
+                      { icon: '✨', text: 'Frequent updates' },
+                      { icon: '🚀', text: 'Rapid improvements' }
+                    ].map((item, idx) => (
+                      <div key={idx} className="flex items-center space-x-3 bg-white/60 backdrop-blur-sm rounded-lg p-2.5 border border-gray-200/50 transition-all duration-200 hover:bg-white/80 hover:scale-[1.02]">
+                        <span className="text-lg">{item.icon}</span>
+                        <span className="text-sm font-medium text-gray-700">{item.text}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Support CTA */}
+                <div className="relative overflow-hidden bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-4 shadow-lg">
+                  <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-12 -mt-12"></div>
+                  <div className="relative">
+                    <div className="flex items-center space-x-2 mb-2">
+                      <MessageCircle className="w-5 h-5 text-blue-100" />
+                      <p className="text-sm font-bold text-white">Need Help?</p>
+                    </div>
+                    <p className="text-sm text-blue-100 mb-3 leading-relaxed">
+                      Report bugs or get support from our team
+                    </p>
+                    <a
+                      href="https://t.me/+_fXXrjRRqu41Yzdk"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center space-x-2 w-full bg-white hover:bg-blue-50 text-blue-600 font-bold py-3 px-4 rounded-lg text-sm transition-all duration-200 shadow-md transform active:scale-95"
+                    >
+                      <MessageCircle className="w-4 h-4" />
+                      <span>Join Telegram</span>
+                      <ExternalLink className="w-4 h-4" />
+                    </a>
+                  </div>
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="p-5 pt-0">
+                <button
+                  onClick={() => setShowBetaModal(false)}
+                  className="w-full bg-gradient-to-r from-gray-800 to-gray-900 hover:from-gray-900 hover:to-black text-white font-bold py-3.5 px-4 rounded-xl text-sm transition-all duration-200 shadow-lg transform active:scale-[0.98]"
+                >
+                  Got it, thanks! 👍
+                </button>
+              </div>
             </div>
           </div>
         </div>
