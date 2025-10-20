@@ -10,6 +10,7 @@ import Link from 'next/link'
 import { formatTimeRemaining, truncateAddress } from '@/lib/blockchain'
 import { ErrorModal } from '@/app/components/ErrorModal'
 import { ConfirmModal } from '@/app/components/ConfirmModal'
+import { useMiniAppContext } from '@/app/components/MiniAppProvider'
 import { 
   Eye, 
   Plus, 
@@ -23,8 +24,16 @@ import {
   Timer,
   Wallet,
   Check,
-  Copy
+  Copy,
+  User
 } from 'lucide-react'
+
+interface NeynarUser {
+  fid: number
+  username: string
+  display_name: string
+  pfp_url: string
+}
 
 interface PotData {
   id: string
@@ -56,10 +65,13 @@ export default function Profile() {
   const [successMessage, setSuccessMessage] = useState<string>('')
   const [showConfirmModal, setShowConfirmModal] = useState(false)
   const [potToReclaim, setPotToReclaim] = useState<string | null>(null)
+  const [fetchedUserProfile, setFetchedUserProfile] = useState<NeynarUser | null>(null)
+  const [profileLoading, setProfileLoading] = useState(false)
 
   // Wallet connections
   const { address: wagmiAddress, isConnected: wagmiConnected } = useAccount()
   const { address: miniKitAddress, isConnected: miniKitConnected } = useMiniKitWallet()
+  const { userProfile: contextUserProfile } = useMiniAppContext()
   
   // Wagmi hooks for reclaim
   const { writeContract: reclaimContract, data: reclaimHash } = useWriteContract()
@@ -80,8 +92,39 @@ export default function Profile() {
   useEffect(() => {
     if (mounted && isConnected && userAddress) {
       loadUserPots()
+      loadUserProfile()
     }
   }, [mounted, isConnected, userAddress])
+
+  async function loadUserProfile() {
+    if (!userAddress || !isFarcaster) return
+    
+    // If we have profile from context, use it
+    if (contextUserProfile?.username) {
+      setFetchedUserProfile({
+        fid: contextUserProfile.fid || 0,
+        username: contextUserProfile.username,
+        display_name: contextUserProfile.displayName || contextUserProfile.username,
+        pfp_url: contextUserProfile.avatarUrl || ''
+      })
+      return
+    }
+    
+    // Otherwise, fetch from API
+    try {
+      setProfileLoading(true)
+      const response = await fetch(`/api/user/profile?address=${userAddress}`)
+      const data = await response.json()
+      
+      if (response.ok && data.user) {
+        setFetchedUserProfile(data.user)
+      }
+    } catch (error) {
+      console.error('Failed to load user profile:', error)
+    } finally {
+      setProfileLoading(false)
+    }
+  }
 
   async function loadUserPots() {
     try {
@@ -269,15 +312,47 @@ export default function Profile() {
       {/* Profile Header */}
       <div className="bg-card backdrop-blur-xl rounded-md p-4 border border-gray-200 shadow-card">
         <div className="flex items-center space-x-3 mb-3">
-          <div className="w-12 h-12 gradient-hero rounded-md flex items-center justify-center shadow-lg">
-            <Wallet className="w-6 h-6 text-white" />
-          </div>
+          {/* Avatar */}
+          {fetchedUserProfile?.pfp_url ? (
+            <img 
+              src={fetchedUserProfile.pfp_url} 
+              alt={fetchedUserProfile.username}
+              className="w-16 h-16 rounded-md object-cover shadow-lg"
+            />
+          ) : (
+            <div className="w-16 h-16 gradient-hero rounded-md flex items-center justify-center shadow-lg">
+              <User className="w-8 h-8 text-white" />
+            </div>
+          )}
+          
+          {/* User Info */}
           <div className="flex-1">
-            <h1 className="text-xl font-bold text-gray-900">Profile</h1>
-            <p className="text-xs font-mono text-gray-600">{userAddress?.slice(0, 10)}...{userAddress?.slice(-8)}</p>
+            {fetchedUserProfile?.username ? (
+              <>
+                <h1 className="text-xl font-bold text-gray-900">
+                  {fetchedUserProfile.display_name || fetchedUserProfile.username}
+                </h1>
+                <p className="text-sm text-blue-600 font-medium">@{fetchedUserProfile.username}</p>
+              </>
+            ) : profileLoading ? (
+              <>
+                <div className="h-6 w-32 bg-gray-200 rounded animate-pulse mb-1"></div>
+                <div className="h-4 w-24 bg-gray-200 rounded animate-pulse"></div>
+              </>
+            ) : (
+              <>
+                <h1 className="text-xl font-bold text-gray-900">Profile</h1>
+                {isFarcaster && <p className="text-xs text-gray-600">Base User</p>}
+              </>
+            )}
           </div>
+          
+          {/* Refresh Button */}
           <button
-            onClick={loadUserPots}
+            onClick={() => {
+              loadUserPots()
+              loadUserProfile()
+            }}
             disabled={loading}
             className="p-2 text-primary hover:text-primary-dark disabled:opacity-50 transition-colors"
           >

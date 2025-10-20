@@ -2,10 +2,18 @@
 
 import Link from 'next/link'
 import { useAccount } from 'wagmi'
-import { Home as HomeIcon, Plus, Eye, MessageCircle, Wallet, X, AlertCircle, ExternalLink } from 'lucide-react'
+import { Home as HomeIcon, Plus, Eye, MessageCircle, Wallet, X, AlertCircle, ExternalLink, User } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 import { useMiniKitWallet } from '@/hooks/useMiniKitWallet'
+import { useMiniAppContext } from '@/app/components/MiniAppProvider'
 import { useState, useEffect } from 'react'
+
+interface NeynarUser {
+  fid: number
+  username: string
+  display_name: string
+  pfp_url: string
+}
 
 interface MobileLayoutProps {
   children: React.ReactNode
@@ -16,10 +24,12 @@ export default function MobileLayout({ children, showBottomNav = true }: MobileL
   const [isFarcaster, setIsFarcaster] = useState(false)
   const [mounted, setMounted] = useState(false)
   const [showBetaModal, setShowBetaModal] = useState(false)
+  const [fetchedUserProfile, setFetchedUserProfile] = useState<NeynarUser | null>(null)
 
   // Wallet connections
   const { address: wagmiAddress, isConnected: wagmiConnected } = useAccount()
   const { address: miniKitAddress, isConnected: miniKitConnected } = useMiniKitWallet()
+  const { userProfile: contextUserProfile } = useMiniAppContext()
   
   const pathname = usePathname()
 
@@ -34,17 +44,53 @@ export default function MobileLayout({ children, showBottomNav = true }: MobileL
   const isConnected = isFarcaster ? miniKitConnected : wagmiConnected
   const userAddress = isFarcaster ? miniKitAddress : wagmiAddress
 
-  // Truncate address for display
-  const truncatedAddress = userAddress ? `${userAddress.slice(0, 6)}...${userAddress.slice(-4)}` : ''
+  // Load user profile
+  useEffect(() => {
+    if (mounted && isConnected && userAddress && isFarcaster) {
+      loadUserProfile()
+    }
+  }, [mounted, isConnected, userAddress, isFarcaster])
+
+  async function loadUserProfile() {
+    if (!userAddress) return
+    
+    // If we have profile from context, use it
+    if (contextUserProfile?.username) {
+      setFetchedUserProfile({
+        fid: contextUserProfile.fid || 0,
+        username: contextUserProfile.username,
+        display_name: contextUserProfile.displayName || contextUserProfile.username,
+        pfp_url: contextUserProfile.avatarUrl || ''
+      })
+      return
+    }
+    
+    // Otherwise, fetch from API
+    try {
+      const response = await fetch(`/api/user/profile?address=${userAddress}`)
+      const data = await response.json()
+      
+      if (response.ok && data.user) {
+        setFetchedUserProfile(data.user)
+      }
+    } catch (error) {
+      console.error('Failed to load user profile:', error)
+    }
+  }
+
+  // Display name: username if available, otherwise truncated address
+  const displayName = fetchedUserProfile?.username 
+    ? `@${fetchedUserProfile.username}` 
+    : userAddress ? `${userAddress.slice(0, 6)}...${userAddress.slice(-4)}` : ''
 
   return (
     <main className="min-h-screen bg-card flex flex-col">
-      {/* Top Header with Wallet Info */}
+      {/* Top Header with User Info */}
       {mounted && isConnected && (
         <div className="gradient-hero shadow-lg">
           <div className="max-w-md mx-auto px-4 py-3">
             <div className="flex items-center justify-between">
-              {/* Beta Badge + Wallet Address */}
+              {/* Beta Badge + User Info */}
               <div className="flex items-center space-x-3">
                 {/* Beta Badge - Clickable */}
                 <button
@@ -54,10 +100,24 @@ export default function MobileLayout({ children, showBottomNav = true }: MobileL
                   <span className="text-xs font-bold text-yellow-300">BETA</span>
                 </button>
                 
-                {/* Wallet Address */}
+                {/* User Profile */}
                 <div className="flex items-center space-x-2">
-                  <div className="w-2 h-2 bg-gold rounded-full animate-pulse"></div>
-                  <span className="text-sm font-semibold text-white font-mono">{truncatedAddress}</span>
+                  {/* Avatar */}
+                  {fetchedUserProfile?.pfp_url ? (
+                    <img 
+                      src={fetchedUserProfile.pfp_url} 
+                      alt={fetchedUserProfile.username}
+                      className="w-7 h-7 rounded-md object-cover border border-white/20"
+                    />
+                  ) : (
+                    <div className="w-7 h-7 bg-white/20 rounded-md flex items-center justify-center border border-white/20">
+                      <User className="w-4 h-4 text-white" />
+                    </div>
+                  )}
+                  {/* Name/Address */}
+                  <span className="text-sm font-semibold text-white">
+                    {displayName}
+                  </span>
                 </div>
               </div>
               

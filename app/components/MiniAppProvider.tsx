@@ -1,8 +1,46 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, createContext, useContext } from 'react'
 import { sdk } from '@farcaster/miniapp-sdk'
 import { miniKitWallet } from '@/lib/minikit-wallet'
+
+interface UserProfile {
+  fid?: number
+  username?: string
+  displayName?: string
+  avatarUrl?: string
+}
+
+interface FarcasterContextUser {
+  fid?: number
+  username?: string
+  displayName?: string
+  display_name?: string
+  pfpUrl?: string
+  pfp_url?: string
+  avatarUrl?: string
+}
+
+interface FarcasterContext {
+  user?: FarcasterContextUser
+  [key: string]: any
+}
+
+interface MiniAppContextType {
+  isReady: boolean
+  isFarcaster: boolean
+  userProfile: UserProfile | null
+  context: FarcasterContext | null
+}
+
+const MiniAppContext = createContext<MiniAppContextType>({
+  isReady: false,
+  isFarcaster: false,
+  userProfile: null,
+  context: null
+})
+
+export const useMiniAppContext = () => useContext(MiniAppContext)
 
 interface MiniAppProviderProps {
   children: React.ReactNode
@@ -10,8 +48,9 @@ interface MiniAppProviderProps {
 
 export function MiniAppProvider({ children }: MiniAppProviderProps) {
   const [isReady, setIsReady] = useState(false)
-  const [context, setContext] = useState<any>(null)
+  const [context, setContext] = useState<FarcasterContext | null>(null)
   const [isFarcaster, setIsFarcaster] = useState(false)
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
 
   useEffect(() => {
     const initializeMiniApp = async () => {
@@ -36,7 +75,7 @@ export function MiniAppProvider({ children }: MiniAppProviderProps) {
           (async () => {
             // Get context from Farcaster
             const ctx = await sdk.context
-            setContext(ctx)
+            setContext(ctx as FarcasterContext)
             
             // Signal that the app is ready
             await sdk.actions.ready()
@@ -47,9 +86,21 @@ export function MiniAppProvider({ children }: MiniAppProviderProps) {
           )
         ])
 
-        const ctx = await initWithTimeout
+        const ctx = await initWithTimeout as FarcasterContext
         setIsReady(true)
         console.log('Mini App initialized successfully', ctx)
+        
+        // Extract user profile from context
+        if (ctx?.user) {
+          const profile: UserProfile = {
+            fid: ctx.user.fid,
+            username: ctx.user.username,
+            displayName: ctx.user.displayName || ctx.user.display_name,
+            avatarUrl: ctx.user.pfpUrl || ctx.user.pfp_url || ctx.user.avatarUrl
+          }
+          setUserProfile(profile)
+          console.log('User profile extracted:', profile)
+        }
       } catch (error) {
         console.error('Failed to initialize Mini App:', error)
         // Always set ready to true so the app doesn't hang
@@ -94,8 +145,10 @@ export function MiniAppProvider({ children }: MiniAppProviderProps) {
   }
 
   return (
-    <div className="mini-app-container">
-      {children}
-    </div>
+    <MiniAppContext.Provider value={{ isReady, isFarcaster, userProfile, context }}>
+      <div className="mini-app-container">
+        {children}
+      </div>
+    </MiniAppContext.Provider>
   )
 }
