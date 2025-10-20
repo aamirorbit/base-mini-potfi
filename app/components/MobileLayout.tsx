@@ -44,12 +44,25 @@ export default function MobileLayout({ children, showBottomNav = true }: MobileL
   const isConnected = isFarcaster ? miniKitConnected : wagmiConnected
   const userAddress = isFarcaster ? miniKitAddress : wagmiAddress
 
-  // Load user profile
+  // Load user profile when wallet connects
   useEffect(() => {
-    if (mounted && isConnected && userAddress && isFarcaster) {
+    if (mounted && isConnected && userAddress) {
       loadUserProfile()
     }
-  }, [mounted, isConnected, userAddress, isFarcaster])
+  }, [mounted, isConnected, userAddress])
+
+  // Update profile when context profile becomes available
+  useEffect(() => {
+    if (contextUserProfile?.username && !fetchedUserProfile) {
+      console.log('✅ [MobileLayout] Context profile became available:', contextUserProfile)
+      setFetchedUserProfile({
+        fid: contextUserProfile.fid || 0,
+        username: contextUserProfile.username,
+        display_name: contextUserProfile.displayName || contextUserProfile.username,
+        pfp_url: contextUserProfile.avatarUrl || ''
+      })
+    }
+  }, [contextUserProfile])
 
   async function loadUserProfile() {
     console.log('🔍 [MobileLayout] Loading user profile...', {

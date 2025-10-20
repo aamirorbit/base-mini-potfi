@@ -96,6 +96,19 @@ export default function Profile() {
     }
   }, [mounted, isConnected, userAddress])
 
+  // Update profile when context profile becomes available
+  useEffect(() => {
+    if (contextUserProfile?.username && !fetchedUserProfile) {
+      console.log('✅ [Profile] Context profile became available:', contextUserProfile)
+      setFetchedUserProfile({
+        fid: contextUserProfile.fid || 0,
+        username: contextUserProfile.username,
+        display_name: contextUserProfile.displayName || contextUserProfile.username,
+        pfp_url: contextUserProfile.avatarUrl || ''
+      })
+    }
+  }, [contextUserProfile])
+
   async function loadUserProfile() {
     console.log('🔍 Loading user profile...', {
       userAddress,
