@@ -120,19 +120,6 @@ export default function MobileLayout({ children, showBottomNav = true }: MobileL
             <div className="flex items-center justify-between gap-3">
               {/* User Profile + Beta Badge */}
               <div className="flex items-center space-x-2 flex-1 min-w-0">
-                {/* Avatar */}
-                {fetchedUserProfile?.pfp_url ? (
-                  <img 
-                    src={fetchedUserProfile.pfp_url} 
-                    alt={fetchedUserProfile.username}
-                    className="w-8 h-8 rounded-md object-cover border border-white/20 flex-shrink-0"
-                  />
-                ) : (
-                  <div className="w-8 h-8 bg-white/20 rounded-md flex items-center justify-center border border-white/20 flex-shrink-0">
-                    <User className="w-4 h-4 text-white" />
-                  </div>
-                )}
-                
                 {/* Name/Address + Beta Badge */}
                 <div className="flex items-center space-x-2 min-w-0">
                   <span className="text-sm font-semibold text-white truncate">
