@@ -656,11 +656,18 @@ export default function Create() {
         
         // Show initial success with txHash - stop showing creating state immediately
         console.log('  - Setting success state and stopping loading...')
+        
+        // IMPORTANT: Update all states to show success screen
+        // Set these in the correct order to ensure re-render
+        setPotId(txHash)  // Set pot ID first
+        setIsPotIdPending(true)  // Mark as pending confirmation
         setBaseAppCreating(false) // Stop showing "Creating..." loading state
-        setPotId(txHash)
-        setShowSuccess(true)
-        setIsPotIdPending(true)
+        setShowSuccess(true)  // Show success screen
+        
         console.log('  - Success state set:', { showSuccess: true, potId: txHash, isPotIdPending: true, baseAppCreating: false })
+        
+        // Force a small delay to ensure state updates are processed
+        await new Promise(resolve => setTimeout(resolve, 100))
         
         // Use public RPC client to poll for receipt (MiniKit provider doesn't support eth_getTransactionReceipt)
         console.log('⏳ Waiting for transaction to be mined...')
@@ -1347,14 +1354,73 @@ export default function Create() {
           {/* Progress Indicator */}
           {((isBaseApp ? baseAppApproving : isApproving) || 
             (isBaseApp ? baseAppCreating : isCreating)) && (
-            <div className="bg-primary/5 border border-primary/20 px-3 py-2 rounded-md shadow-card">
-              <div className="flex items-center space-x-2">
-                <div className="animate-spin w-4 h-4 border-2 border-primary border-t-transparent rounded-full"></div>
-                <p className="text-xs font-semibold text-gray-700">
-                  {(isBaseApp ? baseAppApproving : isApproving) 
-                    ? 'Please approve USDC in your wallet...' 
-                    : 'Please confirm pot creation in your wallet...'}
-                </p>
+            <div className="bg-white/70 backdrop-blur-xl rounded-md p-4 border border-white/20 shadow-card">
+              <h3 className="text-sm font-bold text-gray-900 mb-3">Transaction Progress</h3>
+              
+              <div className="space-y-3">
+                {/* Step 1: Approval */}
+                <div className="flex items-start space-x-3">
+                  <div className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center ${
+                    (isBaseApp ? baseAppApproved : approveSuccess) 
+                      ? 'bg-blue-500' 
+                      : (isBaseApp ? baseAppApproving : isApproving)
+                      ? 'bg-blue-500 animate-pulse'
+                      : 'bg-gray-300'
+                  }`}>
+                    {(isBaseApp ? baseAppApproved : approveSuccess) ? (
+                      <CheckCircle className="w-4 h-4 text-white" />
+                    ) : (isBaseApp ? baseAppApproving : isApproving) ? (
+                      <RefreshCw className="w-3 h-3 text-white animate-spin" />
+                    ) : (
+                      <span className="text-white text-xs font-bold">1</span>
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold text-gray-900">
+                      {(isBaseApp ? baseAppApproved : approveSuccess) ? '✓ ' : ''}
+                      Approve USDC
+                    </p>
+                    <p className="text-xs text-gray-600">
+                      {(isBaseApp ? baseAppApproving : isApproving) 
+                        ? 'Waiting for wallet confirmation...'
+                        : (isBaseApp ? baseAppApproved : approveSuccess)
+                        ? 'Approved successfully'
+                        : 'Pending'}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Step 2: Create Pot */}
+                <div className="flex items-start space-x-3">
+                  <div className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center ${
+                    showSuccess 
+                      ? 'bg-blue-500' 
+                      : (isBaseApp ? baseAppCreating : isCreating)
+                      ? 'bg-blue-500 animate-pulse'
+                      : 'bg-gray-300'
+                  }`}>
+                    {showSuccess ? (
+                      <CheckCircle className="w-4 h-4 text-white" />
+                    ) : (isBaseApp ? baseAppCreating : isCreating) ? (
+                      <RefreshCw className="w-3 h-3 text-white animate-spin" />
+                    ) : (
+                      <span className="text-white text-xs font-bold">2</span>
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold text-gray-900">
+                      {showSuccess ? '✓ ' : ''}
+                      Create Pot
+                    </p>
+                    <p className="text-xs text-gray-600">
+                      {(isBaseApp ? baseAppCreating : isCreating) 
+                        ? 'Sending transaction...'
+                        : showSuccess
+                        ? 'Pot created successfully!'
+                        : 'Waiting for approval'}
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
           )}
