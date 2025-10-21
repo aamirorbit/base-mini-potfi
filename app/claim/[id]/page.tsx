@@ -28,6 +28,8 @@ export default function Claim() {
   const [errorMessage, setErrorMessage] = useState<string>('')
   const [jackpotInfo, setJackpotInfo] = useState<any>(null)
   const [showJackpotModal, setShowJackpotModal] = useState(false)
+  const [showClaimSuccessModal, setShowClaimSuccessModal] = useState(false)
+  const [claimedAmount, setClaimedAmount] = useState<string>('0.01')
   const [potDetails, setPotDetails] = useState<any>(null)
   const [loadingPot, setLoadingPot] = useState(true)
   const [showErrorModal, setShowErrorModal] = useState(false)
@@ -168,10 +170,16 @@ export default function Claim() {
       setErrorMessage('')
       setBusy(false)
       
-      // Show jackpot modal if user won jackpot
+      // Set claimed amount based on jackpot or standard claim
       if (jackpotInfo?.isJackpot) {
+        setClaimedAmount(jackpotInfo.amount || potDetails?.remainingAmount?.toString() || '0')
         setShowJackpotModal(true)
+      } else {
+        setClaimedAmount('0.01') // Standard claim
       }
+      
+      // Always show success modal after claim
+      setShowClaimSuccessModal(true)
       
       console.log('✅ Transaction successful!', isBaseApp ? miniKitTxHash : txHash)
       console.log('Jackpot info:', jackpotInfo)
@@ -721,6 +729,87 @@ export default function Claim() {
               </button>
             </>
           )}
+
+      {/* Claim Success Modal */}
+      {showClaimSuccessModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-white/90 backdrop-blur-xl rounded-md p-6 shadow-2xl border border-white/20 max-w-md w-full max-h-[80vh] overflow-y-auto">
+            <div className="text-center">
+              {/* Success Icon with 3D Effect */}
+              <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-blue-700 rounded-md flex items-center justify-center mb-4 mx-auto shadow-lg transform transition-all duration-300 hover:scale-110">
+                <CheckCircle className="w-10 h-10 text-white" />
+              </div>
+              
+              {/* Header */}
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                {jackpotInfo?.isJackpot ? '🎉 JACKPOT!' : '✨ Claim Successful!'}
+              </h2>
+              <p className="text-sm text-gray-600 mb-6">
+                {jackpotInfo?.isJackpot ? 'You hit the jackpot! 🎰' : 'You earned USDC!'}
+              </p>
+              
+              {/* Amount Display with Glassmorphism */}
+              <div className="bg-blue-500/10 backdrop-blur-xl border border-blue-200/50 rounded-md p-4 mb-6 shadow-lg">
+                <p className="text-sm text-gray-600 mb-1">You Received</p>
+                <p className="text-3xl font-bold text-blue-600">
+                  +{claimedAmount} USDC
+                </p>
+                {jackpotInfo?.totalClaims && (
+                  <p className="text-xs text-gray-500 mt-2">
+                    Claim #{jackpotInfo.totalClaims}
+                  </p>
+                )}
+              </div>
+
+              {/* Call to Action */}
+              <div className="bg-gradient-to-br from-blue-50 via-white to-purple-50 backdrop-blur-xl rounded-md p-4 mb-6 border border-white/20">
+                <Target className="w-8 h-8 text-blue-600 mx-auto mb-2" />
+                <h3 className="text-lg font-bold text-gray-900 mb-2">Create Your Own Pot!</h3>
+                <p className="text-xs text-gray-600 mb-4">
+                  Set up a USDC reward pot and engage your community
+                </p>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="space-y-3">
+                {/* Create Pot Button - Primary */}
+                <Link
+                  href="/create"
+                  onClick={() => setShowClaimSuccessModal(false)}
+                  className="block w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold py-4 px-6 rounded-md text-sm transition-all duration-200 shadow-xl transform active:scale-95 backdrop-blur-sm"
+                >
+                  <div className="flex items-center justify-center space-x-2">
+                    <Coins className="w-5 h-5" />
+                    <span>CREATE YOUR POT</span>
+                  </div>
+                </Link>
+
+                {/* Share App Button - Secondary */}
+                <a
+                  href="https://base.app/~/compose?text=Just%20claimed%20USDC%20on%20PotFi!%20%F0%9F%8E%AF%20Create%20reward%20pots%20and%20engage%20your%20community%20%F0%9F%92%B0&embeds[]=https://potfi.pcdsns.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => setShowClaimSuccessModal(false)}
+                  className="block w-full bg-gray-800/90 backdrop-blur-sm hover:bg-gray-900 text-white font-bold py-4 px-6 rounded-md text-sm transition-all duration-200 shadow-xl transform active:scale-95"
+                >
+                  <div className="flex items-center justify-center space-x-2">
+                    <ExternalLink className="w-4 h-4" />
+                    <span>SHARE POTFI</span>
+                  </div>
+                </a>
+
+                {/* Close Button - Tertiary */}
+                <button
+                  onClick={() => setShowClaimSuccessModal(false)}
+                  className="w-full text-gray-600 hover:text-gray-900 font-semibold py-3 px-6 rounded-md text-sm transition-all duration-200"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Jackpot Success Modal */}
       {showJackpotModal && jackpotInfo?.isJackpot && (

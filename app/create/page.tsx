@@ -151,7 +151,8 @@ export default function Create() {
         }, 500)
       })
     }
-  }, [baseAppApproved, approveSuccess, isBaseApp, baseAppCreating, isCreating, showSuccess, potId, creationAttempted, refetchAllowance, create])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [baseAppApproved, approveSuccess, isBaseApp, baseAppCreating, isCreating, showSuccess, potId, creationAttempted])
 
   // Reset error when starting new actions
   const clearError = () => setErrorMessage('')
@@ -657,17 +658,18 @@ export default function Create() {
         // Show initial success with txHash - stop showing creating state immediately
         console.log('  - Setting success state and stopping loading...')
         
-        // IMPORTANT: Update all states to show success screen
-        // Set these in the correct order to ensure re-render
-        setPotId(txHash)  // Set pot ID first
-        setIsPotIdPending(true)  // Mark as pending confirmation
-        setBaseAppCreating(false) // Stop showing "Creating..." loading state
-        setShowSuccess(true)  // Show success screen
+        // CRITICAL: Update all states in batch to show success screen
+        // First, set the pot ID
+        setPotId(txHash)
+        setIsPotIdPending(true)
         
-        console.log('  - Success state set:', { showSuccess: true, potId: txHash, isPotIdPending: true, baseAppCreating: false })
-        
-        // Force a small delay to ensure state updates are processed
-        await new Promise(resolve => setTimeout(resolve, 100))
+        // Then immediately set success and stop loading
+        // Using queueMicrotask to ensure state updates are batched
+        queueMicrotask(() => {
+          setBaseAppCreating(false)
+          setShowSuccess(true)
+          console.log('  ✅ Success state confirmed:', { showSuccess: true, potId: txHash, baseAppCreating: false })
+        })
         
         // Use public RPC client to poll for receipt (MiniKit provider doesn't support eth_getTransactionReceipt)
         console.log('⏳ Waiting for transaction to be mined...')
@@ -748,7 +750,11 @@ export default function Create() {
         }, 1000) // Poll every second
         
       } catch (error: any) {
-        console.error('CreatePot error:', error)
+        console.error('❌ CreatePot error:', error)
+        console.error('  - Error code:', error.code)
+        console.error('  - Error message:', error.message)
+        console.error('  - Full error:', JSON.stringify(error, null, 2))
+        
         // Check if user rejected the transaction
         const isUserRejection = error.message?.toLowerCase().includes('user rejected') || 
                                error.message?.toLowerCase().includes('user denied') ||
@@ -760,10 +766,17 @@ export default function Create() {
           ? 'Transaction cancelled. Please try again when ready.' 
           : (error.message || 'Failed to create pot')
         
+        console.error('  - Setting error states:', { errorMsg, isUserRejection })
+        
+        // Reset all states on error
+        setBaseAppCreating(false)
+        setShowSuccess(false)
+        setPotId(null)
+        setCreationAttempted(false) // Reset flag so user can retry
+        
+        // Show error
         setErrorMessage(errorMsg)
         setShowErrorModal(true)
-        setBaseAppCreating(false)
-        setCreationAttempted(false) // Reset flag so user can retry
       }
     } else {
       // Convert postId to bytes32 for contract
@@ -812,7 +825,10 @@ export default function Create() {
     baseAppCreating,
     baseAppApproving,
     isCreating,
-    isApproving
+    isApproving,
+    willShowSuccess: showSuccess && potId,
+    willShowError: !!errorMessage,
+    willShowForm: !showSuccess && !errorMessage
   })
 
   if (!mounted) {
@@ -865,13 +881,14 @@ export default function Create() {
     )
   }
 
+  // Success screen
   if (showSuccess && potId) {
-    console.log('✨ Rendering SUCCESS screen!', {
-      potId,
-      claimUrl,
-      shareUrl: shareUrl ? 'Generated' : 'Empty',
-      amount
-    })
+    console.log('✨✨✨ RENDERING SUCCESS SCREEN ✨✨✨')
+    console.log('  - potId:', potId)
+    console.log('  - showSuccess:', showSuccess)
+    console.log('  - claimUrl:', claimUrl)
+    console.log('  - shareUrl:', shareUrl ? 'Generated' : 'Empty')
+    console.log('  - amount:', amount)
     return (
       <div className="space-y-4">
         {/* Success Header */}
@@ -895,7 +912,7 @@ export default function Create() {
           >
             <div className="flex items-center justify-center space-x-2">
               <Share2 className="w-4 h-4" />
-              <span>Share on Warpcast</span>
+              <span>Share on Base app</span>
             </div>
           </a>
           
@@ -1023,7 +1040,11 @@ export default function Create() {
     )
   }
 
+  // If we reach here, we're showing the create form
   console.log('📝 Rendering CREATE FORM')
+  console.log('  - Why not success? showSuccess:', showSuccess, 'potId:', potId ? potId.slice(0, 10) + '...' : 'null')
+  console.log('  - Why not error? errorMessage:', errorMessage || 'none')
+  console.log('  - Loading states: baseAppCreating:', baseAppCreating, 'baseAppApproving:', baseAppApproving)
   
   return (
     <div className="space-y-4">

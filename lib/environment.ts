@@ -79,6 +79,7 @@ export function getShortCastId(castId: string): string {
 
 /**
  * Get share URL for creating new casts
+ * Uses base.app which is the Base app's composer
  */
 export function getShareCastUrl(text: string, embedUrl: string): string {
   const params = new URLSearchParams({
@@ -86,7 +87,7 @@ export function getShareCastUrl(text: string, embedUrl: string): string {
     'embeds[]': embedUrl
   })
   
-  return `https://warpcast.com/~/compose?${params.toString()}`
+  return `https://base.app/~/compose?${params.toString()}`
 }
 
 /**
