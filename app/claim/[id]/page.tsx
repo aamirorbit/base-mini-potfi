@@ -670,9 +670,19 @@ export default function Claim() {
                 )}
               </div>
 
+              {/* MAX_WINNERS Warning */}
+              {potDetails && potDetails.claimed >= 200 && (
+                <div className="bg-yellow-500/10 backdrop-blur-xl border border-yellow-200/50 text-yellow-700 px-4 py-3 rounded-md shadow-lg">
+                  <div className="flex items-center space-x-2">
+                    <AlertTriangle className="w-4 h-4" />
+                    <p className="text-sm font-medium">This pot has reached the maximum claim limit (200 claims)</p>
+                  </div>
+                </div>
+              )}
+              
               {/* Claim Button */}
               <button
-                disabled={busy || isTransactionPending || !address || !castId}
+                disabled={busy || isTransactionPending || !address || !castId || (potDetails && potDetails.claimed >= 200)}
                 onClick={claim}
                 className="w-full relative py-3 px-4 rounded-lg text-sm font-bold btn-uppercase transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden group"
                 style={{
@@ -699,6 +709,7 @@ export default function Claim() {
                   {isTransactionPending ? 'Pending...' : 
                    busy ? 'Processing...' : 
                    !castId ? 'Detecting...' : 
+                   (potDetails && potDetails.claimed >= 200) ? 'Max Claims Reached' :
                    'Claim Now'}
                 </span>
               </button>

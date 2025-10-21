@@ -316,6 +316,16 @@ function PotCard({ pot }: { pot: PotData }) {
             </div>
           </div>
         )}
+        
+        {/* MAX_WINNERS Warning */}
+        {pot.status === 'active' && pot.claimCount >= 180 && pot.claimCount < 200 && (
+          <div className="bg-yellow-500/10 backdrop-blur-xl border border-yellow-200/50 text-yellow-700 px-3 py-2 rounded-md shadow-lg mb-2">
+            <div className="flex items-center space-x-2">
+              <Trophy className="w-4 h-4" />
+              <p className="text-xs font-medium">Approaching claim limit! Only {200 - pot.claimCount} claims remaining.</p>
+            </div>
+          </div>
+        )}
 
         {/* Progress Bar */}
         <div className="mb-2">

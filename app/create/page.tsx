@@ -369,6 +369,11 @@ export default function Create() {
     try {
       const postIdBytes32 = castIdToBytes32(postId)
       
+      // Generate random salt for unpredictable pot ID
+      const salt = `0x${Array.from(crypto.getRandomValues(new Uint8Array(32)))
+        .map(b => b.toString(16).padStart(2, '0'))
+        .join('')}` as `0x${string}`
+      
       // Prepare batch calls
       const calls = [
         {
@@ -380,8 +385,8 @@ export default function Create() {
         {
           address: jackpotAddress as `0x${string}`,
           abi: jackpotAbi,
-          functionName: 'createPot',
-          args: [USDC, usdcAmt, ONE_USDC, timeout, postIdBytes32, requireLike, requireRecast, requireComment]
+          functionName: 'createPotWithSalt',
+          args: [USDC, usdcAmt, ONE_USDC, timeout, postIdBytes32, requireLike, requireRecast, requireComment, salt]
         }
       ]
       
@@ -444,6 +449,22 @@ export default function Create() {
       return
     }
     
+    // Validate pot requirements
+    const standardClaimUSDC = 0.01 // ONE_USDC in human-readable format
+    const minClaims = 10
+    
+    if (amount < standardClaimUSDC * minClaims) {
+      setErrorMessage(`Pot must support at least ${minClaims} claims (minimum ${standardClaimUSDC * minClaims} USDC)`)
+      setShowErrorModal(true)
+      return
+    }
+    
+    if (standardClaimUSDC > amount / 2) {
+      setErrorMessage('Standard claim cannot exceed 50% of the pot amount')
+      setShowErrorModal(true)
+      return
+    }
+    
     // Mark creation as attempted immediately to prevent retries
     setCreationAttempted(true)
     
@@ -462,11 +483,16 @@ export default function Create() {
         // Convert postId to bytes32 for contract
         const postIdBytes32 = castIdToBytes32(postId)
         
-        // Encode the createPot function call
+        // Generate random salt for unpredictable pot ID
+        const salt = `0x${Array.from(crypto.getRandomValues(new Uint8Array(32)))
+          .map(b => b.toString(16).padStart(2, '0'))
+          .join('')}` as `0x${string}`
+        
+        // Encode the createPotWithSalt function call for enhanced security
         const data = encodeFunctionData({
           abi: jackpotAbi,
-          functionName: 'createPot',
-          args: [USDC, usdcAmt, ONE_USDC, timeout, postIdBytes32, requireLike, requireRecast, requireComment]
+          functionName: 'createPotWithSalt',
+          args: [USDC, usdcAmt, ONE_USDC, timeout, postIdBytes32, requireLike, requireRecast, requireComment, salt]
         })
 
         console.log('Sending createPot transaction via MiniKit...')
@@ -556,12 +582,17 @@ export default function Create() {
       // Convert postId to bytes32 for contract
       const postIdBytes32 = castIdToBytes32(postId)
       
-      // Use wagmi for standalone browser
+      // Generate random salt for unpredictable pot ID
+      const salt = `0x${Array.from(crypto.getRandomValues(new Uint8Array(32)))
+        .map(b => b.toString(16).padStart(2, '0'))
+        .join('')}` as `0x${string}`
+      
+      // Use wagmi for standalone browser with enhanced security
       createPotContract({
         abi: jackpotAbi, 
         address: jackpotAddress, 
-        functionName: 'createPot',
-        args: [USDC, usdcAmt, ONE_USDC, timeout, postIdBytes32, requireLike, requireRecast, requireComment]
+        functionName: 'createPotWithSalt',
+        args: [USDC, usdcAmt, ONE_USDC, timeout, postIdBytes32, requireLike, requireRecast, requireComment, salt]
       })
     }
   }
@@ -863,12 +894,22 @@ export default function Create() {
                 onChange={(e) => setAmount(Number(e.target.value))}
                 className="w-full p-3 rounded-md border-2 border-gray-300 text-gray-900 text-base font-semibold focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
                 placeholder="Or enter custom amount"
-                min="1"
-                step="1"
+                min="0.1"
+                step="0.1"
               />
-              <p className="text-gray-600 text-xs mt-2 font-medium">
-                💰 Each claim: 0.01 USDC · Minimum: 1 USDC
-              </p>
+              
+              {/* Validation Hints */}
+              <div className="mt-2 space-y-1">
+                <p className="text-xs text-gray-600">
+                  • Minimum: 0.1 USDC (supports 10 claims)
+                </p>
+                <p className="text-xs text-gray-600">
+                  • Each claim: 0.01 USDC
+                </p>
+                <p className="text-xs text-gray-600">
+                  • Maximum claims: {Math.min(Math.floor(amount / 0.01), 200)}
+                </p>
+              </div>
             </div>
             
             {/* Post ID Input */}
