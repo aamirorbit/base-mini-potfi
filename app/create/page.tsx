@@ -39,7 +39,10 @@ export default function Create() {
   const [copied, setCopied] = useState(false)
   const [showErrorModal, setShowErrorModal] = useState(false)
   const [creationAttempted, setCreationAttempted] = useState(false) // Track if creation has been attempted
-  const [showDebugLogger, setShowDebugLogger] = useState(true) // Always show debug logger for now
+  
+  // Show debug logger only when NEXT_PUBLIC_DEBUG_LOGS is set to "true"
+  const showDebugLogger = process.env.NEXT_PUBLIC_DEBUG_LOGS === 'true'
+  
   const usdcAmt = BigInt(Math.round(amount * 1_000_000)) // 6dp
 
   // Wagmi hooks for fallback

@@ -17,6 +17,7 @@ import { miniKitWallet } from '@/lib/minikit-wallet'
 import { Coins, Target, AlertTriangle, CheckCircle, Wifi, X, XCircle, Wallet, ExternalLink, Zap } from 'lucide-react'
 import Link from 'next/link'
 import { ErrorModal } from '@/app/components/ErrorModal'
+import { DebugLogger } from '@/app/components/DebugLogger'
 
 export default function Claim() {
   const { id } = useParams() as { id: `0x${string}` }
@@ -28,6 +29,9 @@ export default function Claim() {
   const [errorMessage, setErrorMessage] = useState<string>('')
   const [jackpotInfo, setJackpotInfo] = useState<any>(null)
   const [showJackpotModal, setShowJackpotModal] = useState(false)
+  
+  // Show debug logger only when NEXT_PUBLIC_DEBUG_LOGS is set to "true"
+  const showDebugLogger = process.env.NEXT_PUBLIC_DEBUG_LOGS === 'true'
   const [showClaimSuccessModal, setShowClaimSuccessModal] = useState(false)
   const [claimedAmount, setClaimedAmount] = useState<string>('0.01')
   const [potDetails, setPotDetails] = useState<any>(null)
@@ -898,6 +902,9 @@ export default function Claim() {
           }
         }}
       />
+
+      {/* Debug Logger - Only shown when NEXT_PUBLIC_DEBUG_LOGS=true */}
+      {showDebugLogger && <DebugLogger />}
     </div>
   )
 }
