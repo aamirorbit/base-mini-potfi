@@ -15,6 +15,7 @@ import { miniKitWallet } from '@/lib/minikit-wallet'
 import { Coins, AlertTriangle, CheckCircle, Copy, Share2, ArrowLeft, RefreshCw, Clock, DollarSign, Users, Zap } from 'lucide-react'
 import Link from 'next/link'
 import { ErrorModal } from '@/app/components/ErrorModal'
+import { DebugLogger } from '@/app/components/DebugLogger'
 
 export default function Create() {
   const [amount, setAmount] = useState(1)
@@ -38,6 +39,7 @@ export default function Create() {
   const [copied, setCopied] = useState(false)
   const [showErrorModal, setShowErrorModal] = useState(false)
   const [creationAttempted, setCreationAttempted] = useState(false) // Track if creation has been attempted
+  const [showDebugLogger, setShowDebugLogger] = useState(true) // Always show debug logger for now
   const usdcAmt = BigInt(Math.round(amount * 1_000_000)) // 6dp
 
   // Wagmi hooks for fallback
@@ -1462,6 +1464,9 @@ export default function Create() {
           handleCreatePot()
         }}
       />
+
+      {/* Debug Logger - Always visible during development */}
+      {showDebugLogger && <DebugLogger />}
     </div>
   )
 }
