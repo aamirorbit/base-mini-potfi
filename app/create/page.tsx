@@ -192,15 +192,31 @@ export default function Create() {
             topics: potCreatedLog.topics,
           })
           
-          // @ts-ignore - we know this event has potId
-          const realPotId = decoded.args.potId as string
-          console.log('Real pot ID from event:', realPotId)
-          setPotId(realPotId)
-          setShowSuccess(true)
+          console.log('✅ Decoded PotCreated event:', decoded)
+          console.log('  - Event name:', decoded.eventName)
+          console.log('  - Event args:', decoded.args)
           
-          // Initialize pot state in backend
-          initializePotState(realPotId, amount)
+          // The event parameter is called 'id', not 'potId'
+          // @ts-ignore - we know this event has id
+          const realPotId = (decoded.args.id || decoded.args[0]) as string
+          console.log('✅ Real pot ID from event:', realPotId)
+          
+          if (realPotId && realPotId !== '0x0000000000000000000000000000000000000000000000000000000000000000') {
+            setPotId(realPotId)
+            setShowSuccess(true)
+            
+            // Initialize pot state in backend
+            initializePotState(realPotId, amount)
+          } else {
+            console.warn('⚠️ Invalid pot ID from event, using fallback')
+            // Fallback: use timestamp-based ID
+            const fallbackId = calculatePotId(address!, Date.now())
+            console.log('Using fallback pot ID:', fallbackId)
+            setPotId(fallbackId)
+            setShowSuccess(true)
+          }
         } else {
+          console.warn('⚠️ PotCreated event not found in logs, using fallback')
           // Fallback: use timestamp-based ID
           const fallbackId = calculatePotId(address!, Date.now())
           console.log('Using fallback pot ID:', fallbackId)
