@@ -925,17 +925,16 @@ export default function Create() {
         <div className="bg-card backdrop-blur-xl rounded-md p-4 border border-gray-200 shadow-card">
           <h2 className="text-sm font-bold text-gray-900 mb-3">Share Your Pot</h2>
           
-          <a
-            href={shareUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold py-4 px-6 rounded-md text-sm transition-all duration-200 shadow-xl transform active:scale-95 backdrop-blur-sm inline-block text-center mb-2 btn-uppercase"
-          >
-            <div className="flex items-center justify-center space-x-2">
-              <Share2 className="w-4 h-4" />
-              <span>Share on Base app</span>
-            </div>
-          </a>
+          {/* Instructions */}
+          <div className="bg-blue-50 border border-blue-200 rounded-md p-3 mb-3">
+            <p className="text-xs font-semibold text-blue-900 mb-2">📋 How to Share:</p>
+            <ol className="text-xs text-blue-800 space-y-1 ml-4 list-decimal">
+              <li>Click "Copy Link" below</li>
+              <li>Go to your original post on Base</li>
+              <li>Add a comment with the copied link</li>
+              <li>Your followers can now claim!</li>
+            </ol>
+          </div>
           
           <button
             onClick={() => {
@@ -946,19 +945,19 @@ export default function Create() {
             className={`w-full font-bold py-4 px-6 rounded-md text-sm transition-all duration-200 shadow-xl transform active:scale-95 backdrop-blur-sm btn-uppercase ${
               copied 
                 ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white' 
-                : 'bg-gray-800/90 hover:bg-gray-900 text-white'
+                : 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white'
             }`}
           >
             <div className="flex items-center justify-center space-x-2">
               {copied ? (
                 <>
                   <CheckCircle className="w-4 h-4" />
-                  <span>Copied!</span>
+                  <span>Link Copied!</span>
                 </>
               ) : (
                 <>
                   <Copy className="w-4 h-4" />
-                  <span>Copy Link</span>
+                  <span>Copy Claim Link</span>
                 </>
               )}
             </div>
