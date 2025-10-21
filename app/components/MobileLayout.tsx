@@ -113,15 +113,31 @@ export default function MobileLayout({ children, showBottomNav = true }: MobileL
 
   return (
     <main className="min-h-screen bg-card flex flex-col">
-      {/* Top Header with User Info */}
+      {/* Top Header with User Info - Sticky */}
       {mounted && isConnected && (
-        <div className="gradient-hero shadow-lg">
+        <div className="sticky top-0 z-50 gradient-hero shadow-lg">
           <div className="max-w-md mx-auto px-4 py-3">
             <div className="flex items-center justify-between gap-3">
               {/* User Profile + Beta Badge */}
               <div className="flex items-center space-x-2 flex-1 min-w-0">
-                {/* Name/Address + Beta Badge */}
+                {/* Profile Icon + Name/Address + Beta Badge */}
                 <div className="flex items-center space-x-2 min-w-0">
+                  {/* Profile Icon/Link */}
+                  <Link
+                    href="/profile"
+                    className="flex-shrink-0 w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center hover:bg-white/30 transition-all duration-200 border border-white/30"
+                  >
+                    {fetchedUserProfile?.pfp_url ? (
+                      <img 
+                        src={fetchedUserProfile.pfp_url} 
+                        alt="Profile" 
+                        className="w-full h-full rounded-full object-cover"
+                      />
+                    ) : (
+                      <User className="w-4 h-4 text-white" />
+                    )}
+                  </Link>
+                  
                   <span className="text-sm font-semibold text-white truncate">
                     {displayName}
                   </span>

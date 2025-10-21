@@ -347,8 +347,9 @@ export default function Create() {
     const needsApproval = !sufficientAllowance && !alreadyApproved
     
     // Try to use Base Account batch transactions if available
-    if (needsApproval && smartWallet.capabilities.atomicBatch && !smartWallet.capabilities.isLoading) {
-      console.log('🚀 Using Base Account batch transaction for approve + create')
+    // Note: handleBatchCreate will check allowance internally and only approve if needed
+    if (smartWallet.capabilities.atomicBatch && !smartWallet.capabilities.isLoading) {
+      console.log('🚀 Using Base Account batch transaction (will check if approval needed)')
       await handleBatchCreate()
     } else if (needsApproval) {
       console.log('Starting approval process...')
@@ -367,6 +368,13 @@ export default function Create() {
     setBaseAppCreating(true)
     
     try {
+      // First, check current allowance
+      const result = await refetchAllowance()
+      const allowance = result.data as bigint | undefined
+      const needsApproval = !allowance || allowance < usdcAmt
+      
+      console.log('Batch create - Current allowance:', allowance?.toString(), 'Required:', usdcAmt.toString(), 'Needs approval:', needsApproval)
+      
       const postIdBytes32 = castIdToBytes32(postId)
       
       // Generate random salt for unpredictable pot ID
@@ -374,21 +382,24 @@ export default function Create() {
         .map(b => b.toString(16).padStart(2, '0'))
         .join('')}` as `0x${string}`
       
-      // Prepare batch calls
-      const calls = [
-        {
+      // Prepare batch calls - only include approve if needed
+      const calls = []
+      
+      if (needsApproval) {
+        calls.push({
           address: USDC as `0x${string}`,
           abi: erc20Abi,
           functionName: 'approve',
           args: [jackpotAddress, usdcAmt]
-        },
-        {
-          address: jackpotAddress as `0x${string}`,
-          abi: jackpotAbi,
-          functionName: 'createPotWithSalt',
-          args: [USDC, usdcAmt, ONE_USDC, timeout, postIdBytes32, requireLike, requireRecast, requireComment, salt]
-        }
-      ]
+        })
+      }
+      
+      calls.push({
+        address: jackpotAddress as `0x${string}`,
+        abi: jackpotAbi,
+        functionName: 'createPotWithSalt',
+        args: [USDC, usdcAmt, ONE_USDC, timeout, postIdBytes32, requireLike, requireRecast, requireComment, salt]
+      })
       
       console.log('Executing batch transaction with paymaster...', calls)
       
