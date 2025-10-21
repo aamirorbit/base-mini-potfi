@@ -130,7 +130,7 @@ export default function Create() {
         }, 500) // Small delay to show approval success
       })
     }
-  }, [baseAppApproved, approveSuccess, isBaseApp, baseAppCreating, isCreating, showSuccess, potId, creationAttempted])
+  }, [baseAppApproved, approveSuccess, isBaseApp, baseAppCreating, isCreating, showSuccess, potId, creationAttempted, refetchAllowance, create])
 
   // Reset error when starting new actions
   const clearError = () => setErrorMessage('')
@@ -218,6 +218,7 @@ export default function Create() {
     clearError()
     
     // Check allowance again right before approving (double-check)
+    let approvalAmount = usdcAmt
     try {
       const result = await refetchAllowance()
       const allowance = result.data as bigint | undefined
@@ -229,6 +230,13 @@ export default function Create() {
           setBaseAppApproved(true)
         }
         return
+      }
+      
+      // Only approve the incremental amount needed
+      if (allowance && allowance > BigInt(0)) {
+        const incrementalAmount = usdcAmt - allowance
+        console.log('Current allowance:', allowance.toString(), 'Requesting additional:', incrementalAmount.toString())
+        approvalAmount = usdcAmt // Still approve for total amount to avoid multiple approvals
       }
     } catch (error) {
       console.error('Error checking allowance before approval:', error)
@@ -246,11 +254,11 @@ export default function Create() {
           return
         }
 
-        // Encode the approve function call
+        // Encode the approve function call - only approve the exact amount needed
         const data = encodeFunctionData({
           abi: erc20Abi,
           functionName: 'approve',
-          args: [jackpotAddress, usdcAmt]
+          args: [jackpotAddress, approvalAmount]
         })
 
         console.log('Sending approve transaction via MiniKit...')
@@ -313,7 +321,7 @@ export default function Create() {
         abi: erc20Abi, 
         address: USDC, 
         functionName: 'approve', 
-        args: [jackpotAddress, usdcAmt] 
+        args: [jackpotAddress, approvalAmount] 
       })
     }
   }
@@ -386,12 +394,14 @@ export default function Create() {
       const calls = []
       
       if (needsApproval) {
+        // Only approve the exact amount needed for this pot
         calls.push({
           address: USDC as `0x${string}`,
           abi: erc20Abi,
           functionName: 'approve',
           args: [jackpotAddress, usdcAmt]
         })
+        console.log('Including approval in batch for:', usdcAmt.toString(), 'USDC')
       }
       
       calls.push({
@@ -1087,11 +1097,11 @@ export default function Create() {
           </div>
 
           {/* Validation warnings */}
-          {amount < 0.02 && (
+          {amount < 0.1 && (
             <div className="bg-gold/10 border border-gold/30 text-gray-900 px-3 py-2 rounded-md shadow-card">
               <div className="flex items-center space-x-2">
                 <AlertTriangle className="w-4 h-4 text-gold-dark" />
-                <p className="text-xs">Minimum amount: 0.02 USDC</p>
+                <p className="text-xs">Minimum amount: 0.1 USDC (10 claims)</p>
               </div>
             </div>
           )}
@@ -1135,7 +1145,7 @@ export default function Create() {
             onClick={handleCreatePot}
             disabled={
               (isBaseApp ? (baseAppApproving || baseAppCreating) : (isApproving || isCreating)) || 
-              amount < 0.02 || 
+              amount < 0.1 || 
               !postId ||
               (isBaseApp && !isOnBase)
             }
