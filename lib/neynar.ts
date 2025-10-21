@@ -146,24 +146,29 @@ export class NeynarClient {
       console.log('Cast data:', JSON.stringify(cast, null, 2))
       
       // Check if the cast author is the same as the user trying to claim
-      // If so, they automatically "liked" their own post
+      // If so, they automatically pass all engagement requirements (can't recast/like own cast)
       const isOwnCast = cast.author.fid === fid
       console.log(`Is own cast: ${isOwnCast}`)
       
       // With Starter plan, we should now get detailed reaction data
       const likedByUser = cast.reactions?.likes?.some(like => like.fid === fid) || false
+      const recastedByUser = cast.reactions?.recasts?.some(recast => recast.fid === fid) || false
+      
+      // If it's the user's own cast, they automatically pass all requirements
+      // (You can't like/recast/reply to your own cast on Farcaster)
       const liked = isOwnCast || likedByUser
+      const recasted = isOwnCast || recastedByUser
       
       console.log(`Liked by user in API: ${likedByUser}, Is own cast: ${isOwnCast}, Final liked: ${liked}`)
-      const recasted = cast.reactions?.recasts?.some(recast => recast.fid === fid) || false
+      console.log(`Recasted by user in API: ${recastedByUser}, Is own cast: ${isOwnCast}, Final recasted: ${recasted}`)
       
       // For debugging - let's also check the likes_count vs actual likes array
       console.log(`Likes count: ${cast.reactions?.likes_count}, Likes array length: ${cast.reactions?.likes?.length}`)
       console.log(`Recasts count: ${cast.reactions?.recasts_count}, Recasts array length: ${cast.reactions?.recasts?.length}`)
       
-      // For now, let's be more lenient with replies - check if user has replied to this cast
-      // This requires a separate API call to get replies by the user
-      const replied = await this.checkUserRepliedToCast(fid, castHash)
+      // For replies - check if user has replied to this cast
+      // If it's their own cast, they automatically pass (creator gets credit)
+      const replied = isOwnCast ? true : await this.checkUserRepliedToCast(fid, castHash)
 
       console.log(`Engagement status for FID ${fid}:`, { liked, recasted, replied })
 
@@ -185,7 +190,7 @@ export class NeynarClient {
   async checkUserRepliedToCast(fid: number, castHash: string): Promise<boolean> {
     try {
       // Get user's recent casts to check if they replied to this cast
-      const userCasts = await this.getCastsByFid(fid, 50) // Check last 50 casts
+      const userCasts = await this.getCastsByFid(fid, 100) // Check last 100 casts
       
       // Check if any of the user's casts are replies to the target cast
       const hasReplied = userCasts.some(userCast => 
@@ -193,11 +198,12 @@ export class NeynarClient {
         userCast.thread_hash === castHash
       )
       
+      console.log(`Reply check: Found ${userCasts.length} casts, hasReplied: ${hasReplied}`)
       return hasReplied
     } catch (error) {
       console.error('Error checking user replies:', error)
-      // For now, let's be lenient and return true if we can't check
-      return true
+      // On error, return false to be safe (unless it's their own cast, which is handled above)
+      return false
     }
   }
 
@@ -207,18 +213,26 @@ export class NeynarClient {
   }
 
   async getCastsByFid(fid: number, limit = 25): Promise<NeynarCast[]> {
-    const response = await fetch(`${this.baseUrl}/farcaster/feed/user?fid=${fid}&limit=${limit}`, {
-      headers: {
-        'api_key': this.apiKey,
-      },
-    })
+    try {
+      const response = await fetch(`${this.baseUrl}/farcaster/feed/user?fid=${fid}&limit=${limit}`, {
+        headers: {
+          'api_key': this.apiKey,
+        },
+      })
 
-    if (!response.ok) {
-      throw new Error(`Failed to fetch casts: ${response.statusText}`)
+      if (!response.ok) {
+        console.error(`Failed to fetch casts for FID ${fid}: ${response.status} ${response.statusText}`)
+        // Return empty array instead of throwing - user might not have casts
+        return []
+      }
+
+      const data = await response.json()
+      return data.casts || []
+    } catch (error) {
+      console.error(`Error fetching casts for FID ${fid}:`, error)
+      // Return empty array on error to fail gracefully
+      return []
     }
-
-    const data = await response.json()
-    return data.casts
   }
 }
 
