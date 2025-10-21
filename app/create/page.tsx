@@ -654,10 +654,13 @@ export default function Create() {
         console.log('✅ CreatePot transaction sent successfully!')
         console.log('  - TX Hash:', txHash)
         
-        // Show initial success with txHash
+        // Show initial success with txHash - stop showing creating state immediately
+        console.log('  - Setting success state and stopping loading...')
+        setBaseAppCreating(false) // Stop showing "Creating..." loading state
         setPotId(txHash)
         setShowSuccess(true)
         setIsPotIdPending(true)
+        console.log('  - Success state set:', { showSuccess: true, potId: txHash, isPotIdPending: true, baseAppCreating: false })
         
         // Use public RPC client to poll for receipt (MiniKit provider doesn't support eth_getTransactionReceipt)
         console.log('⏳ Waiting for transaction to be mined...')
@@ -726,12 +729,13 @@ export default function Create() {
             // Receipt not yet available, continue polling
             if (attempts >= maxAttempts) {
               clearInterval(pollInterval)
-              console.warn('⏱️ Transaction still pending after 30 seconds')
-              // Show warning but keep the success state - transaction is likely still processing
-              setErrorMessage('Transaction is taking longer than expected. It may still complete. Check BaseScan for status.')
-              setShowErrorModal(true)
+              console.warn('⏱️ Transaction still pending after 60 seconds')
+              // Transaction was sent successfully, just taking long to mine
+              // Keep success screen visible, just stop the "Confirming..." spinner
+              console.log('  - Timeout reached, stopping spinner but keeping success screen')
               setIsPotIdPending(false)
-              setBaseAppCreating(false)
+              // Don't show error modal - transaction is still valid, just slow
+              // User can still share the transaction hash and check BaseScan
             }
           }
         }, 1000) // Poll every second
@@ -793,6 +797,17 @@ export default function Create() {
       )
     : ''
 
+  console.log('🎨 Render state:', {
+    mounted,
+    errorMessage: !!errorMessage,
+    showSuccess,
+    potId: potId ? potId.slice(0, 10) + '...' : null,
+    baseAppCreating,
+    baseAppApproving,
+    isCreating,
+    isApproving
+  })
+
   if (!mounted) {
     return (
       <div className="text-center py-8">
@@ -804,6 +819,7 @@ export default function Create() {
 
   // Show error state
   if (errorMessage) {
+    console.log('🚨 Rendering error screen:', errorMessage)
     return (
       <div className="space-y-4">
         <div className="bg-gold/10 border border-gold/30 rounded-md p-4 shadow-card">
@@ -843,6 +859,12 @@ export default function Create() {
   }
 
   if (showSuccess && potId) {
+    console.log('✨ Rendering SUCCESS screen!', {
+      potId,
+      claimUrl,
+      shareUrl: shareUrl ? 'Generated' : 'Empty',
+      amount
+    })
     return (
       <div className="space-y-4">
         {/* Success Header */}
@@ -919,17 +941,20 @@ export default function Create() {
           
           {isPotIdPending ? (
             <div className="pt-2 border-t border-gray-200">
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-2 mb-2">
                 <RefreshCw className="w-3 h-3 text-primary animate-spin" />
-                <p className="text-xs font-medium text-gray-600">Confirming...</p>
+                <p className="text-xs font-medium text-gray-600">Confirming on blockchain...</p>
               </div>
+              <p className="text-xs text-gray-500">Your pot is being created. You can share it now!</p>
             </div>
           ) : (
             <div className="pt-2 border-t border-gray-200">
-              <p className="font-medium text-gray-600 mb-1">Pot ID</p>
+              <p className="font-medium text-gray-600 mb-1">
+                {potId && potId.length === 66 ? 'Transaction Hash' : 'Pot ID'}
+              </p>
               <p className="text-gray-700 break-all font-mono bg-gray-50 p-2 rounded text-xs">{potId}</p>
               <a 
-                href={`https://basescan.org/tx/${potId.startsWith('0x') && potId.length === 66 ? potId : ''}`}
+                href={`https://basescan.org/tx/${potId.startsWith('0x') && potId.length === 66 ? potId : potId}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-primary hover:text-primary-dark font-semibold text-xs mt-1 inline-block"
@@ -991,6 +1016,8 @@ export default function Create() {
     )
   }
 
+  console.log('📝 Rendering CREATE FORM')
+  
   return (
     <div className="space-y-4">
       {/* Header */}
