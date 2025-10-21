@@ -224,6 +224,11 @@ export default function Claim() {
       const potIdBytes32 = pad(id, { size: 32 })
       const castIdBytes32 = pad(castOut as `0x${string}`, { size: 32 })
       
+      // Generate random userSecret for unpredictable jackpot determination
+      const userSecret = `0x${Array.from(crypto.getRandomValues(new Uint8Array(32)))
+        .map(b => b.toString(16).padStart(2, '0'))
+        .join('')}` as `0x${string}`
+      
       console.log('Calling writeContract with:', {
         potId: id,
         potIdBytes32,
@@ -231,6 +236,7 @@ export default function Claim() {
         castId: castOut,
         castIdBytes32,
         signature,
+        userSecret: userSecret.slice(0, 10) + '...',
         jackpotAddress
       })
       
@@ -251,7 +257,7 @@ export default function Claim() {
               const callData = encodeFunctionData({
                 abi: jackpotAbi,
                 functionName: 'claim',
-                args: [potIdBytes32, BigInt(deadline), castIdBytes32, signature as `0x${string}`]
+                args: [potIdBytes32, BigInt(deadline), castIdBytes32, signature as `0x${string}`, userSecret]
               })
               
               const batchTxId = await provider.request({
@@ -284,7 +290,7 @@ export default function Claim() {
                 abi: jackpotAbi,
                 address: jackpotAddress,
                 functionName: 'claim',
-                args: [potIdBytes32, BigInt(deadline), castIdBytes32, signature as `0x${string}`]
+                args: [potIdBytes32, BigInt(deadline), castIdBytes32, signature as `0x${string}`, userSecret]
               })
               
               console.log('MiniKit transaction submitted:', hash)
@@ -302,7 +308,7 @@ export default function Claim() {
               abi: jackpotAbi,
               address: jackpotAddress,
               functionName: 'claim',
-              args: [potIdBytes32, BigInt(deadline), castIdBytes32, signature as `0x${string}`]
+              args: [potIdBytes32, BigInt(deadline), castIdBytes32, signature as `0x${string}`, userSecret]
             })
             
             console.log('MiniKit transaction submitted:', hash)
@@ -321,7 +327,7 @@ export default function Claim() {
           abi: jackpotAbi, 
           address: jackpotAddress, 
           functionName: 'claim',
-          args: [potIdBytes32, BigInt(deadline), castIdBytes32, signature as `0x${string}`]
+          args: [potIdBytes32, BigInt(deadline), castIdBytes32, signature as `0x${string}`, userSecret]
         })
       }
       

@@ -6,7 +6,6 @@ export const USDC_CONTRACT_ADDRESS = USDC // Alias for compatibility
 export const ONE_USDC = BigInt(10_000) // 0.01 USDC standard claim (6 decimals)
 
 export const potfiAbi = [
-[
     {
       "inputs": [
         {
@@ -1067,7 +1066,6 @@ export const potfiAbi = [
       "stateMutability": "view",
       "type": "function"
     }
-  ]
 ] as const
 
 export const jackpotAbi = potfiAbi // Alias for backward compatibility
