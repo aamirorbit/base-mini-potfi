@@ -121,15 +121,34 @@ export default function Create() {
     const noPotId = !potId
     const hasNotAttemptedCreation = !creationAttempted
     
+    console.log('🔄 Auto-proceed useEffect triggered:', {
+      justApproved,
+      notYetCreating,
+      notYetCreated,
+      noPotId,
+      hasNotAttemptedCreation,
+      willProceed: justApproved && notYetCreating && notYetCreated && noPotId && hasNotAttemptedCreation
+    })
+    
     if (justApproved && notYetCreating && notYetCreated && noPotId && hasNotAttemptedCreation) {
       // Automatically start pot creation after approval
-      console.log('✅ Approval successful, starting pot creation...')
+      console.log('✅ Approval successful, auto-starting pot creation...')
       setCreationAttempted(true) // Mark that we're attempting creation to prevent retries
       // Refetch allowance before proceeding
+      console.log('  - Refetching allowance...')
       refetchAllowance().then(() => {
+        console.log('  - Allowance refetched, calling create() in 500ms...')
         setTimeout(() => {
+          console.log('  - Timeout elapsed, calling create() now...')
           create()
         }, 500) // Small delay to show approval success
+      }).catch(error => {
+        console.error('  - Error refetching allowance:', error)
+        // Still proceed with creation even if refetch fails
+        setTimeout(() => {
+          console.log('  - Calling create() despite refetch error...')
+          create()
+        }, 500)
       })
     }
   }, [baseAppApproved, approveSuccess, isBaseApp, baseAppCreating, isCreating, showSuccess, potId, creationAttempted, refetchAllowance, create])
@@ -352,6 +371,7 @@ export default function Create() {
   
   // Main function that handles both approval and creation
   async function handleCreatePot() {
+    console.log('🎬 handleCreatePot() called')
     try {
       clearError()
       
@@ -359,19 +379,22 @@ export default function Create() {
       let sufficientAllowance = false
       
       try {
+        console.log('  - Checking current allowance...')
         // Refetch the latest allowance
         const result = await refetchAllowance()
         const allowance = result.data as bigint | undefined
         
-        console.log('Current allowance:', allowance?.toString(), 'Required:', usdcAmt.toString())
+        console.log('  - Current allowance:', allowance?.toString(), 'Required:', usdcAmt.toString())
         
         // Check if current allowance is sufficient
         if (allowance && allowance >= usdcAmt) {
           sufficientAllowance = true
-          console.log('Sufficient allowance already exists, skipping approval')
+          console.log('  ✅ Sufficient allowance already exists, skipping approval')
+        } else {
+          console.log('  ⚠️ Insufficient allowance, approval needed')
         }
       } catch (error) {
-        console.error('Error checking allowance:', error)
+        console.error('  ❌ Error checking allowance:', error)
         // Continue with approval if check fails
       }
       
@@ -379,17 +402,25 @@ export default function Create() {
       const alreadyApproved = isBaseApp ? baseAppApproved : approveSuccess
       const needsApproval = !sufficientAllowance && !alreadyApproved
       
+      console.log('  - Decision:', {
+        sufficientAllowance,
+        alreadyApproved,
+        needsApproval,
+        hasAtomicBatch: smartWallet.capabilities.atomicBatch,
+        batchLoading: smartWallet.capabilities.isLoading
+      })
+      
       // Try to use Base Account batch transactions if available
       // Note: handleBatchCreate will check allowance internally and only approve if needed
       if (smartWallet.capabilities.atomicBatch && !smartWallet.capabilities.isLoading) {
         console.log('🚀 Using Base Account batch transaction (will check if approval needed)')
         await handleBatchCreate()
       } else if (needsApproval) {
-        console.log('Starting approval process...')
+        console.log('📝 Starting approval process...')
         await approve()
         // create() will be called automatically after approval success
       } else {
-        console.log('Approval not needed or already done, starting pot creation...')
+        console.log('✨ Approval not needed or already done, starting pot creation directly...')
         await create()
       }
     } catch (error: any) {
@@ -508,6 +539,20 @@ export default function Create() {
   }
 
   async function create() {
+    console.log('🎯 create() called')
+    console.log('  - Current state:', {
+      potId,
+      showSuccess,
+      baseAppCreating,
+      isCreating,
+      creationAttempted,
+      amount,
+      postId,
+      isBaseApp,
+      mounted,
+      address
+    })
+    
     clearError()
     
     // Prevent multiple creation attempts - only check if already successfully created or currently creating
@@ -528,6 +573,7 @@ export default function Create() {
     const minClaims = 10
     
     if (amount < standardClaimUSDC * minClaims) {
+      console.error('❌ Validation failed: amount too small')
       setErrorMessage(`Pot must support at least ${minClaims} claims (minimum ${standardClaimUSDC * minClaims} USDC)`)
       setShowErrorModal(true)
       setCreationAttempted(false) // Reset flag so validation can be fixed and retried
@@ -535,6 +581,7 @@ export default function Create() {
     }
     
     if (standardClaimUSDC > amount / 2) {
+      console.error('❌ Validation failed: standard claim too large')
       setErrorMessage('Standard claim cannot exceed 50% of the pot amount')
       setShowErrorModal(true)
       setCreationAttempted(false) // Reset flag so validation can be fixed and retried
@@ -545,36 +592,56 @@ export default function Create() {
     setCreationAttempted(true)
     
     console.log('🚀 Starting pot creation...')
+    console.log('  - Environment:', { isBaseApp, mounted })
     
     // Use MiniKit provider in Base app, wagmi elsewhere
     if (isBaseApp && mounted) {
+      console.log('📱 Using MiniKit/Base App flow')
       setBaseAppCreating(true)
       try {
+        console.log('  - Getting provider...')
         const provider = miniKitWallet.getProvider()
         if (!provider) {
+          console.error('❌ No provider found')
           setErrorMessage('Wallet not connected properly')
           setShowErrorModal(true)
           setBaseAppCreating(false)
           setCreationAttempted(false) // Reset flag so user can retry after connecting wallet
           return
         }
+        console.log('  ✅ Provider ready')
 
         // Convert postId to bytes32 for contract
         const postIdBytes32 = castIdToBytes32(postId)
+        console.log('  - PostId converted:', postIdBytes32)
         
         // Generate random salt for unpredictable pot ID
         const salt = `0x${Array.from(crypto.getRandomValues(new Uint8Array(32)))
           .map(b => b.toString(16).padStart(2, '0'))
           .join('')}` as `0x${string}`
+        console.log('  - Salt generated:', salt.slice(0, 10) + '...')
         
         // Encode the createPotWithSalt function call for enhanced security
+        console.log('  - Encoding function call with params:', {
+          token: USDC,
+          amount: usdcAmt.toString(),
+          standardClaim: ONE_USDC.toString(),
+          timeout,
+          requireLike,
+          requireRecast,
+          requireComment
+        })
         const data = encodeFunctionData({
           abi: jackpotAbi,
           functionName: 'createPotWithSalt',
           args: [USDC, usdcAmt, ONE_USDC, timeout, postIdBytes32, requireLike, requireRecast, requireComment, salt]
         })
+        console.log('  ✅ Function encoded')
 
-        console.log('Sending createPot transaction via MiniKit...')
+        console.log('📤 Sending createPot transaction via MiniKit...')
+        console.log('  - To:', jackpotAddress)
+        console.log('  - From:', address)
+        
         const txHash = await provider.request({
           method: 'eth_sendTransaction',
           params: [{
@@ -584,7 +651,8 @@ export default function Create() {
           }]
         })
 
-        console.log('✅ CreatePot transaction sent:', txHash)
+        console.log('✅ CreatePot transaction sent successfully!')
+        console.log('  - TX Hash:', txHash)
         
         // Show initial success with txHash
         setPotId(txHash)
@@ -593,31 +661,39 @@ export default function Create() {
         
         // Use public RPC client to poll for receipt (MiniKit provider doesn't support eth_getTransactionReceipt)
         console.log('⏳ Waiting for transaction to be mined...')
+        console.log('  - Setting up public client for receipt polling')
         const publicClient = createPublicClient({
           chain: base,
           transport: http()
         })
+        console.log('  ✅ Public client ready, starting to poll...')
         
         let attempts = 0
-        const maxAttempts = 30 // 30 seconds max
+        const maxAttempts = 60 // 60 seconds max (increased from 30)
         const pollInterval = setInterval(async () => {
           attempts++
+          console.log(`  📊 Poll attempt ${attempts}/${maxAttempts}`)
           try {
             const receipt = await publicClient.getTransactionReceipt({
               hash: txHash as `0x${string}`
             })
+            console.log('  - Receipt received:', receipt ? 'Found' : 'Not found yet')
             
             if (receipt && receipt.status === 'success') {
               // Transaction successful, extract potId
               clearInterval(pollInterval)
-              console.log('✅ Transaction mined:', receipt)
+              console.log('✅ Transaction mined successfully!')
+              console.log('  - Receipt:', receipt)
+              console.log('  - Logs count:', receipt.logs?.length)
               
               if (receipt.logs && receipt.logs.length > 0) {
+                console.log('  - Searching for PotCreated event...')
                 // Find the PotCreated event (first indexed topic after event signature)
                 const potCreatedLog = receipt.logs.find((log: any) => 
                   log.address.toLowerCase() === jackpotAddress.toLowerCase() &&
                   log.topics.length >= 2
                 )
+                console.log('  - PotCreated log found:', !!potCreatedLog)
                 
                 if (potCreatedLog && potCreatedLog.topics[1]) {
                   const realPotId = potCreatedLog.topics[1]
@@ -626,9 +702,15 @@ export default function Create() {
                   setIsPotIdPending(false)
                   
                   // Initialize pot state
+                  console.log('  - Initializing pot state in backend...')
                   initializePotState(realPotId, amount)
+                } else {
+                  console.warn('⚠️ Could not find PotCreated event in logs')
                 }
+              } else {
+                console.warn('⚠️ No logs in receipt')
               }
+              console.log('  - Setting baseAppCreating to false')
               setBaseAppCreating(false)
             } else if (receipt && receipt.status === 'reverted') {
               // Transaction failed
