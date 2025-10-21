@@ -101,12 +101,14 @@ export default function Create() {
       setErrorMessage(errorMsg)
       setShowErrorModal(true)
       setBaseAppApproving(false)
+      setCreationAttempted(false) // Reset flag so user can retry
     }
     if (createError) {
       const errorMsg = `Pot creation failed: ${createError.message}`
       setErrorMessage(errorMsg)
       setShowErrorModal(true)
       setBaseAppCreating(false)
+      setCreationAttempted(false) // Reset flag so user can retry
     }
   }, [approveError, createError])
 
@@ -207,9 +209,11 @@ export default function Create() {
       
       if (!response.ok) {
         console.error('Failed to initialize pot state in backend')
+        // Don't show error to user - pot is created successfully on-chain, backend initialization is optional
       }
     } catch (error) {
       console.error('Error initializing pot state:', error)
+      // Don't show error to user - pot is created successfully on-chain, backend initialization is optional
     }
   }
 
@@ -240,6 +244,7 @@ export default function Create() {
       }
     } catch (error) {
       console.error('Error checking allowance before approval:', error)
+      // Continue with approval - if allowance check fails, approval will handle it
     }
     
     // Use MiniKit provider in Base app, wagmi elsewhere
@@ -251,6 +256,7 @@ export default function Create() {
           setErrorMessage('Wallet not connected properly')
           setShowErrorModal(true)
           setBaseAppApproving(false)
+          setCreationAttempted(false) // Reset flag so user can retry
           return
         }
 
@@ -296,24 +302,42 @@ export default function Create() {
               setErrorMessage('Approval transaction failed')
               setShowErrorModal(true)
               setBaseAppApproving(false)
+              setCreationAttempted(false) // Reset flag so user can retry
             } else if (attempts >= maxAttempts) {
               clearInterval(pollInterval)
+              setErrorMessage('Approval is taking longer than expected. Please check your wallet or try again.')
+              setShowErrorModal(true)
               setBaseAppApproving(false)
+              setCreationAttempted(false) // Reset flag so user can retry
             }
           } catch (error) {
             if (attempts >= maxAttempts) {
               clearInterval(pollInterval)
+              setErrorMessage('Approval is taking longer than expected. Please check your wallet or try again.')
+              setShowErrorModal(true)
               setBaseAppApproving(false)
+              setCreationAttempted(false) // Reset flag so user can retry
             }
           }
         }, 1000)
         
       } catch (error: any) {
         console.error('Approve error:', error)
-        const errorMsg = error.message || 'Failed to approve USDC'
+        // Check if user rejected the transaction
+        const isUserRejection = error.message?.toLowerCase().includes('user rejected') || 
+                               error.message?.toLowerCase().includes('user denied') ||
+                               error.message?.toLowerCase().includes('user cancelled') ||
+                               error.code === 4001 || 
+                               error.code === 'ACTION_REJECTED'
+        
+        const errorMsg = isUserRejection 
+          ? 'Transaction cancelled. Please try again when ready.' 
+          : (error.message || 'Failed to approve USDC')
+        
         setErrorMessage(errorMsg)
         setShowErrorModal(true)
         setBaseAppApproving(false)
+        setCreationAttempted(false) // Reset flag so user can retry
       }
     } else {
       // Use wagmi for standalone browser
@@ -328,44 +352,54 @@ export default function Create() {
   
   // Main function that handles both approval and creation
   async function handleCreatePot() {
-    clearError()
-    
-    // First, check current allowance
-    let sufficientAllowance = false
-    
     try {
-      // Refetch the latest allowance
-      const result = await refetchAllowance()
-      const allowance = result.data as bigint | undefined
+      clearError()
       
-      console.log('Current allowance:', allowance?.toString(), 'Required:', usdcAmt.toString())
+      // First, check current allowance
+      let sufficientAllowance = false
       
-      // Check if current allowance is sufficient
-      if (allowance && allowance >= usdcAmt) {
-        sufficientAllowance = true
-        console.log('Sufficient allowance already exists, skipping approval')
+      try {
+        // Refetch the latest allowance
+        const result = await refetchAllowance()
+        const allowance = result.data as bigint | undefined
+        
+        console.log('Current allowance:', allowance?.toString(), 'Required:', usdcAmt.toString())
+        
+        // Check if current allowance is sufficient
+        if (allowance && allowance >= usdcAmt) {
+          sufficientAllowance = true
+          console.log('Sufficient allowance already exists, skipping approval')
+        }
+      } catch (error) {
+        console.error('Error checking allowance:', error)
+        // Continue with approval if check fails
       }
-    } catch (error) {
-      console.error('Error checking allowance:', error)
-      // Continue with approval if check fails
-    }
-    
-    // Check if we need approval
-    const alreadyApproved = isBaseApp ? baseAppApproved : approveSuccess
-    const needsApproval = !sufficientAllowance && !alreadyApproved
-    
-    // Try to use Base Account batch transactions if available
-    // Note: handleBatchCreate will check allowance internally and only approve if needed
-    if (smartWallet.capabilities.atomicBatch && !smartWallet.capabilities.isLoading) {
-      console.log('🚀 Using Base Account batch transaction (will check if approval needed)')
-      await handleBatchCreate()
-    } else if (needsApproval) {
-      console.log('Starting approval process...')
-      await approve()
-      // create() will be called automatically after approval success
-    } else {
-      console.log('Approval not needed or already done, starting pot creation...')
-      await create()
+      
+      // Check if we need approval
+      const alreadyApproved = isBaseApp ? baseAppApproved : approveSuccess
+      const needsApproval = !sufficientAllowance && !alreadyApproved
+      
+      // Try to use Base Account batch transactions if available
+      // Note: handleBatchCreate will check allowance internally and only approve if needed
+      if (smartWallet.capabilities.atomicBatch && !smartWallet.capabilities.isLoading) {
+        console.log('🚀 Using Base Account batch transaction (will check if approval needed)')
+        await handleBatchCreate()
+      } else if (needsApproval) {
+        console.log('Starting approval process...')
+        await approve()
+        // create() will be called automatically after approval success
+      } else {
+        console.log('Approval not needed or already done, starting pot creation...')
+        await create()
+      }
+    } catch (error: any) {
+      console.error('Unexpected error in handleCreatePot:', error)
+      const errorMsg = error.message || 'An unexpected error occurred. Please try again.'
+      setErrorMessage(errorMsg)
+      setShowErrorModal(true)
+      setBaseAppApproving(false)
+      setBaseAppCreating(false)
+      setCreationAttempted(false)
     }
   }
 
@@ -454,19 +488,38 @@ export default function Create() {
       }
     } catch (error: any) {
       console.error('Batch transaction error:', error)
-      setErrorMessage(error.message || 'Batch transaction failed')
+      // Check if user rejected the transaction
+      const isUserRejection = error.message?.toLowerCase().includes('user rejected') || 
+                             error.message?.toLowerCase().includes('user denied') ||
+                             error.message?.toLowerCase().includes('user cancelled') ||
+                             error.code === 4001 || 
+                             error.code === 'ACTION_REJECTED'
+      
+      const errorMsg = isUserRejection 
+        ? 'Transaction cancelled. Please try again when ready.' 
+        : (error.message || 'Batch transaction failed')
+      
+      setErrorMessage(errorMsg)
       setShowErrorModal(true)
       setBaseAppApproving(false)
       setBaseAppCreating(false)
+      setCreationAttempted(false) // Reset flag so user can retry
     }
   }
 
   async function create() {
     clearError()
     
-    // Prevent multiple creation attempts
-    if (potId || showSuccess || creationAttempted) {
-      console.log('⚠️ Pot already created or creation already attempted, skipping duplicate creation')
+    // Prevent multiple creation attempts - only check if already successfully created or currently creating
+    if (potId || showSuccess) {
+      console.log('⚠️ Pot already created, skipping duplicate creation')
+      return
+    }
+    
+    // Check if creation is already in progress
+    const isCurrentlyCreating = isBaseApp ? baseAppCreating : isCreating
+    if (isCurrentlyCreating) {
+      console.log('⚠️ Pot creation already in progress')
       return
     }
     
@@ -477,17 +530,21 @@ export default function Create() {
     if (amount < standardClaimUSDC * minClaims) {
       setErrorMessage(`Pot must support at least ${minClaims} claims (minimum ${standardClaimUSDC * minClaims} USDC)`)
       setShowErrorModal(true)
+      setCreationAttempted(false) // Reset flag so validation can be fixed and retried
       return
     }
     
     if (standardClaimUSDC > amount / 2) {
       setErrorMessage('Standard claim cannot exceed 50% of the pot amount')
       setShowErrorModal(true)
+      setCreationAttempted(false) // Reset flag so validation can be fixed and retried
       return
     }
     
-    // Mark creation as attempted immediately to prevent retries
+    // Mark creation as attempted to prevent duplicate auto-triggers from useEffect
     setCreationAttempted(true)
+    
+    console.log('🚀 Starting pot creation...')
     
     // Use MiniKit provider in Base app, wagmi elsewhere
     if (isBaseApp && mounted) {
@@ -498,6 +555,7 @@ export default function Create() {
           setErrorMessage('Wallet not connected properly')
           setShowErrorModal(true)
           setBaseAppCreating(false)
+          setCreationAttempted(false) // Reset flag so user can retry after connecting wallet
           return
         }
 
@@ -580,12 +638,16 @@ export default function Create() {
               setShowErrorModal(true)
               setShowSuccess(false)
               setBaseAppCreating(false)
+              setCreationAttempted(false) // Reset flag so user can retry
             }
           } catch (error: any) {
             // Receipt not yet available, continue polling
             if (attempts >= maxAttempts) {
               clearInterval(pollInterval)
               console.warn('⏱️ Transaction still pending after 30 seconds')
+              // Show warning but keep the success state - transaction is likely still processing
+              setErrorMessage('Transaction is taking longer than expected. It may still complete. Check BaseScan for status.')
+              setShowErrorModal(true)
               setIsPotIdPending(false)
               setBaseAppCreating(false)
             }
@@ -594,10 +656,21 @@ export default function Create() {
         
       } catch (error: any) {
         console.error('CreatePot error:', error)
-        const errorMsg = error.message || 'Failed to create pot'
+        // Check if user rejected the transaction
+        const isUserRejection = error.message?.toLowerCase().includes('user rejected') || 
+                               error.message?.toLowerCase().includes('user denied') ||
+                               error.message?.toLowerCase().includes('user cancelled') ||
+                               error.code === 4001 || 
+                               error.code === 'ACTION_REJECTED'
+        
+        const errorMsg = isUserRejection 
+          ? 'Transaction cancelled. Please try again when ready.' 
+          : (error.message || 'Failed to create pot')
+        
         setErrorMessage(errorMsg)
         setShowErrorModal(true)
         setBaseAppCreating(false)
+        setCreationAttempted(false) // Reset flag so user can retry
       }
     } else {
       // Convert postId to bytes32 for contract
