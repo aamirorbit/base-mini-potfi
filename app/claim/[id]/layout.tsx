@@ -75,7 +75,7 @@ export async function generateMetadata({
           version: "1",
           imageUrl: `${baseUrl}/api/frame/image?action=claim&potId=${potId}&amount=${amount}&standardClaim=${standardClaim}&remaining=${remaining}&jackpotProb=${jackpotProb}`,
           button: {
-            title: `Claim ${standardClaim} USDC`,
+            title: "Claim Jackpot",
             action: {
               type: "launch_frame",
               name: "PotFi - Claim Pot",
@@ -144,7 +144,7 @@ export async function generateMetadata({
         version: "1",
         imageUrl: `${baseUrl}/og.png`,
         button: {
-          title: "Claim Now",
+          title: "Claim Jackpot",
           action: {
             type: "launch_frame",
             name: "PotFi - Claim Pot",
