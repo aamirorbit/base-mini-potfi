@@ -2,11 +2,12 @@
 
 import Link from 'next/link'
 import { useAccount } from 'wagmi'
-import { Home as HomeIcon, Plus, Eye, MessageCircle, Wallet, X, AlertCircle, ExternalLink, User } from 'lucide-react'
+import { Home as HomeIcon, Plus, Bug, MessageCircle, Wallet, X, AlertCircle, ExternalLink, User } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 import { useMiniKitWallet } from '@/hooks/useMiniKitWallet'
 import { useMiniAppContext } from '@/app/components/MiniAppProvider'
 import { useState, useEffect } from 'react'
+import BugReportModal from './BugReportModal'
 
 interface NeynarUser {
   fid: number
@@ -24,6 +25,7 @@ export default function MobileLayout({ children, showBottomNav = true }: MobileL
   const [isFarcaster, setIsFarcaster] = useState(false)
   const [mounted, setMounted] = useState(false)
   const [showBetaModal, setShowBetaModal] = useState(false)
+  const [showBugReportModal, setShowBugReportModal] = useState(false)
   const [fetchedUserProfile, setFetchedUserProfile] = useState<NeynarUser | null>(null)
 
   // Wallet connections
@@ -235,24 +237,18 @@ export default function MobileLayout({ children, showBottomNav = true }: MobileL
                 }`}>Create</span>
               </Link>
 
-              {/* View */}
-              <Link
-                href="/view"
+              {/* Bug Report */}
+              <button
+                onClick={() => setShowBugReportModal(true)}
                 className="flex flex-col items-center py-2 px-4 rounded-md transition-all duration-200 transform active:scale-95"
               >
-                <div className={`p-3 rounded-md mb-1 transition-all duration-200 ${
-                  pathname === '/view' 
-                    ? 'gradient-hero scale-105 shadow-lg' 
-                    : 'bg-transparent'
-                }`}>
-                  <Eye className={`w-6 h-6 transition-colors duration-200 ${
-                    pathname === '/view' ? 'text-white' : 'text-gray-600'
-                  }`} />
+                <div className="p-3 rounded-md mb-1 transition-all duration-200 bg-transparent">
+                  <Bug className="w-6 h-6 transition-colors duration-200 text-gray-600" />
                 </div>
-                <span className={`text-xs font-semibold transition-colors duration-200 ${
-                  pathname === '/view' ? 'text-primary' : 'text-gray-600'
-                }`}>View</span>
-              </Link>
+                <span className="text-xs font-semibold transition-colors duration-200 text-gray-600">
+                  Bug Report
+                </span>
+              </button>
 
               {/* Profile */}
               <Link
@@ -370,6 +366,15 @@ export default function MobileLayout({ children, showBottomNav = true }: MobileL
           </div>
         </div>
       )}
+
+      {/* Bug Report Modal */}
+      <BugReportModal
+        isOpen={showBugReportModal}
+        onClose={() => setShowBugReportModal(false)}
+        userAddress={userAddress}
+        userFid={fetchedUserProfile?.fid}
+        username={fetchedUserProfile?.username}
+      />
     </main>
   )
 }
