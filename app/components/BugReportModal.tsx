@@ -92,20 +92,6 @@ export default function BugReportModal({
           </button>
         </div>
 
-        {/* Telegram Support Link - Top */}
-        <div className="mb-4">
-          <a
-            href="https://t.me/+_fXXrjRRqu41Yzdk"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="w-full bg-gray-800/90 hover:bg-gray-900 text-white font-medium py-3 px-4 rounded-md text-sm transition-all duration-200 shadow-xl transform active:scale-95 backdrop-blur-sm flex items-center justify-center space-x-2"
-          >
-            <MessageCircle className="w-4 h-4" />
-            <span>Or Chat with Team on Telegram</span>
-            <ExternalLink className="w-4 h-4" />
-          </a>
-        </div>
-
         {/* Encouraging Message */}
         <div className="bg-blue-500/10 backdrop-blur-xl border border-blue-200/50 rounded-md p-4 mb-4">
           <p className="text-sm text-blue-700 leading-relaxed">
@@ -157,7 +143,7 @@ export default function BugReportModal({
         <button
           onClick={handleSubmit}
           disabled={isSubmitting || !bugReport.trim()}
-          className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold py-4 px-6 rounded-md text-base transition-all duration-200 shadow-xl transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+          className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold py-4 px-6 rounded-md text-base transition-all duration-200 shadow-xl transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 mb-3"
         >
           {isSubmitting ? (
             <>
@@ -171,6 +157,18 @@ export default function BugReportModal({
             </>
           )}
         </button>
+
+        {/* Telegram Support Link - Bottom */}
+        <a
+          href="https://t.me/+_fXXrjRRqu41Yzdk"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="w-full bg-gray-800/90 hover:bg-gray-900 text-white font-medium py-3 px-4 rounded-md text-sm transition-all duration-200 shadow-xl transform active:scale-95 backdrop-blur-sm flex items-center justify-center space-x-2"
+        >
+          <MessageCircle className="w-4 h-4" />
+          <span>Or Chat with Team</span>
+          <ExternalLink className="w-4 h-4" />
+        </a>
       </div>
     </div>
   )
