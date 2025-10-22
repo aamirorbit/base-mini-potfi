@@ -3,7 +3,6 @@
 import { useEffect, useState, createContext, useContext } from 'react'
 import { sdk } from '@farcaster/miniapp-sdk'
 import { miniKitWallet } from '@/lib/minikit-wallet'
-import { BaseMiniAppWarning } from './BaseMiniAppWarning'
 
 interface UserProfile {
   fid?: number
@@ -46,7 +45,6 @@ interface FarcasterContext {
 
 interface MiniAppContextType {
   isReady: boolean
-  isFarcaster: boolean
   isBaseMiniApp: boolean
   userProfile: UserProfile | null
   context: FarcasterContext | null
@@ -54,7 +52,6 @@ interface MiniAppContextType {
 
 const MiniAppContext = createContext<MiniAppContextType>({
   isReady: false,
-  isFarcaster: false,
   isBaseMiniApp: false,
   userProfile: null,
   context: null
@@ -69,7 +66,6 @@ interface MiniAppProviderProps {
 export function MiniAppProvider({ children }: MiniAppProviderProps) {
   const [isReady, setIsReady] = useState(false)
   const [context, setContext] = useState<FarcasterContext | null>(null)
-  const [isFarcaster, setIsFarcaster] = useState(false)
   const [isBaseMiniApp, setIsBaseMiniApp] = useState(false)
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
 
@@ -78,74 +74,65 @@ export function MiniAppProvider({ children }: MiniAppProviderProps) {
       try {
         // Check user agent for Base Mini App detection
         const userAgent = typeof window !== 'undefined' ? navigator.userAgent : ''
+        const isInIframe = typeof window !== 'undefined' && window.parent !== window
         const isBaseApp = userAgent.includes('Base') || userAgent.includes('Coinbase')
+        const isMiniAppEnv = isInIframe || isBaseApp
         
-        console.log('🔍 Initial environment detection:', {
+        console.log('🔍 Environment detection:', {
           userAgent,
-          isBaseApp
+          isInIframe,
+          isBaseApp,
+          isMiniAppEnv
         })
         
         setIsBaseMiniApp(isBaseApp)
-
-        // Try to initialize Farcaster SDK - this is the direct way to detect Farcaster
-        console.log('🚀 Attempting to initialize Farcaster SDK...')
-
-        try {
-          // Add timeout to prevent hanging
-          const initWithTimeout = Promise.race([
-            (async () => {
-              // Get context from Farcaster SDK - this will only work in Farcaster environment
-              console.log('📡 Getting context from Farcaster SDK...')
-              const ctx = await sdk.context
-              console.log('✅ Farcaster context received:', JSON.stringify(ctx, null, 2))
-              setContext(ctx as FarcasterContext)
-              
-              // Signal that the app is ready
-              await sdk.actions.ready()
-              return ctx
-            })(),
-            new Promise((_, reject) => 
-              setTimeout(() => reject(new Error('SDK initialization timeout')), 3000)
-            )
-          ])
-
-          const ctx = await initWithTimeout as FarcasterContext
-          
-          // If we got here, we're definitely in Farcaster
-          setIsFarcaster(true)
-          console.log('✅ Confirmed: Running in Farcaster environment')
-          
-          // Extract user profile from context
-          if (ctx?.user) {
-            console.log('👤 User data found:', ctx.user)
-            const profile: UserProfile = {
-              fid: ctx.user.fid,
-              username: ctx.user.username,
-              displayName: ctx.user.displayName,
-              avatarUrl: ctx.user.pfpUrl
-            }
-            setUserProfile(profile)
-            console.log('✅ User profile extracted:', profile)
-          } else {
-            console.warn('⚠️ No user data in context')
-          }
-        } catch (sdkError) {
-          // SDK initialization failed - not in Farcaster
-          console.log('ℹ️ Farcaster SDK not available:', sdkError)
-          setIsFarcaster(false)
-          
-          // If we're in Base app, that's still valid
-          if (isBaseApp) {
-            console.log('✅ Running in Base Mini App environment')
-          } else {
-            console.log('ℹ️ Running in regular browser')
-          }
-        }
         
+        if (!isMiniAppEnv) {
+          console.log('Not in mini app environment, skipping initialization')
+          setIsReady(true)
+          return
+        }
+
+        console.log('🚀 Initializing Mini App SDK...')
+
+        // Add timeout to prevent hanging
+        const initWithTimeout = Promise.race([
+          (async () => {
+            // Get context from SDK
+            console.log('📡 Getting context from SDK...')
+            const ctx = await sdk.context
+            console.log('✅ Context received:', JSON.stringify(ctx, null, 2))
+            setContext(ctx as FarcasterContext)
+            
+            // Signal that the app is ready
+            await sdk.actions.ready()
+            return ctx
+          })(),
+          new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Initialization timeout')), 5000)
+          )
+        ])
+
+        const ctx = await initWithTimeout as FarcasterContext
         setIsReady(true)
-        console.log('✅ App initialization complete')
+        console.log('✅ Mini App initialized successfully')
+        
+        // Extract user profile from context
+        if (ctx?.user) {
+          console.log('👤 User data found:', ctx.user)
+          const profile: UserProfile = {
+            fid: ctx.user.fid,
+            username: ctx.user.username,
+            displayName: ctx.user.displayName,
+            avatarUrl: ctx.user.pfpUrl
+          }
+          setUserProfile(profile)
+          console.log('✅ User profile extracted:', profile)
+        } else {
+          console.warn('⚠️ No user data in context')
+        }
       } catch (error) {
-        console.error('❌ Failed to initialize app:', error)
+        console.error('❌ Failed to initialize Mini App:', error)
         // Always set ready to true so the app doesn't hang
         setIsReady(true)
       }
@@ -188,10 +175,8 @@ export function MiniAppProvider({ children }: MiniAppProviderProps) {
   }
 
   return (
-    <MiniAppContext.Provider value={{ isReady, isFarcaster, isBaseMiniApp, userProfile, context }}>
+    <MiniAppContext.Provider value={{ isReady, isBaseMiniApp, userProfile, context }}>
       <div className="mini-app-container">
-        {/* Show warning when opened in Farcaster but not Base Mini App */}
-        {isFarcaster && !isBaseMiniApp && <BaseMiniAppWarning />}
         {children}
       </div>
     </MiniAppContext.Provider>
