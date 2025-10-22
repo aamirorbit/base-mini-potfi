@@ -2,11 +2,12 @@
 
 import Link from 'next/link'
 import { useAccount } from 'wagmi'
-import { Home as HomeIcon, Plus, Eye, MessageCircle, Wallet, X, AlertCircle, ExternalLink, User } from 'lucide-react'
+import { Home as HomeIcon, Plus, Eye, Bug, MessageCircle, Wallet, X, AlertCircle, ExternalLink, User } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 import { useMiniKitWallet } from '@/hooks/useMiniKitWallet'
 import { useMiniAppContext } from '@/app/components/MiniAppProvider'
 import { useState, useEffect } from 'react'
+import BugReportModal from './BugReportModal'
 
 interface NeynarUser {
   fid: number
@@ -24,6 +25,7 @@ export default function MobileLayout({ children, showBottomNav = true }: MobileL
   const [isFarcaster, setIsFarcaster] = useState(false)
   const [mounted, setMounted] = useState(false)
   const [showBetaModal, setShowBetaModal] = useState(false)
+  const [showBugReportModal, setShowBugReportModal] = useState(false)
   const [fetchedUserProfile, setFetchedUserProfile] = useState<NeynarUser | null>(null)
 
   // Wallet connections
@@ -160,11 +162,9 @@ export default function MobileLayout({ children, showBottomNav = true }: MobileL
                 </div>
               </div>
               
-              {/* Support Button */}
-              <a
-                href="https://t.me/+_fXXrjRRqu41Yzdk"
-                target="_blank"
-                rel="noopener noreferrer"
+              {/* Bug Report Button */}
+              <button
+                onClick={() => setShowBugReportModal(true)}
                 className="relative px-3 py-1.5 text-xs font-bold rounded-md transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] btn-uppercase overflow-hidden flex-shrink-0"
                 style={{
                   background: 'linear-gradient(180deg, #B8941F 0%, #D4AF37 20%, #D4AF37 80%, #A67C00 100%)',
@@ -176,10 +176,10 @@ export default function MobileLayout({ children, showBottomNav = true }: MobileL
               >
                 <div className="absolute inset-0 opacity-30" style={{ background: 'linear-gradient(180deg, transparent 0%, rgba(212, 175, 55, 0.3) 48%, rgba(212, 175, 55, 0.3) 52%, transparent 100%)' }}></div>
                 <div className="relative flex items-center space-x-1">
-                  <MessageCircle className="w-3 h-3" />
-                  <span>Support</span>
+                  <Bug className="w-3 h-3" />
+                  <span>Bug Report</span>
                 </div>
-              </a>
+              </button>
             </div>
           </div>
         </div>
@@ -370,6 +370,15 @@ export default function MobileLayout({ children, showBottomNav = true }: MobileL
           </div>
         </div>
       )}
+
+      {/* Bug Report Modal */}
+      <BugReportModal
+        isOpen={showBugReportModal}
+        onClose={() => setShowBugReportModal(false)}
+        userAddress={userAddress}
+        userFid={fetchedUserProfile?.fid}
+        username={fetchedUserProfile?.username}
+      />
     </main>
   )
 }

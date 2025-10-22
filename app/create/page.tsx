@@ -6,12 +6,13 @@ import { erc20Abi, keccak256, encodePacked, decodeEventLog, encodeFunctionData, 
 import { base } from 'viem/chains'
 import { jackpotAbi, jackpotAddress, USDC, ONE_USDC } from '@/lib/contracts'
 import { getAppDomain, castIdToBytes32, extractCastHash } from '@/lib/utils'
-import { detectBaseAppEnvironment, getShareCastUrl } from '@/lib/environment'
+import { detectBaseAppEnvironment } from '@/lib/environment'
 import { useMiniKitWallet } from '@/hooks/useMiniKitWallet'
 import { useSmartWallet } from '@/hooks/useSmartWallet'
 import { useBatchTransactions } from '@/hooks/useBatchTransactions'
 import { getPaymasterCapability } from '@/lib/paymaster'
 import { miniKitWallet } from '@/lib/minikit-wallet'
+import { sdk } from '@farcaster/miniapp-sdk'
 import { Coins, AlertTriangle, CheckCircle, Copy, Share2, ArrowLeft, RefreshCw, Clock, DollarSign, Users, Zap } from 'lucide-react'
 import Link from 'next/link'
 import { ErrorModal } from '@/app/components/ErrorModal'
@@ -831,12 +832,24 @@ export default function Create() {
 
   // Generate shareable URLs
   const claimUrl = potId ? `${getAppDomain()}/claim/${potId}` : ''
-  const shareUrl = claimUrl
-    ? getShareCastUrl(
-        `🎯 Claim my ${amount} USDC PotFi pot! Get 0.01 USDC per claim or hit the jackpot! 🎰`,
-        claimUrl
-      )
-    : ''
+  
+  // Share on Base using SDK
+  const handleShareOnBase = () => {
+    if (!claimUrl) return
+    
+    try {
+      sdk.actions.composeCast({
+        text: `🎯 Claim my ${amount} USDC PotFi pot! Get 0.01 USDC per claim or hit the jackpot! 🎰\n\nClaim here:`,
+        embeds: [claimUrl]
+      })
+    } catch (error) {
+      console.error('Error opening composer:', error)
+      // Fallback: just copy the link
+      navigator.clipboard.writeText(claimUrl)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    }
+  }
 
   console.log('🎨 Render state:', {
     mounted,
@@ -908,7 +921,6 @@ export default function Create() {
     console.log('  - potId:', potId)
     console.log('  - showSuccess:', showSuccess)
     console.log('  - claimUrl:', claimUrl)
-    console.log('  - shareUrl:', shareUrl ? 'Generated' : 'Empty')
     console.log('  - amount:', amount)
     return (
       <div className="space-y-4">
@@ -929,13 +941,24 @@ export default function Create() {
           <div className="bg-blue-50 border border-blue-200 rounded-md p-3 mb-3">
             <p className="text-xs font-semibold text-blue-900 mb-2">📋 How to Share:</p>
             <ol className="text-xs text-blue-800 space-y-1 ml-4 list-decimal">
-              <li>Click "Copy Link" below</li>
-              <li>Go to your original post on Base</li>
-              <li>Add a comment with the copied link</li>
-              <li>Your followers can now claim!</li>
+              <li>Click "Share on Base" to post with link</li>
+              <li>Or copy link and share manually</li>
+              <li>Your followers can claim the pot!</li>
             </ol>
           </div>
           
+          {/* Share on Base Button - Uses SDK */}
+          <button
+            onClick={handleShareOnBase}
+            className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold py-4 px-6 rounded-md text-sm transition-all duration-200 shadow-xl transform active:scale-95 backdrop-blur-sm mb-2 btn-uppercase"
+          >
+            <div className="flex items-center justify-center space-x-2">
+              <Share2 className="w-4 h-4" />
+              <span>Share on Base</span>
+            </div>
+          </button>
+          
+          {/* Copy Link Button */}
           <button
             onClick={() => {
               navigator.clipboard.writeText(claimUrl)
@@ -945,7 +968,7 @@ export default function Create() {
             className={`w-full font-bold py-4 px-6 rounded-md text-sm transition-all duration-200 shadow-xl transform active:scale-95 backdrop-blur-sm btn-uppercase ${
               copied 
                 ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white' 
-                : 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white'
+                : 'bg-gray-800/90 hover:bg-gray-900 text-white'
             }`}
           >
             <div className="flex items-center justify-center space-x-2">
@@ -957,7 +980,7 @@ export default function Create() {
               ) : (
                 <>
                   <Copy className="w-4 h-4" />
-                  <span>Copy Claim Link</span>
+                  <span>Copy Link</span>
                 </>
               )}
             </div>
@@ -1188,7 +1211,7 @@ export default function Create() {
                   }
                 }}
                 rows={3}
-                className="w-full p-3 rounded-md border-2 border-gray-300 text-gray-900 text-sm font-mono focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all resize-none"
+                className="w-full p-3 rounded-md border-2 border-gray-300 text-gray-900 text-base font-mono focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all resize-none"
                 placeholder="Paste your Base post URL here...&#10;&#10;Example: base.app/post/0x..."
               />
               {postId ? (

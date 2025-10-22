@@ -129,6 +129,9 @@ NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=your_project_id
 
 # App Domain (for frames)
 NEXT_PUBLIC_APP_DOMAIN=https://yourdomain.com
+
+# Slack Webhook (for bug reports)
+SLACK_WEBHOOK_URL=https://hooks.slack.com/services/YOUR/WEBHOOK/URL
 ```
 
 ## 🚀 **Deployment**

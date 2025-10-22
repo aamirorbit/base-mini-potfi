@@ -45,14 +45,14 @@ interface FarcasterContext {
 
 interface MiniAppContextType {
   isReady: boolean
-  isFarcaster: boolean
+  isBaseMiniApp: boolean
   userProfile: UserProfile | null
   context: FarcasterContext | null
 }
 
 const MiniAppContext = createContext<MiniAppContextType>({
   isReady: false,
-  isFarcaster: false,
+  isBaseMiniApp: false,
   userProfile: null,
   context: null
 })
@@ -66,31 +66,29 @@ interface MiniAppProviderProps {
 export function MiniAppProvider({ children }: MiniAppProviderProps) {
   const [isReady, setIsReady] = useState(false)
   const [context, setContext] = useState<FarcasterContext | null>(null)
-  const [isFarcaster, setIsFarcaster] = useState(false)
+  const [isBaseMiniApp, setIsBaseMiniApp] = useState(false)
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
 
   useEffect(() => {
     const initializeMiniApp = async () => {
       try {
-        // Check if we're in a mini app environment (Farcaster or Base app)
+        // Check user agent for Base Mini App detection
         const userAgent = typeof window !== 'undefined' ? navigator.userAgent : ''
         const isInIframe = typeof window !== 'undefined' && window.parent !== window
-        const isFarcasterUA = userAgent.includes('Farcaster')
         const isBaseApp = userAgent.includes('Base') || userAgent.includes('Coinbase')
-        const isMiniAppEnv = isInIframe || isFarcasterUA || isBaseApp
+        const isMiniAppEnv = isInIframe || isBaseApp
         
         console.log('🔍 Environment detection:', {
           userAgent,
           isInIframe,
-          isFarcasterUA,
           isBaseApp,
           isMiniAppEnv
         })
         
-        setIsFarcaster(isMiniAppEnv)
+        setIsBaseMiniApp(isBaseApp)
         
         if (!isMiniAppEnv) {
-          console.log('Not in mini app environment, skipping Mini App initialization')
+          console.log('Not in mini app environment, skipping initialization')
           setIsReady(true)
           return
         }
@@ -100,7 +98,7 @@ export function MiniAppProvider({ children }: MiniAppProviderProps) {
         // Add timeout to prevent hanging
         const initWithTimeout = Promise.race([
           (async () => {
-            // Get context from Farcaster
+            // Get context from SDK
             console.log('📡 Getting context from SDK...')
             const ctx = await sdk.context
             console.log('✅ Context received:', JSON.stringify(ctx, null, 2))
@@ -143,17 +141,17 @@ export function MiniAppProvider({ children }: MiniAppProviderProps) {
     initializeMiniApp()
   }, [])
 
-  // Auto-connect wallet when in Farcaster environment
+  // Auto-connect wallet when in Base Mini App environment
   useEffect(() => {
     const autoConnectWallet = async () => {
-      if (isReady && isFarcaster) {
+      if (isReady && isBaseMiniApp) {
         try {
           // Check if already connected
           const walletState = await miniKitWallet.getWalletState()
           if (!walletState.isConnected) {
-            console.log('Auto-connecting Farcaster wallet...')
+            console.log('Auto-connecting Base Mini App wallet...')
             await miniKitWallet.connectWallet()
-            console.log('Farcaster wallet auto-connected successfully')
+            console.log('Base Mini App wallet auto-connected successfully')
           }
         } catch (error) {
           console.error('Auto-connect failed:', error)
@@ -163,7 +161,7 @@ export function MiniAppProvider({ children }: MiniAppProviderProps) {
     }
 
     autoConnectWallet()
-  }, [isReady, isFarcaster])
+  }, [isReady, isBaseMiniApp])
 
   if (!isReady) {
     return (
@@ -177,7 +175,7 @@ export function MiniAppProvider({ children }: MiniAppProviderProps) {
   }
 
   return (
-    <MiniAppContext.Provider value={{ isReady, isFarcaster, userProfile, context }}>
+    <MiniAppContext.Provider value={{ isReady, isBaseMiniApp, userProfile, context }}>
       <div className="mini-app-container">
         {children}
       </div>
