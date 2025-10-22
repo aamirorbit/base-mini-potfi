@@ -19,7 +19,6 @@ import {
 
 export default function Home() {
   const [mounted, setMounted] = useState(false)
-  const [isFarcaster, setIsFarcaster] = useState(false)
   const [activePots, setActivePots] = useState<number>(0)
   const [loading, setLoading] = useState(true)
   
@@ -27,15 +26,15 @@ export default function Home() {
   const { address: wagmiAddress, isConnected: wagmiConnected } = useAccount()
   const { address: miniKitAddress, isConnected: miniKitConnected } = useMiniKitWallet()
 
+  // Detect Base Mini App for wallet selection
+  const [isBaseMiniApp, setIsBaseMiniApp] = useState(false)
+
   useEffect(() => {
     setMounted(true)
     if (typeof window !== 'undefined') {
       const userAgent = navigator.userAgent || ''
-      const isInIframe = window.parent !== window
-      const isFarcasterUA = userAgent.includes('Farcaster')
       const isBaseApp = userAgent.includes('Base') || userAgent.includes('Coinbase')
-      
-      setIsFarcaster(isInIframe || isFarcasterUA || isBaseApp)
+      setIsBaseMiniApp(isBaseApp)
     }
   }, [])
 
@@ -60,7 +59,7 @@ export default function Home() {
     }
   }, [mounted])
 
-  const isConnected = isFarcaster ? miniKitConnected : wagmiConnected
+  const isConnected = isBaseMiniApp ? miniKitConnected : wagmiConnected
 
   if (!mounted) {
     return (

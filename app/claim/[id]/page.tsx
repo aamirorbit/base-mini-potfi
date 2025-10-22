@@ -14,7 +14,7 @@ import { sdk } from '@farcaster/miniapp-sdk'
 import { pad, createWalletClient, custom, PublicClient, createPublicClient, http, encodeFunctionData } from 'viem'
 import { base } from 'viem/chains'
 import { miniKitWallet } from '@/lib/minikit-wallet'
-import { Coins, Target, AlertTriangle, CheckCircle, Wifi, X, XCircle, Wallet, ExternalLink, Zap } from 'lucide-react'
+import { Coins, Target, AlertTriangle, CheckCircle, Wifi, X, XCircle, Wallet, ExternalLink, Zap, Share2 } from 'lucide-react'
 import Link from 'next/link'
 import { ErrorModal } from '@/app/components/ErrorModal'
 import { DebugLogger } from '@/app/components/DebugLogger'
@@ -789,18 +789,25 @@ export default function Claim() {
                 </Link>
 
                 {/* Share App Button - Secondary */}
-                <a
-                  href="https://base.app/~/compose?text=Just%20claimed%20USDC%20on%20PotFi!%20%F0%9F%8E%AF%20Create%20reward%20pots%20and%20engage%20your%20community%20%F0%9F%92%B0&embeds[]=https://potfi.pcdsns.com"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={() => setShowClaimSuccessModal(false)}
-                  className="block w-full bg-gray-800/90 backdrop-blur-sm hover:bg-gray-900 text-white font-bold py-4 px-6 rounded-md text-sm transition-all duration-200 shadow-xl transform active:scale-95"
+                <button
+                  onClick={() => {
+                    try {
+                      sdk.actions.composeCast({
+                        text: `Just claimed USDC on PotFi! 🎯 Create reward pots and engage your community 💰\n\nTry it:`,
+                        embeds: ['https://potfi.basecitizens.com']
+                      })
+                      setShowClaimSuccessModal(false)
+                    } catch (error) {
+                      console.error('Error opening composer:', error)
+                    }
+                  }}
+                  className="w-full bg-gray-800/90 backdrop-blur-sm hover:bg-gray-900 text-white font-bold py-4 px-6 rounded-md text-sm transition-all duration-200 shadow-xl transform active:scale-95"
                 >
                   <div className="flex items-center justify-center space-x-2">
-                    <ExternalLink className="w-4 h-4" />
+                    <Share2 className="w-4 h-4" />
                     <span>SHARE POTFI</span>
                   </div>
-                </a>
+                </button>
 
                 {/* Close Button - Tertiary */}
                 <button
