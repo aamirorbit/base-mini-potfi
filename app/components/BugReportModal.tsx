@@ -111,7 +111,7 @@ export default function BugReportModal({
             value={bugReport}
             onChange={(e) => setBugReport(e.target.value)}
             placeholder="Example: When I tried to claim a pot, the transaction got stuck and nothing happened... Also the button kept spinning forever 😅"
-            className="w-full px-4 py-3 bg-white/70 backdrop-blur-xl border border-gray-200 rounded-md text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none shadow-lg"
+            className="w-full px-4 py-3 bg-white/70 backdrop-blur-xl border border-gray-200 rounded-md text-base text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none shadow-lg"
             rows={5}
             disabled={isSubmitting}
           />

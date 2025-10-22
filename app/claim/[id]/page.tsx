@@ -37,8 +37,6 @@ export default function Claim() {
   const [potDetails, setPotDetails] = useState<any>(null)
   const [loadingPot, setLoadingPot] = useState(true)
   const [showErrorModal, setShowErrorModal] = useState(false)
-  const [debugInfo, setDebugInfo] = useState<string[]>([])
-  const [showDebug, setShowDebug] = useState(true)
   
   // Wagmi hooks for fallback
   const { address: wagmiAddress, isConnected: wagmiConnected } = useAccount()
@@ -368,7 +366,7 @@ export default function Claim() {
     <div className="space-y-4">
           {/* Compact Header */}
           <div>
-            <h1 className="text-xl font-bold text-gray-900">Claim Pot</h1>
+            <h1 className="text-xl font-bold text-gray-900">Claim Pot Reward</h1>
             <p className="text-xs text-gray-600 font-mono">#{id?.slice(0, 16)}...</p>
           </div>
 
@@ -434,20 +432,12 @@ export default function Claim() {
                 </div>
               )}
               
-              {/* Wallet Status */}
-              <div className="bg-white/70 backdrop-blur-xl rounded-md p-3 border border-white/20">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <div className="w-2 h-2 bg-primary rounded-full animate-pulse"></div>
-                    <span className="text-xs font-semibold text-gray-700">Connected</span>
-                  </div>
-                  <span className="text-xs text-gray-500 font-mono">{displayAddress}</span>
-                </div>
-                
-                {isBaseApp && !isOnBase && (
+              {/* Network Switch for Base App - Only show if not on Base */}
+              {isBaseApp && !isOnBase && (
+                <div className="bg-white/70 backdrop-blur-xl rounded-md p-3 border border-white/20">
                   <button
                     onClick={switchToBase}
-                    className="w-full mt-2 relative py-2 px-3 rounded-lg text-xs font-bold btn-uppercase transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] overflow-hidden group"
+                    className="w-full relative py-2 px-3 rounded-lg text-xs font-bold btn-uppercase transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] overflow-hidden group"
                     style={{
                       background: 'linear-gradient(180deg, #B8941F 0%, #D4AF37 20%, #D4AF37 80%, #A67C00 100%)',
                       boxShadow: '0 4px 8px rgba(0, 0, 0, 0.3), inset 0 1px 2px rgba(255, 255, 255, 0.3), inset 0 -1px 2px rgba(0, 0, 0, 0.4)',
@@ -461,11 +451,11 @@ export default function Claim() {
                     <div className="absolute inset-0 opacity-30" style={{ background: 'linear-gradient(180deg, transparent 0%, rgba(212, 175, 55, 0.3) 48%, rgba(212, 175, 55, 0.3) 52%, transparent 100%)' }}></div>
                     <div className="relative flex items-center justify-center space-x-1.5">
                       <Wifi className="w-3 h-3" />
-                      <span>Switch to Base</span>
+                      <span>Switch to Base Network</span>
                     </div>
                   </button>
-                )}
-              </div>
+                </div>
+              )}
 
               {/* Pot Details */}
               {potDetails && (
@@ -483,17 +473,6 @@ export default function Claim() {
                     <p className="text-xs font-medium text-gray-600">Jackpot</p>
                   </div>
                 </div>
-              )}
-
-              {/* Debug Toggle Button */}
-              {!showDebug && (
-                <button
-                  onClick={() => setShowDebug(true)}
-                  className="w-full bg-gray-800 text-white text-xs py-2 px-3 rounded-md mb-2 flex items-center justify-center space-x-1"
-                >
-                  <span>🐛</span>
-                  <span>Show Debug Info</span>
-                </button>
               )}
 
               {/* Instructions */}
@@ -554,7 +533,7 @@ export default function Claim() {
                         }
                       }}
                       placeholder="Paste Base URL or cast hash (0x...)"
-                      className="w-full rounded-md px-3 py-2.5 text-sm bg-white text-gray-900 placeholder-gray-400 border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full rounded-md px-3 py-2.5 text-base bg-white text-gray-900 placeholder-gray-400 border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     />
                     <p className="text-xs text-gray-500 mt-1">
                       {castId 
@@ -574,13 +553,6 @@ export default function Claim() {
                       href={`https://base.app/post/${castId}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      onClick={() => {
-                        console.log('🔍 Opening Base URL:', `https://base.app/post/${castId}`)
-                        setDebugInfo([
-                          `🔍 Opening: base.app/post/${castId.slice(0, 10)}...`,
-                          `✅ Link clicked - opening in new tab`
-                        ])
-                      }}
                       className="block w-full bg-card hover:bg-gray-100 border-2 border-primary/30 rounded-md p-4 transition-all shadow-card hover:shadow-lg active:scale-98 no-underline"
                     >
                       <div className="flex items-start justify-between mb-3">
@@ -624,54 +596,6 @@ export default function Claim() {
                     <p className="text-xs text-gray-500 mt-2 text-center">
                       Complete all 3 actions to be eligible for claim
                     </p>
-                  </div>
-                )}
-                
-                {/* Debug Panel */}
-                {showDebug && (
-                  <div className="bg-gray-900 text-white rounded-md p-3 text-xs font-mono mb-3">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="font-bold text-blue-400">🐛 Debug Info</span>
-                      <button
-                        onClick={() => setShowDebug(false)}
-                        className="text-gray-400 hover:text-white"
-                      >
-                        <X className="w-3 h-3" />
-                      </button>
-                    </div>
-                    
-                    <div className="space-y-1 text-xs">
-                      <div className="border-b border-gray-700 pb-1 mb-2">
-                        <p className="text-gray-400">Cast ID:</p>
-                        <p className="text-green-400 break-all">{castId || 'Not set'}</p>
-                      </div>
-                      
-                      <div className="border-b border-gray-700 pb-1 mb-2">
-                        <p className="text-gray-400">Post URL:</p>
-                        <p className="text-blue-400 break-all text-xs">
-                          {castId ? `https://base.app/post/${castId}` : 'Not set'}
-                        </p>
-                      </div>
-                      
-                      {debugInfo.length > 0 && (
-                        <div className="border-t border-gray-700 pt-2 mt-2">
-                          <p className="text-gray-400 mb-1">Last Action:</p>
-                          {debugInfo.map((log, i) => (
-                            <p key={i} className="text-yellow-400">{log}</p>
-                          ))}
-                        </div>
-                      )}
-                      
-                      <button
-                        onClick={() => {
-                          setDebugInfo([])
-                          console.clear()
-                        }}
-                        className="mt-2 text-xs text-gray-400 hover:text-white underline"
-                      >
-                        Clear logs
-                      </button>
-                    </div>
                   </div>
                 )}
                 

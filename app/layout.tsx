@@ -8,8 +8,14 @@ import React from 'react'
 const appDomain = getAppDomain()
 
 export const metadata: Metadata = {
+  metadataBase: new URL(appDomain),
   title: 'PotFi - Decentralized Prize Pots',
   description: 'Create and claim prize pots on Base. Instant claims with jackpot chances!',
+  viewport: {
+    width: 'device-width',
+    initialScale: 1,
+    maximumScale: 5,
+  },
   icons: {
     icon: '/icon.png',
   },

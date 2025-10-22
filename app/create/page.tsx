@@ -1211,7 +1211,7 @@ export default function Create() {
                   }
                 }}
                 rows={3}
-                className="w-full p-3 rounded-md border-2 border-gray-300 text-gray-900 text-sm font-mono focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all resize-none"
+                className="w-full p-3 rounded-md border-2 border-gray-300 text-gray-900 text-base font-mono focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all resize-none"
                 placeholder="Paste your Base post URL here...&#10;&#10;Example: base.app/post/0x..."
               />
               {postId ? (
