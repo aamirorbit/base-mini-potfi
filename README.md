@@ -4,9 +4,31 @@
 
 PotFi is the first engagement-to-earn platform that pays people instantly for interacting with social posts. Built on Base, powered by Farcaster frames, secured by smart contracts.
 
+## 📑 Table of Contents
+
+- [What is PotFi?](#-what-is-potfi)
+- [Key Features](#-key-features)
+- [Quick Start](#-quick-start)
+- [Architecture](#️-architecture)
+- [How It Works](#-how-it-works)
+- [Early Traction](#-early-traction)
+- [Why PotFi?](#-why-potfi)
+- [Environment Setup](#-environment-setup)
+- [Production Deployment](#-production-deployment)
+- [API Endpoints](#-api-endpoints)
+- [Frontend Pages](#-frontend-pages)
+- [Farcaster Frame Implementation](#-farcaster-frame-implementation)
+- [Security Features](#-security-features)
+- [Smart Contract Specification](#-smart-contract-specification)
+- [Tech Stack](#️-tech-stack)
+- [FAQ & Troubleshooting](#-faq--troubleshooting)
+- [Contributing](#-contributing)
+- [Useful Commands](#️-useful-commands)
+- [License](#-license)
+
 ## 🎯 What is PotFi?
 
-Creators fund prize pots with USDC, ZORA, all other creator coins. Their audience engages (like, comment, recast) and claims instant rewards. Someone might hit the jackpot and win it all. Everyone wins, everything's transparent, all on-chain.
+Creators fund prize pots with USDC. Their audience engages (like, comment, recast) and claims instant rewards. Someone might hit the jackpot and win it all. Everyone wins, everything's transparent, all on-chain.
 
 ### **✅ Key Features:**
 - 💰 **Instant USDC Rewards** - Claim and receive in seconds
@@ -18,62 +40,154 @@ Creators fund prize pots with USDC, ZORA, all other creator coins. Their audienc
 
 ## 🚀 **Quick Start**
 
-### Prerequisites
-- Node.js 18+
-- npm or yarn
-- Base network access
-- USDC on Base
-- Neynar API key
+### **Prerequisites**
+- Node.js 18+ and npm/yarn
+- Git
+- Wallet with Base network access
+- USDC on Base (for testing)
 
-### Installation
+### **Installation & Setup**
+
+1. **Clone the repository**
 ```bash
-npm install
-npm run dev
+git clone <your-repo-url>
+cd PotFi
 ```
 
-## 📚 Documentation
+2. **Install dependencies**
+```bash
+npm install
+# or
+yarn install
+```
 
-Comprehensive documentation is available in the [`docs/`](./docs) folder:
+3. **Set up environment variables**
+```bash
+cp .env.example .env.local
+# Edit .env.local with your API keys (see Environment Setup section)
+```
 
-### For Presentations & Pitches
-- **[Project Submission](./docs/PROJECT_SUBMISSION.md)** - Complete project overview, value proposition, and market analysis
-- **[Presentation Guide](./docs/PRESENTATION_SLIDE_GUIDE.md)** - Slide templates and formats for pitching PotFi
-- **[Image Generation Prompts](./docs/IMAGE_GENERATION_PROMPTS.md)** - AI prompts for creating branded visual assets
+4. **Run development server**
+```bash
+npm run dev
+# or
+yarn dev
+```
 
-### For Developers
-- **[Base Account Setup](./docs/BASE_ACCOUNT_SETUP.md)** - Base network integration guide
-- **[Frame Implementation](./docs/FRAME_IMPLEMENTATION.md)** - Farcaster frames development
-- **[API Documentation](./docs/API_STATUS.md)** - API endpoints and usage
-- **[Smart Contract Docs](./docs/LOGIC_VERIFICATION.md)** - Contract logic and verification
+5. **Open your browser**
+```
+http://localhost:3000
+```
 
-### For Deployment
-- **[Deployment Guide](./docs/DEPLOYMENT_GUIDE.md)** - Production deployment instructions
-- **[Production Checklist](./docs/PRODUCTION_SETUP_CHECKLIST.md)** - Pre-launch checklist
-- **[GitHub Setup](./docs/GITHUB_SETUP_GUIDE.md)** - CI/CD configuration
+### **Deploying the Smart Contract**
 
-**[→ View all documentation](./docs/README.md)**
+```bash
+cd hardhat-project
+npm install
+npx hardhat compile
+npx hardhat run scripts/deploy.js --network base
+```
+
+Save the deployed contract address to `NEXT_PUBLIC_POTFI_CONTRACT_ADDRESS` in `.env.local`.
 
 ## 🏗️ **Architecture**
 
-### **Frame Endpoints** (New!)
-- `/api/frame` - Main frame entry point
-- `/api/frame/create` - Create Prize Pot flow
-- `/api/frame/claim` - Claim Prize Pot flow
-- `/api/frame/image` - Dynamic frame images
+### **Tech Stack Overview**
 
-### **Smart Contract** (`hardhat-project/contracts/PotFi.sol`)
-- **USDC-based lottery system** on Base
-- **Multiple winners** with randomized splits
-- **2.5% fee** per claim (charged to claimant)
-- **Timeout mechanism** for unclaimed funds
-- **Permit system** for engagement verification
+```
+┌─────────────────────────────────────────────────────────────┐
+│                        Frontend Layer                        │
+│  Next.js 14 • React • TypeScript • Tailwind CSS              │
+│  Farcaster Frames • MiniKit • Wagmi • Viem                   │
+└─────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────┐
+│                      API Layer (Backend)                     │
+│  • Pot Management APIs                                       │
+│  • User Profile & History APIs                               │
+│  • Engagement Verification (Neynar)                          │
+│  • Frame Handlers (Create/Claim)                             │
+│  • Permit Generation & Signing                               │
+└─────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────┐
+│                    Blockchain Layer (Base)                   │
+│  Smart Contract: PotFi.sol                                   │
+│  • USDC Prize Pots                                           │
+│  • Jackpot Mechanism                                         │
+│  • Engagement Gating                                         │
+│  • Creator Sweeps                                            │
+└─────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────┐
+│                    External Integrations                     │
+│  • Neynar API (Farcaster)                                    │
+│  • Alchemy RPC (Base blockchain)                             │
+│  • WalletConnect                                             │
+│  • Slack Webhooks (Bug Reports)                              │
+└─────────────────────────────────────────────────────────────┘
+```
 
-### **Frontend** (`app/`)
-- **Next.js 14** with App Router
-- **Wagmi** for Web3 integration
-- **Tailwind CSS** for styling
-- **Farcaster integration** via Neynar API
-- **Frame support** for native Farcaster experience
+### **Smart Contract Features**
+- ⚡ **USDC-based Prize Pots** - Native stablecoin rewards
+- 🎰 **Dynamic Jackpot System** - Increasing probability over time
+- 🔐 **Engagement Gating** - Verify likes, comments, recasts
+- 💰 **Standard Claims** - 0.01 USDC per claim minimum
+- ⏱️ **Timeout & Reclaim** - Creators can recover unclaimed funds
+- 🔒 **Permit Signatures** - Gasless claiming with EIP-712
+
+### **Frontend Architecture**
+- 📱 **Mobile-First Design** - Beautiful glassmorphism UI
+- 🎨 **Component Library** - Reusable React components
+- 🔌 **Multi-Wallet Support** - Wagmi + MiniKit for Base app
+- 🖼️ **Frame Support** - Native Farcaster frame integration
+- 🚀 **Smart Wallet Ready** - Base Account capabilities
+
+### **Key Technical Implementations**
+
+#### **Engagement Verification Flow**
+```typescript
+1. User clicks "Claim" button in frame/app
+2. Frontend sends request to /api/gate/permit with:
+   - potId: Prize pot identifier
+   - claimerAddress: User's wallet address
+   - castId: Farcaster cast hash
+   - fid: User's Farcaster ID
+
+3. Backend verifies via Neynar API:
+   - Has user liked the cast?
+   - Has user recasted it?
+   - Has user commented on it?
+
+4. If verified, generates EIP-712 permit signature:
+   - Server signs with GATE_SIGNER_PK (private key)
+   - Returns signature + deadline to frontend
+
+5. Frontend calls smart contract claim() with signature
+6. Contract validates signature and transfers USDC
+```
+
+#### **Jackpot Probability Algorithm**
+```typescript
+Base chance: 1% per claim
++ Claim multiplier: +0.1% per previous claim
++ Time multiplier: +0.05% per hour elapsed
+= Total probability (max 50%)
+
+Random selection using cryptographic randomness
+```
+
+#### **Multi-Wallet Strategy**
+```typescript
+// Detect environment
+isBaseApp = window.navigator.userAgent.includes('Base')
+
+// Use appropriate wallet
+wallet = isBaseApp ? MiniKitWallet : WagmiConnector
+
+// Unified interface for both
+sendTransaction(txData)
+```
 
 ## 🎮 How It Works
 
@@ -107,69 +221,198 @@ Comprehensive documentation is available in the [`docs/`](./docs) folder:
 
 ## 🔧 **Environment Setup**
 
-Create `.env.local`:
+### **Required Environment Variables**
+
+Create `.env.local` in the project root:
 
 ```bash
-# Base Network
+# ============================================
+# Blockchain Configuration (Base Network)
+# ============================================
 NEXT_PUBLIC_BASE_RPC_URL=https://mainnet.base.org
-NEXT_PUBLIC_POTFI_CONTRACT_ADDRESS=0x...
-
-# USDC on Base
+NEXT_PUBLIC_POTFI_CONTRACT_ADDRESS=0x...  # Your deployed PotFi contract
 NEXT_PUBLIC_USDC_CONTRACT_ADDRESS=0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913
 
-# Neynar API (Farcaster integration)
+# ============================================
+# Alchemy API (Recommended for Production)
+# ============================================
+ALCHEMY_API_KEY=your_alchemy_api_key
+NEXT_PUBLIC_ALCHEMY_API_KEY=your_alchemy_api_key
+
+# ============================================
+# Farcaster Integration (Neynar)
+# ============================================
 NEYNAR_API_KEY=your_neynar_api_key
 
-# Gate Signer (for permit generation)
-GATE_SIGNER_PK=your_private_key
-FEE_TREASURY_ADDRESS=0x...
+# ============================================
+# Permit Signing (Server-side only!)
+# ============================================
+GATE_SIGNER_PK=your_private_key  # NEVER expose to client!
+FEE_TREASURY_ADDRESS=0x...       # Treasury for fee collection
 
-# WalletConnect
-NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=your_project_id
+# ============================================
+# Wallet Integration
+# ============================================
+NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=your_walletconnect_project_id
 
-# App Domain (for frames)
+# ============================================
+# Application URL (for Frames)
+# ============================================
 NEXT_PUBLIC_APP_DOMAIN=https://yourdomain.com
 
-# Slack Webhook (for bug reports)
+# ============================================
+# Bug Reporting (Optional)
+# ============================================
 SLACK_WEBHOOK_URL=https://hooks.slack.com/services/YOUR/WEBHOOK/URL
+
+# ============================================
+# Debug & Development (Optional)
+# ============================================
+NEXT_PUBLIC_DEBUG_LOGS=false  # Set to "true" for debug logging
 ```
 
-## 🚀 **Deployment**
+### **Getting API Keys**
 
-### 1. Deploy Smart Contract
+1. **Alchemy API** (blockchain access)
+   - Sign up at [alchemy.com](https://www.alchemy.com/)
+   - Create Base mainnet app
+   - Copy API key
+
+2. **Neynar API** (Farcaster integration)
+   - Sign up at [neynar.com](https://neynar.com/)
+   - Create new project
+   - Copy API key
+
+3. **WalletConnect** (wallet connections)
+   - Sign up at [walletconnect.com](https://walletconnect.com/)
+   - Create new project
+   - Copy Project ID
+
+4. **Slack Webhook** (bug reports - optional)
+   - Create Slack app at [api.slack.com/apps](https://api.slack.com/apps)
+   - Enable Incoming Webhooks
+   - Copy webhook URL
+
+## 🚀 **Production Deployment**
+
+### **1. Deploy Smart Contract to Base Mainnet**
+
 ```bash
-npm run deploy
+cd hardhat-project
+
+# Compile contracts
+npx hardhat compile
+
+# Deploy to Base mainnet
+npx hardhat run scripts/deploy.js --network base
+
+# Verify contract on BaseScan
+npx hardhat run scripts/verify-contract.js --network base
 ```
 
-### 2. Deploy Frontend
+**Save the contract address** - you'll need it for the next steps.
+
+### **2. Configure Production Environment**
+
+Update `.env.local` (or your hosting platform's environment variables):
+
 ```bash
+# Update with deployed contract
+NEXT_PUBLIC_POTFI_CONTRACT_ADDRESS=0x...  # Your deployed address
+
+# Production domain
+NEXT_PUBLIC_APP_DOMAIN=https://your-production-domain.com
+
+# All other API keys from Environment Setup section
+```
+
+### **3. Deploy Frontend**
+
+#### **Option A: Vercel (Recommended)**
+```bash
+# Install Vercel CLI
+npm i -g vercel
+
+# Deploy
+vercel --prod
+
+# Add environment variables in Vercel dashboard
+```
+
+#### **Option B: Manual Deployment**
+```bash
+# Build production bundle
 npm run build
+
+# Start production server
 npm run start
+
+# Or use PM2 for process management
+pm2 start npm --name "potfi" -- start
 ```
 
-### 3. Update Farcaster Manifest
-Update `public/.well-known/farcaster.json` with your domain.
+### **4. Configure Farcaster Frames**
 
-### 4. Test Frames
-- Test frame functionality on Base App
-- Verify engagement verification works
-- Test claim flow end-to-end
+1. Update frame metadata in `public/.well-known/farcaster.json`
+2. Test your frames at [Warpcast Frame Validator](https://warpcast.com/~/developers/frames)
+3. Share your frame URL: `https://your-domain.com/p/[pot-id]`
 
-## 📱 **Frame Implementation**
+### **5. Post-Deployment Checklist**
 
-### **Frame Structure**
+- ✅ Smart contract deployed and verified on BaseScan
+- ✅ Environment variables configured
+- ✅ Frontend deployed and accessible
+- ✅ Frame metadata validated
+- ✅ Test pot creation flow
+- ✅ Test claim flow with engagement verification
+- ✅ Monitor Slack for bug reports
+- ✅ Set up analytics/monitoring
+
+## 📱 **Farcaster Frame Implementation**
+
+### **What are Frames?**
+Frames are interactive elements embedded directly in Farcaster casts. PotFi uses frames to enable pot creation and claiming without leaving the social feed.
+
+### **Frame Architecture**
+
+```
+Main Frame (/api/frame)
+  ├─→ Create Flow (/api/frame/create)
+  │     ├─→ Input amount & settings
+  │     ├─→ Smart contract deployment
+  │     └─→ Success + Share frame
+  │
+  └─→ Claim Flow (/api/frame/claim)
+        ├─→ Verify engagement (Like/Recast/Comment)
+        ├─→ Generate permit signature
+        ├─→ Process claim on contract
+        └─→ Success + Results frame
+```
+
+### **Frame Metadata Example**
+
 ```html
-<!-- Main Frame -->
+<!-- Basic Frame Structure -->
 <meta property="fc:frame" content="vNext" />
-<meta property="fc:frame:image" content="..." />
+<meta property="fc:frame:image" content="https://your-domain.com/og.png" />
+<meta property="fc:frame:image:aspect_ratio" content="1.91:1" />
+
+<!-- Buttons -->
 <meta property="fc:frame:button:1" content="Create Prize Pot" />
+<meta property="fc:frame:button:1:action" content="post" />
 <meta property="fc:frame:button:2" content="Claim Prize Pot" />
+<meta property="fc:frame:button:2:action" content="post" />
+
+<!-- Post URL for button clicks -->
+<meta property="fc:frame:post_url" content="https://your-domain.com/api/frame" />
 ```
 
-### **Frame Flows**
-1. **Create Flow**: Input amount/winners → Create pot → Success
-2. **Claim Flow**: Verify engagement → Claim → Receive reward
-3. **Image Generation**: Dynamic images based on state
+### **Key Features**
+- ✅ **Engagement Verification** - Automatically checks likes, recasts, comments
+- ✅ **Permit Signatures** - Server-side signing for secure claims
+- ✅ **Dynamic Images** - Generate custom images per frame state
+- ✅ **Error Handling** - User-friendly error messages in frames
+- ✅ **Success Flows** - Clear confirmation and share options
 
 ## 🔒 **Security Features**
 
@@ -201,28 +444,94 @@ Update `public/.well-known/farcaster.json` with your domain.
 
 ## 🔌 **API Endpoints**
 
-### **Frame Endpoints**
-- `/api/frame` - Main frame entry point
-- `/api/frame/create` - Create Prize Pot flow
-- `/api/frame/claim` - Claim Prize Pot flow
-- `/api/frame/image` - Dynamic frame images
+### **Core API Endpoints**
 
-### **Gate Endpoints**
-- `/api/gate/permit` - Generate signed permit for claiming
-- **Requirements**: Like + Comment + Recast verification
-- **Returns**: `{deadline, castId, signature}`
+#### **Pot Management**
+- **`GET /api/pots`** - Fetch all pots or filter by creator
+  - Query params: `?creator=0x...` (optional)
+  - Returns: List of pots with stats, status, and metadata
+  
+- **`POST /api/pots`** - Get specific pot details by ID
+  - Body: `{ potId: "0x..." }`
+  - Returns: Detailed pot information including jackpot probability
 
-## 🎨 **Frontend Components**
+#### **User APIs**
+- **`GET /api/user/profile`** - Get Farcaster user profile
+  - Query params: `?address=0x...` or `?fid=123`
+  - Returns: User's Farcaster profile (username, display name, pfp)
 
-### **Pages**
-- `/` - Home page with wallet connection
-- `/create` - Create new Prize Pot (legacy)
-- `/p/[id]` - Claim specific Prize Pot (legacy)
+- **`GET /api/user/history`** - Get user transaction history
+  - Query params: `?address=0x...`
+  - Returns: All deposits, claims, and user stats
 
-### **Frames** (New!)
-- **Create Frame** - Set up Prize Pot in frame
-- **Claim Frame** - Claim Prize Pot in frame
-- **Success Frame** - Show results
+#### **Engagement & Permits**
+- **`POST /api/gate/permit`** - Generate signed permit for claiming
+  - Body: `{ potId, claimerAddress, castId, fid }`
+  - Verifies: Like + Comment + Recast engagement
+  - Returns: `{ deadline, castId, signature, jackpot }`
+
+- **`POST /api/gate`** - Manage pot state (internal)
+  - Actions: `initialize`, `status`, `reclaim`
+  - Used for pot lifecycle management
+
+- **`GET /api/gate`** - Get all pot states
+  - Query params: `?creator=0x...` (optional)
+  - Returns: Pot states with claim counts
+
+#### **Bug Reporting**
+- **`POST /api/bug-report`** - Submit bug reports
+  - Body: `{ report, userAddress, userFid, username }`
+  - Sends reports to Slack webhook
+
+### **Farcaster Frame Endpoints**
+
+#### **Frame Pages**
+- **`GET /api/frame`** - Main frame entry point
+  - Returns: HTML with frame metadata
+  - Buttons: "Create Prize Pot" | "Claim Prize Pot"
+
+- **`POST /api/frame`** - Handle frame button interactions
+  - Routes to create or claim flows
+
+#### **Create Flow**
+- **`GET /api/frame/create`** - Create Prize Pot frame
+  - Query params: `?castId=...`
+  - Returns: Frame with input for amount/winners
+
+- **`POST /api/frame/create`** - Process pot creation
+  - Body: Form data with input and castId
+  - Returns: Success frame with pot ID
+
+#### **Claim Flow**
+- **`GET /api/frame/claim`** - Claim Prize Pot frame
+  - Query params: `?potId=...&castId=...`
+  - Returns: Frame with claim button
+
+- **`POST /api/frame/claim`** - Process claim request
+  - Body: Form data with potId, castId, fid
+  - Verifies engagement and processes claim
+  - Returns: Success or requirements frame
+
+#### **Dynamic Images**
+- **`GET /api/frame/image`** - Generate frame images
+  - Query params: `?action=...&potId=...`
+  - Actions: `start`, `create`, `claim`, `success`, `claimed`, `requirements`
+  - Returns: Redirect to appropriate image
+
+## 🎨 **Frontend Pages**
+
+### **Main Pages**
+- **`/`** - Home page with features, stats, and wallet connection
+- **`/create`** - Create new Prize Pot with custom settings
+- **`/view`** - Browse all active, completed, and expired pots
+- **`/profile`** - View user's created pots and manage reclaims
+- **`/claim/[id]`** - Claim specific Prize Pot with engagement verification
+
+### **Frame Routes** (Farcaster Integration)
+- **`/api/frame`** - Main frame entry point
+- **`/api/frame/create`** - Create Prize Pot in frame
+- **`/api/frame/claim`** - Claim Prize Pot in frame
+- **`/p/[id]`** - Pot-specific frame for sharing
 
 ## 🚀 **Base Mini Apps Guide Integration**
 
@@ -262,42 +571,132 @@ This project follows the [Base Mini Apps Guide](https://paragraph.com/@cryptso/m
 - Alchemy SDK
 - WalletConnect
 
-**See [docs/PROJECT_SUBMISSION.md](./docs/PROJECT_SUBMISSION.md) for complete tech stack details.**
+## ❓ **FAQ & Troubleshooting**
 
-## 🤝 Contributing
+### **Common Issues**
 
-Contributions are welcome! Please:
+**Q: "Failed to fetch pot data from blockchain"**
+- Check your `ALCHEMY_API_KEY` is set correctly
+- Verify Base RPC is accessible
+- Try again in 30 seconds (RPC rate limiting)
+
+**Q: "Engagement verification failed"**
+- Ensure you've liked, recasted, AND commented on the post
+- Wait 10-30 seconds after engaging for Farcaster to sync
+- Verify your wallet is connected to your Farcaster account
+
+**Q: "Transaction failed"**
+- Check you have enough USDC in your wallet
+- Ensure you're connected to Base network (Chain ID: 8453)
+- Verify you haven't already claimed this pot
+
+**Q: "Frame not loading in Warpcast"**
+- Verify frame metadata is valid using Frame Validator
+- Check `NEXT_PUBLIC_APP_DOMAIN` is set correctly
+- Ensure images are accessible (1.91:1 aspect ratio)
+
+### **Need Help?**
+- Check the [Smart Contract](hardhat-project/contracts/PotFi.sol) for logic details
+- Review API responses in browser console
+- Enable debug logs: `NEXT_PUBLIC_DEBUG_LOGS=true`
+- Open an issue on GitHub
+
+## 🤝 **Contributing**
+
+We welcome contributions! Here's how to get started:
+
+### **Development Workflow**
 1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
+2. Clone your fork: `git clone <your-fork-url>`
+3. Create a feature branch: `git checkout -b feature/amazing-feature`
+4. Make your changes
+5. Test thoroughly (create test pots, test claims, test frames)
+6. Commit: `git commit -m 'Add amazing feature'`
+7. Push: `git push origin feature/amazing-feature`
+8. Open a Pull Request
 
-## 📄 License
+### **Code Style**
+- Follow existing patterns and conventions
+- Use TypeScript strict mode
+- Follow the design system in `.cursorrules`
+- Add comments for complex logic
+- Test on both desktop and mobile
+
+### **What to Contribute**
+- 🐛 Bug fixes
+- ✨ New features
+- 📝 Documentation improvements
+- 🎨 UI/UX enhancements
+- 🧪 Tests and test coverage
+- 🌐 Translations (future)
+
+## 🛠️ **Useful Commands**
+
+### **Development**
+```bash
+npm run dev          # Start development server
+npm run build        # Build for production
+npm run start        # Start production server
+npm run lint         # Run ESLint
+```
+
+### **Smart Contract**
+```bash
+cd hardhat-project
+npx hardhat compile                           # Compile contracts
+npx hardhat test                              # Run tests
+npx hardhat run scripts/deploy.js --network base      # Deploy to Base
+npx hardhat run scripts/verify-contract.js --network base  # Verify on BaseScan
+```
+
+### **Utilities**
+```bash
+npm run update-abi   # Update ABI after contract changes
+```
+
+## 📊 **Monitoring & Analytics**
+
+### **Smart Contract Events**
+Monitor these events on BaseScan:
+- `PotCreated` - New pot created
+- `StandardClaim` - User claimed standard amount
+- `JackpotClaim` - User won jackpot
+- `Swept` - Creator reclaimed funds
+
+### **API Health Checks**
+- Monitor `/api/pots` response times
+- Track Neynar API rate limits
+- Monitor Alchemy RPC usage
+- Check Slack for bug reports
+
+### **Recommended Tools**
+- [BaseScan](https://basescan.org/) - Blockchain explorer
+- [Warpcast Frame Validator](https://warpcast.com/~/developers/frames) - Test frames
+- [Neynar Analytics](https://neynar.com/) - Farcaster insights
+
+## 📄 **License**
 
 MIT License - see LICENSE file for details.
 
-## 🔗 Links
+## 🌟 **Acknowledgments**
 
-- **Documentation**: [docs/](./docs)
-- **Smart Contract**: [hardhat-project/contracts/PotFi.sol](./hardhat-project/contracts/PotFi.sol)
-- **Live Demo**: [Add your deployment URL]
-- **GitHub**: [Add your GitHub repo URL]
-
-## 💬 Support
-
-Need help? Check out:
-- 📚 [Documentation](./docs/README.md)
-- 🚀 [Deployment Guide](./docs/DEPLOYMENT_GUIDE.md)
-- 🐛 [GitHub Issues](../../issues)
-- 💡 Test with small amounts first!
+Built with:
+- [Base](https://base.org/) - Ethereum L2 blockchain
+- [Farcaster](https://www.farcaster.xyz/) - Decentralized social protocol
+- [Neynar](https://neynar.com/) - Farcaster API infrastructure
+- [Alchemy](https://www.alchemy.com/) - Blockchain development platform
+- [WalletConnect](https://walletconnect.com/) - Wallet connection protocol
 
 ---
 
 <div align="center">
 
-**Built on Base ⛓️ • Powered by Farcaster 🟣 • Secured by Smart Contracts 🔒**
+### **Built on Base ⛓️ • Powered by Farcaster 🟣 • Secured by Smart Contracts 🔒**
 
-*Turn Engagement Into Earnings*
+**Turn Engagement Into Earnings**
+
+[Live Demo](#) • [Documentation](hardhat-project/contracts/PotFi.sol) • [Report Bug](../../issues)
+
+Made with ❤️ by the PotFi team
 
 </div>
