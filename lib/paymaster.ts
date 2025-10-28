@@ -5,9 +5,9 @@
 
 import { base } from 'viem/chains'
 
-// Coinbase Paymaster Service URL for Base Mainnet
-// Replace with your actual Coinbase Developer Platform API key
-const PAYMASTER_SERVICE_URL = process.env.NEXT_PUBLIC_COINBASE_PAYMASTER_URL!
+// Coinbase Paymaster Service URL
+// Get this from Coinbase Developer Platform: https://portal.cdp.coinbase.com/
+const PAYMASTER_SERVICE_URL = process.env.NEXT_PUBLIC_COINBASE_PAYMASTER_URL
 
 export interface PaymasterCapability {
   paymasterService: {
@@ -21,12 +21,20 @@ export interface PaymasterCapability {
  * @returns Paymaster capability object or undefined if not available
  */
 export function getPaymasterCapability(chainId: number): PaymasterCapability | undefined {
-  // Only provide paymaster for Base mainnet (8453)
-  if (chainId !== base.id) {
-    console.log('Paymaster not available for chain:', chainId)
+  // Check if paymaster URL is configured
+  if (!PAYMASTER_SERVICE_URL) {
+    console.log('Paymaster URL not configured. Set NEXT_PUBLIC_COINBASE_PAYMASTER_URL to enable gas sponsorship.')
     return undefined
   }
 
+  // Only support Base mainnet for now
+  if (chainId !== base.id) {
+    console.log('Paymaster not available for chain:', chainId, '(only Base mainnet supported)')
+    return undefined
+  }
+
+  console.log('✅ Paymaster available for Base Mainnet')
+  
   return {
     paymasterService: {
       url: PAYMASTER_SERVICE_URL
@@ -44,6 +52,7 @@ export function canUseGasSponsorship(
   hasPaymasterCapability: boolean,
   chainId?: number
 ): boolean {
+  if (!chainId) return false
   return hasPaymasterCapability && chainId === base.id
 }
 

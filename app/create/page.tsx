@@ -310,14 +310,59 @@ export default function Create() {
         })
 
         console.log('Sending approve transaction via MiniKit...')
-        const txHash = await provider.request({
-          method: 'eth_sendTransaction',
-          params: [{
-            from: address,
-            to: USDC,
-            data: data,
-          }]
-        })
+        
+        let txHash: `0x${string}`
+        
+        // Try to use sponsored gas if available
+        if (smartWallet.canSponsorGas && paymasterCapability) {
+          console.log('🚀 Using sponsored gas for approval')
+          
+          try {
+            const batchTxId = await provider.request({
+              method: 'wallet_sendCalls',
+              params: [{
+                version: '1.0',
+                chainId: '0x2105', // Base mainnet
+                from: address,
+                calls: [{
+                  to: USDC,
+                  data: data
+                }],
+                capabilities: paymasterCapability
+              }]
+            })
+            
+            console.log('✅ Sponsored approval submitted:', batchTxId)
+            txHash = batchTxId as `0x${string}`
+          } catch (sponsorError: any) {
+            console.log('Sponsored approval failed, falling back to regular transaction:', sponsorError.message)
+            
+            // Fallback to regular transaction
+            const fallbackHash = await provider.request({
+              method: 'eth_sendTransaction',
+              params: [{
+                from: address,
+                to: USDC,
+                data: data,
+              }]
+            })
+            
+            txHash = fallbackHash as `0x${string}`
+          }
+        } else {
+          // Regular transaction without gas sponsorship
+          console.log('Using regular transaction for approval (no paymaster)')
+          const regularHash = await provider.request({
+            method: 'eth_sendTransaction',
+            params: [{
+              from: address,
+              to: USDC,
+              data: data,
+            }]
+          })
+          
+          txHash = regularHash as `0x${string}`
+        }
 
         console.log('✅ Approve transaction sent:', txHash)
         
@@ -665,14 +710,58 @@ export default function Create() {
         console.log('  - To:', jackpotAddress)
         console.log('  - From:', address)
         
-        const txHash = await provider.request({
-          method: 'eth_sendTransaction',
-          params: [{
-            from: address,
-            to: jackpotAddress,
-            data: data,
-          }]
-        })
+        let txHash: `0x${string}`
+        
+        // Try to use sponsored gas if available
+        if (smartWallet.canSponsorGas && paymasterCapability) {
+          console.log('🚀 Using sponsored gas transaction')
+          
+          try {
+            const batchTxId = await provider.request({
+              method: 'wallet_sendCalls',
+              params: [{
+                version: '1.0',
+                chainId: '0x2105', // Base mainnet
+                from: address,
+                calls: [{
+                  to: jackpotAddress,
+                  data: data
+                }],
+                capabilities: paymasterCapability
+              }]
+            })
+            
+            console.log('✅ Sponsored transaction submitted:', batchTxId)
+            txHash = batchTxId as `0x${string}`
+          } catch (sponsorError: any) {
+            console.log('Sponsored transaction failed, falling back to regular transaction:', sponsorError.message)
+            
+            // Fallback to regular transaction
+            const fallbackHash = await provider.request({
+              method: 'eth_sendTransaction',
+              params: [{
+                from: address,
+                to: jackpotAddress,
+                data: data,
+              }]
+            })
+            
+            txHash = fallbackHash as `0x${string}`
+          }
+        } else {
+          // Regular transaction without gas sponsorship
+          console.log('Using regular transaction (no paymaster)')
+          const regularHash = await provider.request({
+            method: 'eth_sendTransaction',
+            params: [{
+              from: address,
+              to: jackpotAddress,
+              data: data,
+            }]
+          })
+          
+          txHash = regularHash as `0x${string}`
+        }
 
         console.log('✅ CreatePot transaction sent successfully!')
         console.log('  - TX Hash:', txHash)

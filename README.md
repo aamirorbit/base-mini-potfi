@@ -256,6 +256,14 @@ FEE_TREASURY_ADDRESS=0x...       # Treasury for fee collection
 NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=your_walletconnect_project_id
 
 # ============================================
+# Paymaster (Sponsored Gas) - OPTIONAL
+# ============================================
+NEXT_PUBLIC_COINBASE_PAYMASTER_URL=https://api.developer.coinbase.com/rpc/v1/base/YOUR_API_KEY
+# Get this from: https://portal.cdp.coinbase.com/
+# Navigate to: Onchain Tools > Paymaster
+# Benefits: Users don't pay gas fees for claim/create transactions
+
+# ============================================
 # Application URL (for Frames)
 # ============================================
 NEXT_PUBLIC_APP_DOMAIN=https://yourdomain.com
@@ -288,7 +296,15 @@ NEXT_PUBLIC_DEBUG_LOGS=false  # Set to "true" for debug logging
    - Create new project
    - Copy Project ID
 
-4. **Slack Webhook** (bug reports - optional)
+4. **Coinbase Paymaster** (gas sponsorship - optional but recommended)
+   - Sign up at [Coinbase Developer Platform](https://portal.cdp.coinbase.com/)
+   - Navigate to **Onchain Tools > Paymaster**
+   - Copy your Paymaster service URL
+   - Set up contracts allowlist (add your PotFi contract address)
+   - Get up to $15k in gas credits with [Base Gasless Campaign](https://www.base.org/gasless)
+   - **Note**: Without this, users pay their own gas fees
+
+5. **Slack Webhook** (bug reports - optional)
    - Create Slack app at [api.slack.com/apps](https://api.slack.com/apps)
    - Enable Incoming Webhooks
    - Copy webhook URL
