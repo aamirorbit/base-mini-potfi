@@ -139,33 +139,10 @@ export class NeynarClient {
     return data.cast
   }
 
-  async getCastWithViewerContext(castHash: string, viewerFid: number): Promise<any> {
-    // Use viewer_fid parameter to get viewer_context which includes if this user liked/recasted
-    const response = await fetch(
-      `${this.baseUrl}/farcaster/cast?identifier=${castHash}&type=hash&viewer_fid=${viewerFid}`,
-      {
-        headers: {
-          'api_key': this.apiKey,
-        },
-      }
-    )
-
-    if (!response.ok) {
-      console.error(`Failed to fetch cast with viewer context: ${response.status} ${response.statusText}`)
-      throw new Error(`Failed to fetch cast: ${response.statusText}`)
-    }
-
-    const data = await response.json()
-    console.log('Cast with viewer_context:', JSON.stringify(data.cast?.viewer_context, null, 2))
-    return data.cast
-  }
-
   async checkEngagement(fid: number, castHash: string): Promise<EngagementStatus> {
     try {
       console.log(`Checking engagement for FID ${fid} on cast ${castHash}`)
-      
-      // Get cast with viewer context to see if this specific user has engaged
-      const cast = await this.getCastWithViewerContext(castHash, fid)
+      const cast = await this.getCast(castHash)
       console.log('Cast data:', JSON.stringify(cast, null, 2))
       
       // Check if the cast author is the same as the user trying to claim
@@ -173,21 +150,23 @@ export class NeynarClient {
       const isOwnCast = cast.author.fid === fid
       console.log(`Is own cast: ${isOwnCast}`)
       
-      // Check viewer_context for this specific user's reactions
-      const likedByUser = cast.viewer_context?.liked || false
-      const recastedByUser = cast.viewer_context?.recasted || false
-      
       // If it's the user's own cast, they automatically pass all requirements
-      // (You can't like/recast/reply to your own cast on Farcaster)
-      const liked = isOwnCast || likedByUser
-      const recasted = isOwnCast || recastedByUser
+      if (isOwnCast) {
+        console.log('✅ Auto-passing - user is the cast author')
+        return {
+          liked: true,
+          recasted: true,
+          replied: true
+        }
+      }
       
-      console.log(`Liked by user (viewer_context): ${likedByUser}, Is own cast: ${isOwnCast}, Final liked: ${liked}`)
-      console.log(`Recasted by user (viewer_context): ${recastedByUser}, Is own cast: ${isOwnCast}, Final recasted: ${recasted}`)
-      
-      // For replies - check if user has replied to this cast
-      // If it's their own cast, they automatically pass (creator gets credit)
-      const replied = isOwnCast ? true : await this.checkUserRepliedToCast(fid, castHash)
+      // Use dedicated reactions endpoint for accurate engagement data
+      // This endpoint works with Starter plan
+      const [liked, recasted, replied] = await Promise.all([
+        this.checkUserLikedCast(fid, castHash),
+        this.checkUserRecastedCast(fid, castHash),
+        this.checkUserRepliedToCast(fid, castHash)
+      ])
 
       console.log(`Engagement status for FID ${fid}:`, { liked, recasted, replied })
 
@@ -206,40 +185,12 @@ export class NeynarClient {
     }
   }
 
-  async checkUserRepliedToCast(fid: number, castHash: string): Promise<boolean> {
+  async checkUserLikedCast(fid: number, castHash: string): Promise<boolean> {
     try {
-      // Method 1: Check cast conversation/replies directly
-      const replies = await this.getCastReplies(castHash)
-      const hasRepliedInThread = replies.some(reply => reply.author.fid === fid)
-      
-      if (hasRepliedInThread) {
-        console.log(`✅ Reply check: User ${fid} found in cast replies`)
-        return true
-      }
-      
-      // Method 2: Fallback - Get user's recent casts to check if they replied to this cast
-      const userCasts = await this.getCastsByFid(fid, 100) // Check last 100 casts
-      
-      // Check if any of the user's casts are replies to the target cast
-      const hasReplied = userCasts.some(userCast => 
-        userCast.parent_hash === castHash || 
-        userCast.thread_hash === castHash
-      )
-      
-      console.log(`Reply check: Found ${userCasts.length} user casts, hasReplied: ${hasReplied}`)
-      return hasReplied
-    } catch (error) {
-      console.error('Error checking user replies:', error)
-      // On error, return false to be safe (unless it's their own cast, which is handled above)
-      return false
-    }
-  }
-
-  async getCastReplies(castHash: string, limit = 100): Promise<NeynarCast[]> {
-    try {
-      // Use conversation endpoint to get all replies to a cast
+      // Use reactions endpoint to check if user liked the cast
+      // Endpoint: GET /farcaster/reactions/user?fid={fid}&type=likes&limit=100
       const response = await fetch(
-        `${this.baseUrl}/farcaster/cast/conversation?identifier=${castHash}&type=hash&reply_depth=1&include_chronological_parent_casts=false&limit=${limit}`,
+        `${this.baseUrl}/farcaster/reactions/user?fid=${fid}&type=likes&limit=100`,
         {
           headers: {
             'api_key': this.apiKey,
@@ -248,19 +199,137 @@ export class NeynarClient {
       )
 
       if (!response.ok) {
-        console.error(`Failed to fetch cast replies: ${response.status} ${response.statusText}`)
-        return []
+        console.error(`Failed to fetch likes for FID ${fid}: ${response.status} ${response.statusText}`)
+        return false
       }
 
       const data = await response.json()
+      const reactions = data.reactions || []
       
-      // The conversation endpoint returns direct replies in the conversation.cast.direct_replies array
-      const directReplies = data.conversation?.cast?.direct_replies || []
-      console.log(`Found ${directReplies.length} direct replies to cast ${castHash}`)
+      // Check if any of the likes are for this specific cast
+      const hasLiked = reactions.some((reaction: any) => 
+        reaction.cast?.hash === castHash || reaction.target_hash === castHash
+      )
       
-      return directReplies
+      console.log(`✅ Like check: FID ${fid} ${hasLiked ? 'HAS' : 'HAS NOT'} liked cast ${castHash}`)
+      return hasLiked
     } catch (error) {
-      console.error('Error fetching cast replies:', error)
+      console.error(`Error checking if user liked cast:`, error)
+      return false
+    }
+  }
+
+  async checkUserRecastedCast(fid: number, castHash: string): Promise<boolean> {
+    try {
+      // Use reactions endpoint to check if user recasted the cast
+      // Endpoint: GET /farcaster/reactions/user?fid={fid}&type=recasts&limit=100
+      const response = await fetch(
+        `${this.baseUrl}/farcaster/reactions/user?fid=${fid}&type=recasts&limit=100`,
+        {
+          headers: {
+            'api_key': this.apiKey,
+          },
+        }
+      )
+
+      if (!response.ok) {
+        console.error(`Failed to fetch recasts for FID ${fid}: ${response.status} ${response.statusText}`)
+        return false
+      }
+
+      const data = await response.json()
+      const reactions = data.reactions || []
+      
+      // Check if any of the recasts are for this specific cast
+      const hasRecasted = reactions.some((reaction: any) => 
+        reaction.cast?.hash === castHash || reaction.target_hash === castHash
+      )
+      
+      console.log(`✅ Recast check: FID ${fid} ${hasRecasted ? 'HAS' : 'HAS NOT'} recasted cast ${castHash}`)
+      return hasRecasted
+    } catch (error) {
+      console.error(`Error checking if user recasted cast:`, error)
+      return false
+    }
+  }
+
+  async checkUserRepliedToCast(fid: number, castHash: string): Promise<boolean> {
+    try {
+      // Method 1: Check cast conversation/replies
+      // Get all replies to the cast and check if user is among them
+      const response = await fetch(
+        `${this.baseUrl}/farcaster/cast/conversation?identifier=${castHash}&type=hash&reply_depth=1&include_chronological_parent_casts=false&limit=100`,
+        {
+          headers: {
+            'api_key': this.apiKey,
+          },
+        }
+      )
+
+      if (response.ok) {
+        const data = await response.json()
+        const conversation = data.conversation?.cast?.direct_replies || []
+        
+        // Check if any of the direct replies are from this user
+        const hasReplied = conversation.some((reply: any) => reply.author?.fid === fid)
+        
+        if (hasReplied) {
+          console.log(`✅ Reply check: FID ${fid} HAS replied to cast ${castHash}`)
+          return true
+        }
+      }
+
+      // Method 2: Fallback - check user's recent casts
+      console.log(`ℹ️ No reply found in conversation, checking user's recent casts...`)
+      const userCasts = await this.getUserCastsAlternative(fid, 50)
+      
+      // Check if any of the user's casts are replies to the target cast
+      const hasReplied = userCasts.some(userCast => 
+        userCast.parent_hash === castHash || 
+        userCast.thread_hash === castHash
+      )
+      
+      console.log(`✅ Reply check: FID ${fid} ${hasReplied ? 'HAS' : 'HAS NOT'} replied to cast ${castHash}`)
+      return hasReplied
+    } catch (error) {
+      console.error('Error checking user replies:', error)
+      return false
+    }
+  }
+
+  // Alternative method to get user's casts (for Starter plan)
+  async getUserCastsAlternative(fid: number, limit = 50): Promise<NeynarCast[]> {
+    try {
+      // Try the feed endpoint first
+      let response = await fetch(
+        `${this.baseUrl}/farcaster/feed/user/casts?fid=${fid}&limit=${limit}`,
+        {
+          headers: {
+            'api_key': this.apiKey,
+          },
+        }
+      )
+
+      if (!response.ok) {
+        // Fallback: try user profile with recent casts
+        response = await fetch(
+          `${this.baseUrl}/farcaster/user/bulk?fids=${fid}&viewer_fid=${fid}`,
+          {
+            headers: {
+              'api_key': this.apiKey,
+            },
+          }
+        )
+      }
+
+      if (response.ok) {
+        const data = await response.json()
+        return data.casts || data.users?.[0]?.casts || []
+      }
+
+      return []
+    } catch (error) {
+      console.error(`Error fetching casts for FID ${fid}:`, error)
       return []
     }
   }
@@ -272,25 +341,14 @@ export class NeynarClient {
 
   async getCastsByFid(fid: number, limit = 25): Promise<NeynarCast[]> {
     try {
-      // Try the user feed endpoint first (works with most Neynar plans)
-      const response = await fetch(
-        `${this.baseUrl}/farcaster/feed/user/casts?fid=${fid}&limit=${limit}&include_replies=true`,
-        {
-          headers: {
-            'api_key': this.apiKey,
-          },
-        }
-      )
+      const response = await fetch(`${this.baseUrl}/farcaster/feed/user?fid=${fid}&limit=${limit}`, {
+        headers: {
+          'api_key': this.apiKey,
+        },
+      })
 
       if (!response.ok) {
         console.error(`Failed to fetch casts for FID ${fid}: ${response.status} ${response.statusText}`)
-        
-        // If 404, try alternative endpoint
-        if (response.status === 404) {
-          console.log(`Trying alternative endpoint for FID ${fid}...`)
-          return await this.getCastsByFidAlternative(fid, limit)
-        }
-        
         // Return empty array instead of throwing - user might not have casts
         return []
       }
@@ -300,31 +358,6 @@ export class NeynarClient {
     } catch (error) {
       console.error(`Error fetching casts for FID ${fid}:`, error)
       // Return empty array on error to fail gracefully
-      return []
-    }
-  }
-
-  async getCastsByFidAlternative(fid: number, limit = 25): Promise<NeynarCast[]> {
-    try {
-      // Alternative: Use feed endpoint
-      const response = await fetch(
-        `${this.baseUrl}/farcaster/feed?feed_type=filter&filter_type=fids&fids=${fid}&with_recasts=false&limit=${limit}`,
-        {
-          headers: {
-            'api_key': this.apiKey,
-          },
-        }
-      )
-
-      if (!response.ok) {
-        console.error(`Alternative endpoint also failed for FID ${fid}: ${response.status}`)
-        return []
-      }
-
-      const data = await response.json()
-      return data.casts || []
-    } catch (error) {
-      console.error(`Error with alternative endpoint for FID ${fid}:`, error)
       return []
     }
   }
